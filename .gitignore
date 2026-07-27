@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+
+outputs/
+custom_floors/
+
+# Keep large and personal template assets local.
+templates/*.psd
+
+# Personal preset slots stay on this computer.
+data/court_presets.json

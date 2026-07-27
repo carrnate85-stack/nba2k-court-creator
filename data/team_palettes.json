@@ -1,0 +1,6683 @@
+{
+  "source": "https://teamcolorcodes.com",
+  "generated_from": {
+    "NBA": "https://teamcolorcodes.com/nba-team-color-codes/",
+    "NCAA D1": "https://teamcolorcodes.com/ncaa-color-codes/"
+  },
+  "palettes": [
+    {
+      "league": "NBA",
+      "team": "Atlanta Hawks",
+      "source": "https://teamcolorcodes.com/atlanta-hawks-color-codes/",
+      "colors": [
+        {
+          "name": "Torch Red",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Legacy Yellow",
+          "hex": "#FDB927"
+        },
+        {
+          "name": "Infinity Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Granite Gray",
+          "hex": "#9EA2A2"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Volt Green",
+          "hex": "#C1D32F"
+        },
+        {
+          "name": "Hawks Charcoal",
+          "hex": "#26282A"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Boston Celtics",
+      "source": "https://teamcolorcodes.com/boston-celtics-color-codes/",
+      "colors": [
+        {
+          "name": "CELTICS GREEN",
+          "hex": "#007A33"
+        },
+        {
+          "name": "CELTICS GOLD",
+          "hex": "#BA9653"
+        },
+        {
+          "name": "CELTICS BROWN",
+          "hex": "#963821"
+        },
+        {
+          "name": "CELTICS BLACK",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Brooklyn Nets",
+      "source": "https://teamcolorcodes.com/brooklyn-nets-color-codes/",
+      "colors": [
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "NAVY BLUE",
+          "hex": "#002A60"
+        },
+        {
+          "name": "RED",
+          "hex": "#CD1041"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#777D84"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#C6CFD4"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Charlotte Hornets",
+      "source": "https://teamcolorcodes.com/charlotte-hornets-color-codes/",
+      "colors": [
+        {
+          "name": "HORNETS PURPLE",
+          "hex": "#1D1160"
+        },
+        {
+          "name": "TEAL",
+          "hex": "#00788C"
+        },
+        {
+          "name": "PMS Cool Gray 8 C",
+          "hex": "#A1A1A4"
+        },
+        {
+          "name": "Teal",
+          "hex": "#00778B"
+        },
+        {
+          "name": "Purple",
+          "hex": "#280071"
+        },
+        {
+          "name": "Red/Orange",
+          "hex": "#F9423A"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Chicago Bulls",
+      "source": "https://teamcolorcodes.com/chicago-bulls-color-codes/",
+      "colors": [
+        {
+          "name": "BULLS RED",
+          "hex": "#CE1141"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Cleveland Cavaliers",
+      "source": "https://teamcolorcodes.com/cleveland-cavaliers-color-codes/",
+      "colors": [
+        {
+          "name": "PMS 209 C",
+          "hex": "#860038"
+        },
+        {
+          "name": "PMS 282 C",
+          "hex": "#041E42"
+        },
+        {
+          "name": "PMS 1235 C",
+          "hex": "#FDBB30"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "ORANGE",
+          "hex": "#E35205"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#5C88DA"
+        },
+        {
+          "name": "Black",
+          "hex": "#27251F"
+        },
+        {
+          "name": "ORANGE",
+          "hex": "#DC3B34"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Dallas Mavericks",
+      "source": "https://teamcolorcodes.com/dallas-mavericks-color-codes/",
+      "colors": [
+        {
+          "name": "Royal Blue",
+          "hex": "#00538C"
+        },
+        {
+          "name": "Navy Blue",
+          "hex": "#002B5E"
+        },
+        {
+          "name": "Silver",
+          "hex": "#B8C4CA"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#000000"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002855"
+        },
+        {
+          "name": "Green",
+          "hex": "#00843D"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Denver Nuggets",
+      "source": "https://teamcolorcodes.com/denver-nuggets-color-codes/",
+      "colors": [
+        {
+          "name": "Midnight Blue",
+          "hex": "#0E2240"
+        },
+        {
+          "name": "Sunshine Yellow",
+          "hex": "#FEC524"
+        },
+        {
+          "name": "Flatirons Red",
+          "hex": "#8B2131"
+        },
+        {
+          "name": "Skyline Blue",
+          "hex": "#1D428A"
+        },
+        {
+          "name": "Navy Blue",
+          "hex": "#00285E"
+        },
+        {
+          "name": "Powder Blue",
+          "hex": "#418FDE"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FDB927"
+        },
+        {
+          "name": "Navy Blue",
+          "hex": "#041E42"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Detroit Pistons",
+      "source": "https://teamcolorcodes.com/detroit-pistons-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Royal",
+          "hex": "#1D42BA"
+        },
+        {
+          "name": "Gray",
+          "hex": "#BEC0C2"
+        },
+        {
+          "name": "Navy",
+          "hex": "#002D62"
+        },
+        {
+          "name": "RED",
+          "hex": "#ED174C"
+        },
+        {
+          "name": "Royal",
+          "hex": "#006BB6"
+        },
+        {
+          "name": "RED",
+          "hex": "#D50032"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#003DA5"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Golden State Warriors",
+      "source": "https://teamcolorcodes.com/golden-state-warriors-color-codes/",
+      "colors": [
+        {
+          "name": "Warriors Blue",
+          "hex": "#1D428A"
+        },
+        {
+          "name": "Golden Yellow",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Houston Rockets",
+      "source": "https://teamcolorcodes.com/houston-rockets-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CE1141"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Silver",
+          "hex": "#C4CED4"
+        },
+        {
+          "name": "Blue",
+          "hex": "#041E42"
+        },
+        {
+          "name": "Metallic Blue",
+          "hex": "#2C7AA1"
+        },
+        {
+          "name": "Red",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "Silver",
+          "hex": "#8A8D8F"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Indiana Pacers",
+      "source": "https://teamcolorcodes.com/indiana-pacers-color-codes/",
+      "colors": [
+        {
+          "name": "Pacers Blue",
+          "hex": "#002D62"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FDBB30"
+        },
+        {
+          "name": "Silver",
+          "hex": "#BEC0C2"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Los Angeles Clippers",
+      "source": "https://teamcolorcodes.com/los-angeles-clippers-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#1D428A"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#BEC0C2"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Los Angeles Lakers",
+      "source": "https://teamcolorcodes.com/los-angeles-lakers-color-codes/",
+      "colors": [
+        {
+          "name": "Lakers Purple",
+          "hex": "#552583"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FDB927"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Memphis Grizzlies",
+      "source": "https://teamcolorcodes.com/memphis-grizzlies-color-codes/",
+      "colors": [
+        {
+          "name": "BLUE",
+          "hex": "#5D76A9"
+        },
+        {
+          "name": "Navy",
+          "hex": "#12173F"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#F5B112"
+        },
+        {
+          "name": "Gray",
+          "hex": "#707271"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#6189B9"
+        },
+        {
+          "name": "Navy",
+          "hex": "#00285E"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FDB927"
+        },
+        {
+          "name": "SMOKE BLUE",
+          "hex": "#BED4E9"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Miami Heat",
+      "source": "https://teamcolorcodes.com/miami-heat-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#98002E"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#F9A01B"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#000000"
+        },
+        {
+          "name": "Blue",
+          "hex": "#41B6E6"
+        },
+        {
+          "name": "Fuschia",
+          "hex": "#DB3EB1"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "HEAT RED",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "HEAT YELLOW",
+          "hex": "#FEDD00"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Milwaukee Bucks",
+      "source": "https://teamcolorcodes.com/milwaukee-bucks-color-codes/",
+      "colors": [
+        {
+          "name": "GOOD LAND GREEN",
+          "hex": "#00471B"
+        },
+        {
+          "name": "CREAM CITY CREAM",
+          "hex": "#EEE1C6"
+        },
+        {
+          "name": "GREAT LAKES BLUE",
+          "hex": "#0077C0"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Red",
+          "hex": "#AC1A2F"
+        },
+        {
+          "name": "HUNTER GREEN",
+          "hex": "#274E37"
+        },
+        {
+          "name": "Gray",
+          "hex": "#95999D"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Minnesota Timberwolves",
+      "source": "https://teamcolorcodes.com/minnesota-timberwolves-color-codes/",
+      "colors": [
+        {
+          "name": "Midnight Blue",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "Lake Blue",
+          "hex": "#236192"
+        },
+        {
+          "name": "Moonlight Grey",
+          "hex": "#9EA2A2"
+        },
+        {
+          "name": "Aurora Green",
+          "hex": "#78BE20"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "New Orleans Pelicans",
+      "source": "https://teamcolorcodes.com/new-orleans-pelicans-team-color-codes/",
+      "colors": [
+        {
+          "name": "Pelicans Navy",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "Pelicans Red",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Pelicans Gold",
+          "hex": "#85714D"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "New York Knicks",
+      "source": "https://teamcolorcodes.com/new-york-knicks-color-codes/",
+      "colors": [
+        {
+          "name": "Knicks Blue",
+          "hex": "#006BB6"
+        },
+        {
+          "name": "Knicks Orange",
+          "hex": "#F58426"
+        },
+        {
+          "name": "Knicks Silver",
+          "hex": "#BEC0C2"
+        },
+        {
+          "name": "Knicks Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Knicks Blue",
+          "hex": "#0072CE"
+        },
+        {
+          "name": "Knicks Orange",
+          "hex": "#FE5000"
+        },
+        {
+          "name": "Knicks Silver",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Oklahoma City Thunder",
+      "source": "https://teamcolorcodes.com/oklahoma-city-thunder-color-codes/",
+      "colors": [
+        {
+          "name": "Thunder Blue",
+          "hex": "#007AC1"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002D62"
+        },
+        {
+          "name": "Sunset",
+          "hex": "#EF3B24"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FDBB30"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Orlando Magic",
+      "source": "https://teamcolorcodes.com/orlando-magic-color-codes/",
+      "colors": [
+        {
+          "name": "MAGIC BLUE",
+          "hex": "#0077C0"
+        },
+        {
+          "name": "PMS 877 C",
+          "hex": "#C4CED4"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Philadelphia 76ers",
+      "source": "https://teamcolorcodes.com/philadelphia-76ers-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#006BB6"
+        },
+        {
+          "name": "Red",
+          "hex": "#ED174C"
+        },
+        {
+          "name": "Navy",
+          "hex": "#002B5C"
+        },
+        {
+          "name": "Silver",
+          "hex": "#C4CED4"
+        },
+        {
+          "name": "Red",
+          "hex": "#D50032"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#BB9754"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#040204"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002F6C"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Phoenix Suns",
+      "source": "https://teamcolorcodes.com/phoenix-suns-color-codes/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#1D1160"
+        },
+        {
+          "name": "Orange",
+          "hex": "#E56020"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#63727A"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#F9AD1B"
+        },
+        {
+          "name": "Dark Orange",
+          "hex": "#B95915"
+        },
+        {
+          "name": "Light Gray",
+          "hex": "#BEC0C2"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FF6900"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Portland Trail Blazers",
+      "source": "https://teamcolorcodes.com/portland-trailblazers-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#E03A3E"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Sacramento Kings",
+      "source": "https://teamcolorcodes.com/sacramento-kings-color-codes/",
+      "colors": [
+        {
+          "name": "266C",
+          "hex": "#542E91"
+        },
+        {
+          "name": "887 C",
+          "hex": "#C4CED4"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "San Antonio Spurs",
+      "source": "https://teamcolorcodes.com/san-antonio-spurs-color-codes/",
+      "colors": [
+        {
+          "name": "SILVER",
+          "hex": "#C4CED4"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#000000"
+        },
+        {
+          "name": "Silver",
+          "hex": "#8A8D8F"
+        },
+        {
+          "name": "Fuschia",
+          "hex": "#EF426F"
+        },
+        {
+          "name": "Blue",
+          "hex": "#00B2A9"
+        },
+        {
+          "name": "ORANGE",
+          "hex": "#FF8200"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Toronto Raptors",
+      "source": "https://teamcolorcodes.com/toronto-raptors-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CE1141"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Silver",
+          "hex": "#A1A1A4"
+        },
+        {
+          "name": "Gold",
+          "hex": "#B4975A"
+        },
+        {
+          "name": "PURPLE",
+          "hex": "#753BBD"
+        },
+        {
+          "name": "RED",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "Silver (Metallic)",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Utah Jazz",
+      "source": "https://teamcolorcodes.com/utah-jazz-color-codes/",
+      "colors": [
+        {
+          "name": "NAVY",
+          "hex": "#002B5C"
+        },
+        {
+          "name": "GREEN",
+          "hex": "#00471B"
+        },
+        {
+          "name": "YELLOW",
+          "hex": "#F9A01B"
+        },
+        {
+          "name": "NAVY BLUE",
+          "hex": "#00275D"
+        },
+        {
+          "name": "PURPLE",
+          "hex": "#3E2680"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#6CAEDF"
+        },
+        {
+          "name": "Purple",
+          "hex": "#753BBD"
+        },
+        {
+          "name": "Light Blue",
+          "hex": "#00A9E0"
+        }
+      ]
+    },
+    {
+      "league": "NBA",
+      "team": "Washington Wizards",
+      "source": "https://teamcolorcodes.com/washington-wizards-color-codes/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#002B5C"
+        },
+        {
+          "name": "RED",
+          "hex": "#E31837"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#C4CED4"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Abilene Christian Wildcats",
+      "source": "https://teamcolorcodes.com/abilene-christian-wildcats-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#4F2170"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Gray",
+          "hex": "#C5C6C8"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Air Force Falcons",
+      "source": "https://teamcolorcodes.com/air-force-falcons-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#003087"
+        },
+        {
+          "name": "Silver",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Akron Zips",
+      "source": "https://teamcolorcodes.com/akron-zips-color-codes/",
+      "colors": [
+        {
+          "name": "BLUE",
+          "hex": "#041E42"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#A89968"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Alabama A&M Bulldogs",
+      "source": "https://teamcolorcodes.com/alabama-am-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#660000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Alabama Crimson Tide",
+      "source": "https://teamcolorcodes.com/alabama-crimson-tide-color-codes/",
+      "colors": [
+        {
+          "name": "Crimson",
+          "hex": "#9E1B32"
+        },
+        {
+          "name": "Gray",
+          "hex": "#828A8F"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Alabama State Hornets",
+      "source": "https://teamcolorcodes.com/alabama-state-hornets-colors/",
+      "colors": [
+        {
+          "name": "Old Gold",
+          "hex": "#C99700"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Albany Great Danes",
+      "source": "https://teamcolorcodes.com/albany-great-danes-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#461660"
+        },
+        {
+          "name": "Gold",
+          "hex": "#EEB211"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Alcorn State Braves",
+      "source": "https://teamcolorcodes.com/alcorn-state-braves-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#CE8E00"
+        },
+        {
+          "name": "Purple",
+          "hex": "#4B306A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Appalachian State Mountaineers",
+      "source": "https://teamcolorcodes.com/appalachian-state-mountaineers-color-codes/",
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#222222"
+        },
+        {
+          "name": "YELLOW",
+          "hex": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Arizona State Sun Devils",
+      "source": "https://teamcolorcodes.com/arizona-state-color-codes/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#8C1D40"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFC627"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Arizona Wildcats",
+      "source": "https://teamcolorcodes.com/arizona-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "Cardinal",
+          "hex": "#CC0033"
+        },
+        {
+          "name": "Navy",
+          "hex": "#003366"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Arkansas Golden Lions",
+      "source": "https://teamcolorcodes.com/arkansas-pine-bluff-golden-lions-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#EEB310"
+        },
+        {
+          "name": "Red",
+          "hex": "#E31837"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Arkansas Little-Rock Trojans",
+      "source": "https://teamcolorcodes.com/arkansas-little-rock-trojans-color-codes/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#6E2639"
+        },
+        {
+          "name": "Silver",
+          "hex": "#A7A9AC"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Arkansas Razorbacks",
+      "source": "https://teamcolorcodes.com/arkansas-razorbacks-color-codes/",
+      "colors": [
+        {
+          "name": "Cardinal",
+          "hex": "#9D2235"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Army Black Knights",
+      "source": "https://teamcolorcodes.com/army-black-knights-color-codes/",
+      "colors": [
+        {
+          "name": "GOLD ATHLETICS",
+          "hex": "#D4BF91"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#B2B4B3"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Auburn Tigers",
+      "source": "https://teamcolorcodes.com/auburn-tigers-color-codes/",
+      "colors": [
+        {
+          "name": "Auburn Blue",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "Auburn Orange",
+          "hex": "#E87722"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Austin Peay Governors",
+      "source": "https://teamcolorcodes.com/austin-peay-governors-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#C41E3A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Gray",
+          "hex": "#ADAFAA"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "B-C Wildcats",
+      "source": "https://teamcolorcodes.com/bethune-cookman-wildcats-colors/",
+      "colors": [
+        {
+          "name": "Yellow",
+          "hex": "#F2A900"
+        },
+        {
+          "name": "Burgundy",
+          "hex": "#6F263D"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "BYU Cougars",
+      "source": "https://teamcolorcodes.com/byu-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#002E5D"
+        },
+        {
+          "name": "Royal",
+          "hex": "#0062B8"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Ball State Cardinals",
+      "source": "https://teamcolorcodes.com/ball-state-cardinals-color-codes/",
+      "colors": [
+        {
+          "name": "CARDINAL RED",
+          "hex": "#BA0C2F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Baylor Bears",
+      "source": "https://teamcolorcodes.com/baylor-bears-color-codes/",
+      "colors": [
+        {
+          "name": "Baylor Green",
+          "hex": "#154734"
+        },
+        {
+          "name": "Baylor Gold",
+          "hex": "#FFB81C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Belmont Bruins",
+      "source": "https://teamcolorcodes.com/belmont-bruins-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Dark Blue",
+          "hex": "#00205B"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Binghamton Bearcats",
+      "source": "https://teamcolorcodes.com/binghamton-bearcats-colors/",
+      "colors": [
+        {
+          "name": "Deep Green",
+          "hex": "#005A43"
+        },
+        {
+          "name": "Green",
+          "hex": "#169B62"
+        },
+        {
+          "name": "RED",
+          "hex": "#BF0D3E"
+        },
+        {
+          "name": "COOL GRAY",
+          "hex": "#B1B3B3"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Boise State Broncos",
+      "source": "https://teamcolorcodes.com/boise-state-colors/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#D64309"
+        },
+        {
+          "name": "Blue",
+          "hex": "#0033A0"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Boston College Eagles",
+      "source": "https://teamcolorcodes.com/boston-college-eagles-color-codes/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#98002E"
+        },
+        {
+          "name": "Gold",
+          "hex": "#BC9B6A"
+        },
+        {
+          "name": "Gray",
+          "hex": "#726158"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Boston University Terriers",
+      "source": "https://teamcolorcodes.com/boston-university-terriers-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CC0000"
+        },
+        {
+          "name": "Dark Red",
+          "hex": "#A3011B"
+        },
+        {
+          "name": "Dark Grey",
+          "hex": "#231F20"
+        },
+        {
+          "name": "Grey",
+          "hex": "#929497"
+        },
+        {
+          "name": "Light Grey",
+          "hex": "#E6E6E7"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Bowling Green Falcons",
+      "source": "https://teamcolorcodes.com/bowling-green-falcons-color-codes/",
+      "colors": [
+        {
+          "name": "ORANGE",
+          "hex": "#FE5000"
+        },
+        {
+          "name": "BROWN",
+          "hex": "#4F2C1D"
+        },
+        {
+          "name": "TAN",
+          "hex": "#CDA077"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Bradley Braves",
+      "source": "https://teamcolorcodes.com/bradley-braves-color-codes/",
+      "colors": [
+        {
+          "name": "Bradley Red",
+          "hex": "#A50000"
+        },
+        {
+          "name": "KABOOM GRAY",
+          "hex": "#999999"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Brown Bears",
+      "source": "https://teamcolorcodes.com/brown-bears-color-codes/",
+      "colors": [
+        {
+          "name": "BROWN BEARS DARK BROWN",
+          "hex": "#4E3629"
+        },
+        {
+          "name": "BROWN BEARS LIGHT BROWN",
+          "hex": "#7C2529"
+        },
+        {
+          "name": "BROWN BEARS RED",
+          "hex": "#E4002B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Bryant Bulldogs",
+      "source": "https://teamcolorcodes.com/bryant-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#B4975B"
+        },
+        {
+          "name": "Light Gold",
+          "hex": "#C9BB8C"
+        },
+        {
+          "name": "Gray",
+          "hex": "#818286"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Bucknell Bison",
+      "source": "https://teamcolorcodes.com/bucknell-bison-colors/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#E87722"
+        },
+        {
+          "name": "Blue",
+          "hex": "#003865"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Buffalo Bulls",
+      "source": "https://teamcolorcodes.com/buffalo-bulls-color-codes/",
+      "colors": [
+        {
+          "name": "UB BLUE",
+          "hex": "#005BBB"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Butler Bulldogs",
+      "source": "https://teamcolorcodes.com/butler-bulldogs-color-codes/",
+      "colors": [
+        {
+          "name": "BlUE",
+          "hex": "#13294B"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#747678"
+        },
+        {
+          "name": "SECONDARY GRAY",
+          "hex": "#D1E0D7"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "C. C. Blue Devils",
+      "source": "https://teamcolorcodes.com/central-connecticut-blue-devils-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00539B"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Silver",
+          "hex": "#CFD4D8"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "CSUB Roadrunners",
+      "source": "https://teamcolorcodes.com/csub-roadrunners-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#003594"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "CSUN Matadors",
+      "source": "https://teamcolorcodes.com/csun-matadors-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#CE1126"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#D1CEC6"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Cal Poly Mustangs",
+      "source": "https://teamcolorcodes.com/cal-poly-mustangs-color-codes/",
+      "colors": [
+        {
+          "name": "CAL POLY GREEN",
+          "hex": "#003831"
+        },
+        {
+          "name": "CAL POLY VEGAS GOLD",
+          "hex": "#FFE395"
+        },
+        {
+          "name": "CAL POLY COPPER GOLD",
+          "hex": "#B38F4F"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Cal State Fullerton Titans",
+      "source": "https://teamcolorcodes.com/cal-state-fullerton-titans-color-codes/",
+      "colors": [
+        {
+          "name": "TITAN BLUE",
+          "hex": "#00274C"
+        },
+        {
+          "name": "TITAN LIGHT ORANGE",
+          "hex": "#DC8218"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "California Baptist Lancers",
+      "source": "https://teamcolorcodes.com/california-baptist-lancers-colors/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#002554"
+        },
+        {
+          "name": "Gold",
+          "hex": "#A37400"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "California Golden Bears",
+      "source": "https://teamcolorcodes.com/california-golden-bears-color-codes/",
+      "colors": [
+        {
+          "name": "Berkeley Blue",
+          "hex": "#003262"
+        },
+        {
+          "name": "Founder's Rock",
+          "hex": "#3B7EA1"
+        },
+        {
+          "name": "California Gold",
+          "hex": "#FDB515"
+        },
+        {
+          "name": "Medalist",
+          "hex": "#C4820E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Campbell Fighting Camels",
+      "source": "https://teamcolorcodes.com/campbell-fighting-camels-colors/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#F58025"
+        },
+        {
+          "name": "Black",
+          "hex": "#231F20"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Canisius Golden Griffins",
+      "source": "https://teamcolorcodes.com/canisius-golden-griffins-color-codes/",
+      "colors": [
+        {
+          "name": "BLUE",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FFBA00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Central Arkansas Bears",
+      "source": "https://teamcolorcodes.com/central-arkansas-bears-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#4F2D7F"
+        },
+        {
+          "name": "Gray",
+          "hex": "#818A8F"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Central Michigan Chippewas",
+      "source": "https://teamcolorcodes.com/central-michigan-chippewas-color-codes/",
+      "colors": [
+        {
+          "name": "MAROON",
+          "hex": "#6A0032"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FFC82E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Charleston Buccaneers",
+      "source": "https://teamcolorcodes.com/charleston-southern-buccaneers-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#A8996E"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002855"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Charleston Cougars",
+      "source": "https://teamcolorcodes.com/charleston-cougars-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#800000"
+        },
+        {
+          "name": "METALLIC GOLD",
+          "hex": "#9D8958"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#D9D9D6"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#C5B783"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Charlotte 49ers",
+      "source": "https://teamcolorcodes.com/unc-charlotte-49ers-color-codes/",
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Chattanooga Mocs",
+      "source": "https://teamcolorcodes.com/chattanooga--mocs-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00386B"
+        },
+        {
+          "name": "Gold",
+          "hex": "#E0AA0F"
+        },
+        {
+          "name": "Gray",
+          "hex": "#ADAFAA"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Chicago State Cougars",
+      "source": "https://teamcolorcodes.com/chicago-state-cougars-color-codes/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#006666"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Cincinnati Bearcats",
+      "source": "https://teamcolorcodes.com/cincinnati-bearcats-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#E00122"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Clemson Tigers",
+      "source": "https://teamcolorcodes.com/clemson-tigers-colors/",
+      "colors": [
+        {
+          "name": "Clemson Orange",
+          "hex": "#F56600"
+        },
+        {
+          "name": "Regalia",
+          "hex": "#522D80"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Cleveland State Vikings",
+      "source": "https://teamcolorcodes.com/cleveland-state-vikings-color-codes/",
+      "colors": [
+        {
+          "name": "CLEVELAND STATE GREEN",
+          "hex": "#006747"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Colgate Raiders",
+      "source": "https://teamcolorcodes.com/colgate-raiders-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#821019"
+        },
+        {
+          "name": "Maple Red",
+          "hex": "#E10028"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Shadow Gray",
+          "hex": "#5A646E"
+        },
+        {
+          "name": "Winter Gray",
+          "hex": "#D2D4D6"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Colorado Buffaloes",
+      "source": "https://teamcolorcodes.com/colorado-buffaloes-color-codes/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#CFB87C"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "Silver",
+          "hex": "#A2A4A3"
+        },
+        {
+          "name": "Dark Gray",
+          "hex": "#565A5C"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#4B92DB"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Colorado State Rams",
+      "source": "https://teamcolorcodes.com/colorado-state-rams-color-codes/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#1E4D2B"
+        },
+        {
+          "name": "Gold",
+          "hex": "#C8C372"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Columbia Lions",
+      "source": "https://teamcolorcodes.com/columbia-lions-color-codes/",
+      "colors": [
+        {
+          "name": "ATHLETIC DARK BLUE",
+          "hex": "#003865"
+        },
+        {
+          "name": "COLUMBIA BLUE",
+          "hex": "#9BCBEB"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Connecticut Huskies",
+      "source": "https://teamcolorcodes.com/connecticut-huskies-colors/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#000E2F"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#7C878E"
+        },
+        {
+          "name": "Red",
+          "hex": "#E4002B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Coppin State Eagles",
+      "source": "https://teamcolorcodes.com/coppin-state-eagles-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#003056"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFC915"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Cornell Big Red",
+      "source": "https://teamcolorcodes.com/cornell-big-red-color-codes/",
+      "colors": [
+        {
+          "name": "CARNELIAN",
+          "hex": "#B31B1B"
+        },
+        {
+          "name": "PMS 161 C",
+          "hex": "#5E3920"
+        },
+        {
+          "name": "PMS 7567 C",
+          "hex": "#89572E"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Creighton Bluejays",
+      "source": "https://teamcolorcodes.com/creighton-bluejays-color-codes/",
+      "colors": [
+        {
+          "name": "CU BlUE",
+          "hex": "#005CA9"
+        },
+        {
+          "name": "CU NAVY BLUE",
+          "hex": "#00235D"
+        },
+        {
+          "name": "CU LIGHT BLUE",
+          "hex": "#6CADDE"
+        },
+        {
+          "name": "CU GRAY",
+          "hex": "#828282"
+        },
+        {
+          "name": "CU LIGHT GRAY",
+          "hex": "#C8C8C8"
+        },
+        {
+          "name": "SILVER METALLIC",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Dartmouth Big Green",
+      "source": "https://teamcolorcodes.com/dartmouth-big-green-color-codes/",
+      "colors": [
+        {
+          "name": "DARTMOUTH GREEN",
+          "hex": "#046A38"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Davidson Wildcats",
+      "source": "https://teamcolorcodes.com/davidson-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#AC1A2F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Dayton Flyers",
+      "source": "https://teamcolorcodes.com/dayton-flyers-color-codes/",
+      "colors": [
+        {
+          "name": "RED SCARE",
+          "hex": "#CE1141"
+        },
+        {
+          "name": "FLYERS BLUE",
+          "hex": "#004B8D"
+        },
+        {
+          "name": "GLOW RED",
+          "hex": "#F80228"
+        },
+        {
+          "name": "GLOW BLUE",
+          "hex": "#0200D1"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "DePaul Blue Demons",
+      "source": "https://teamcolorcodes.com/depaul-blue-demons-color-codes/",
+      "colors": [
+        {
+          "name": "ROYAL BlUE",
+          "hex": "#005EB8"
+        },
+        {
+          "name": "SCARLET",
+          "hex": "#E4002B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Delaware Blue Hens",
+      "source": "https://teamcolorcodes.com/delaware-blue-hens-colors/",
+      "colors": [
+        {
+          "name": "Delaware Blue",
+          "hex": "#00539F"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFDD31"
+        },
+        {
+          "name": "Delaware Yellow-Gold",
+          "hex": "#FFD200"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Delaware State Hornets",
+      "source": "https://teamcolorcodes.com/delaware-state-hornets-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#EE3124"
+        },
+        {
+          "name": "Light Blue",
+          "hex": "#72CDF4"
+        },
+        {
+          "name": "Blue",
+          "hex": "#009DDC"
+        },
+        {
+          "name": "Black",
+          "hex": "#231F20"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Denver Pioneers",
+      "source": "https://teamcolorcodes.com/denver-pioneers-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#8B2332"
+        },
+        {
+          "name": "Bronze",
+          "hex": "#8B6F4B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Detroit Mercy Titans",
+      "source": "https://teamcolorcodes.com/detroit-mercy-titans-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#A6093D"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#002D72"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#D7D2CB"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Drake Bulldogs",
+      "source": "https://teamcolorcodes.com/drake-bulldogs-color-codes/",
+      "colors": [
+        {
+          "name": "DRAKE BLUE",
+          "hex": "#004477"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#999999"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Drexel Dragons",
+      "source": "https://teamcolorcodes.com/drexel-dragons-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00437B"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFDA02"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Duke Blue Devils",
+      "source": "https://teamcolorcodes.com/duke-blue-devils-color-codes/",
+      "colors": [
+        {
+          "name": "Blue (Duke Athletics)",
+          "hex": "#003087"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Duke Royal Blue",
+          "hex": "#00539B"
+        },
+        {
+          "name": "Duke Navy Blue",
+          "hex": "#012169"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Duquesne Dukes",
+      "source": "https://teamcolorcodes.com/duquesne-dukes-color-codes/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#041E42"
+        },
+        {
+          "name": "Red",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "E. Kentucky Colonels",
+      "source": "https://teamcolorcodes.com/eastern-kentucky-colonels-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#8A0039"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "ETSU",
+      "source": "https://teamcolorcodes.com/etsu-buccaneers-colors/",
+      "colors": [
+        {
+          "name": "Navy",
+          "hex": "#041E42"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "East Carolina Pirates",
+      "source": "https://teamcolorcodes.com/east-carolina-pirates-color-codes/",
+      "colors": [
+        {
+          "name": "PURPLE",
+          "hex": "#592A8A"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FDC82F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Eastern Illinois Panthers",
+      "source": "https://teamcolorcodes.com/eastern-illinois-panthers-colors/",
+      "colors": [
+        {
+          "name": "Gray",
+          "hex": "#919295"
+        },
+        {
+          "name": "Blue",
+          "hex": "#004B83"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Eastern Michigan",
+      "source": "https://teamcolorcodes.com/eastern-michigan-eagles-color-codes/",
+      "colors": [
+        {
+          "name": "GREEN",
+          "hex": "#006633"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Eastern Washington",
+      "source": "https://teamcolorcodes.com/eastern-washington-eagles-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#A10022"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#6D6E71"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Elon Phoenix",
+      "source": "https://teamcolorcodes.com/elon-phoenix-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#73000A"
+        },
+        {
+          "name": "Gold",
+          "hex": "#B59A57"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Evansville Purple Aces",
+      "source": "https://teamcolorcodes.com/evansville-purple-aces-color-codes/",
+      "colors": [
+        {
+          "name": "PURPLE",
+          "hex": "#52237F"
+        },
+        {
+          "name": "ORANGE",
+          "hex": "#F36F21"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "F. Dickinson Knights",
+      "source": "https://teamcolorcodes.com/fairleigh-dickinson-knights-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#28334A"
+        },
+        {
+          "name": "Burgundy",
+          "hex": "#72293C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Fairfield Stags",
+      "source": "https://teamcolorcodes.com/fairfield-stags-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#A2AAAD"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Florida A&M Rattlers",
+      "source": "https://teamcolorcodes.com/florida-am-rattlers-colors/",
+      "colors": [
+        {
+          "name": "Fang Orange",
+          "hex": "#EE7624"
+        },
+        {
+          "name": "Venom Green",
+          "hex": "#1B5633"
+        },
+        {
+          "name": "Black",
+          "hex": "#231F20"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Florida Gators",
+      "source": "https://teamcolorcodes.com/florida-gators-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#0021A5"
+        },
+        {
+          "name": "Orange",
+          "hex": "#FA4616"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Florida Gulf Coast Eagles",
+      "source": "https://teamcolorcodes.com/florida-gulf-coast-eagles-color-codes/",
+      "colors": [
+        {
+          "name": "Cobalt Blue",
+          "hex": "#002D72"
+        },
+        {
+          "name": "Emerald Green",
+          "hex": "#007749"
+        },
+        {
+          "name": "Gold",
+          "hex": "#B9975B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Florida State Seminoles",
+      "source": "https://teamcolorcodes.com/florida-state-seminoles-color-codes/",
+      "colors": [
+        {
+          "name": "Garnet",
+          "hex": "#782F40"
+        },
+        {
+          "name": "Gold",
+          "hex": "#CEB888"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Fordham Rams",
+      "source": "https://teamcolorcodes.com/fordham-rams-color-codes/",
+      "colors": [
+        {
+          "name": "FORDHAM AHTLETIC MAROON",
+          "hex": "#860038"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Fort Wayne Mastadons",
+      "source": "https://teamcolorcodes.com/fort-wayne-mastadons-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#002F6C"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Dark Gray",
+          "hex": "#63666A"
+        },
+        {
+          "name": "Medium Gray",
+          "hex": "#97999B"
+        },
+        {
+          "name": "Light Gray",
+          "hex": "#BBBCBC"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Fresno State Bulldogs",
+      "source": "https://teamcolorcodes.com/fresno-state-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#DB0032"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002E6D"
+        },
+        {
+          "name": "Green",
+          "hex": "#007934"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Furman Paladins",
+      "source": "https://teamcolorcodes.com/furman-paladins-colors/",
+      "colors": [
+        {
+          "name": "Dark Purple",
+          "hex": "#201547"
+        },
+        {
+          "name": "Purple",
+          "hex": "#582C83"
+        },
+        {
+          "name": "Cool Gray 6 C",
+          "hex": "#A7A8AA"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Gardner-Webb Bulldogs",
+      "source": "https://teamcolorcodes.com/gardner-webb-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#BF2F37"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "George Mason Patriots",
+      "source": "https://teamcolorcodes.com/george-mason-patriots-color-codes/",
+      "colors": [
+        {
+          "name": "MASON GREEN",
+          "hex": "#006633"
+        },
+        {
+          "name": "MASON GOLD",
+          "hex": "#FFCC33"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "George Washington Colonials",
+      "source": "https://teamcolorcodes.com/george-washington-colonials-color-codes/",
+      "colors": [
+        {
+          "name": "BUFF",
+          "hex": "#E2CB92"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#002654"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Georgetown Hoyas",
+      "source": "https://teamcolorcodes.com/georgetown-hoyas-colors/",
+      "colors": [
+        {
+          "name": "GEORGETOWN BLUE",
+          "hex": "#041E42"
+        },
+        {
+          "name": "GEORGETOWN GRAY",
+          "hex": "#8D817B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Georgia Bulldogs",
+      "source": "https://teamcolorcodes.com/georgia-bulldogs-color-codes/",
+      "colors": [
+        {
+          "name": "Bulldog Red",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "Arch Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Chapel Bell White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Georgia Southern Eagles",
+      "source": "https://teamcolorcodes.com/georgia-southern-eagles-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#011E41"
+        },
+        {
+          "name": "Gray",
+          "hex": "#A3AAAE"
+        },
+        {
+          "name": "Old Gold",
+          "hex": "#87714D"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Georgia Tech Yellow Jackets",
+      "source": "https://teamcolorcodes.com/georgia-tech-yellow-jackets-color-codes/",
+      "colors": [
+        {
+          "name": "Tech Gold",
+          "hex": "#B3A369"
+        },
+        {
+          "name": "Tech Gold (Metallic)",
+          "hex": "#A28D5B"
+        },
+        {
+          "name": "Blue",
+          "hex": "#003057"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Gonzaga Bulldogs",
+      "source": "https://teamcolorcodes.com/gonzaga-colors/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#041E42"
+        },
+        {
+          "name": "Athletic Red",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Athletic Gray",
+          "hex": "#C1C6C8"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Grambling Tigers",
+      "source": "https://teamcolorcodes.com/grambling-tigers-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#EAA921"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Grand Canyon Antelopes",
+      "source": "https://teamcolorcodes.com/gcu-antelopes-color-codes/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#522398"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Green Bay Phoenix",
+      "source": "https://teamcolorcodes.com/green-bay-phoenix-color-codes/",
+      "colors": [
+        {
+          "name": "GREEN",
+          "hex": "#006747"
+        },
+        {
+          "name": "RED",
+          "hex": "#9D2235"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Hampton Pirates",
+      "source": "https://teamcolorcodes.com/hampton-pirates-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#0060A9"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Hartford Hawks",
+      "source": "https://teamcolorcodes.com/hartford-hawks-colors/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#C02427"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#0F0708"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Harvard Crimson",
+      "source": "https://teamcolorcodes.com/harvard-university-colors/",
+      "colors": [
+        {
+          "name": "Crimson",
+          "hex": "#A41034"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "Cool Grey",
+          "hex": "#808285"
+        },
+        {
+          "name": "Silver",
+          "hex": "#B6B6B6"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Hawaii Warriors",
+      "source": "https://teamcolorcodes.com/hawaii-warriors-color-codes/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#024731"
+        },
+        {
+          "name": "Silver",
+          "hex": "#C8C8C8"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "High Point Panthers",
+      "source": "https://teamcolorcodes.com/high-point-panthers-colors/",
+      "colors": [
+        {
+          "name": "Royal Purple",
+          "hex": "#330072"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Hofstra Pride",
+      "source": "https://teamcolorcodes.com/hofstra-pride-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#0B1E73"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FEB612"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Holy Cross",
+      "source": "https://teamcolorcodes.com/holy-cross-crusaders-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#602D89"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Houston Baptist Huskies",
+      "source": "https://teamcolorcodes.com/houston-baptist-huskies-colors/ ",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#1C4E9D"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F3652C"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Houston Cougars",
+      "source": "https://teamcolorcodes.com/houston-cougars-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "DARK RED",
+          "hex": "#76232F"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#B2B4B2"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Howard Bisons",
+      "source": "https://teamcolorcodes.com/howard-bison-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#003A63"
+        },
+        {
+          "name": "Dark Blue",
+          "hex": "#E51937"
+        },
+        {
+          "name": "Gray",
+          "hex": "#6A808C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "IUPUI Jaguars",
+      "source": "https://teamcolorcodes.com/iupui-jaguars-color-codes/",
+      "colors": [
+        {
+          "name": "IU CRIMSON",
+          "hex": "#9D2235"
+        },
+        {
+          "name": "IU CREAM",
+          "hex": "#DFD1A7"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Idaho State Bengals",
+      "source": "https://teamcolorcodes.com/idaho-state-bengals-color-codes/",
+      "colors": [
+        {
+          "name": "ISU Orange",
+          "hex": "#FF671F"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Light Orange",
+          "hex": "#F9A81A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Idaho Vandals",
+      "source": "https://teamcolorcodes.com/idaho-vandals-color-codes/",
+      "colors": [
+        {
+          "name": "Athletic Gold",
+          "hex": "#B3A369"
+        },
+        {
+          "name": "Academic Gold",
+          "hex": "#EAAB00"
+        },
+        {
+          "name": "Metallic Gold",
+          "hex": "#86754D"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Illinois Fighting Illini",
+      "source": "https://teamcolorcodes.com/illinois-fighting-illini-colors/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#13294B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Illinois State Redbirds",
+      "source": "https://teamcolorcodes.com/illinois-state-redbirds-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#CE1126"
+        },
+        {
+          "name": "YELLOW",
+          "hex": "#F9DD16"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Incarnate Word Cardinals",
+      "source": "https://teamcolorcodes.com/incarnate-word-cardinals-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CB333B"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Indiana Hoosiers",
+      "source": "https://teamcolorcodes.com/indiana-hoosiers-color-codes/",
+      "colors": [
+        {
+          "name": "Crimson",
+          "hex": "#990000"
+        },
+        {
+          "name": "Cream",
+          "hex": "#EEEDEB"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Indiana State Sycamores",
+      "source": "https://teamcolorcodes.com/indiana-state-sycamores-color-codes/",
+      "colors": [
+        {
+          "name": "ROYAL BLUE",
+          "hex": "#0142BC"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Iona Gaels",
+      "source": "https://teamcolorcodes.com/iona-gaels-color-codes/",
+      "colors": [
+        {
+          "name": "MAROON",
+          "hex": "#6F2C3F"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#F2A900"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Iowa Hawkeyes",
+      "source": "https://teamcolorcodes.com/iowa-hawkeyes-color-codes/",
+      "colors": [
+        {
+          "name": "Hawkeyes Gold",
+          "hex": "#FFCD00"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Iowa State Cyclones",
+      "source": "https://teamcolorcodes.com/iowa-state-cyclones-color-codes/",
+      "colors": [
+        {
+          "name": "Cardinal",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Gold",
+          "hex": "#F1BE48"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "J. State Gamecocks",
+      "source": "https://teamcolorcodes.com/jacksonville-state-gamecocks-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CC0000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Jackson State Tigers",
+      "source": "https://teamcolorcodes.com/jackson-state-tigers-colors/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#002147"
+        },
+        {
+          "name": "Light Blue",
+          "hex": "#008ED6"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Jacksonville Dolphins",
+      "source": "https://teamcolorcodes.com/jacksonville-dolphins-color-codes/",
+      "colors": [
+        {
+          "name": "GREEN",
+          "hex": "#004E44"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#898A8D"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#BBBBBB"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "James Madison Dukes",
+      "source": "https://teamcolorcodes.com/james-madison-dukes-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#450084"
+        },
+        {
+          "name": "Gold",
+          "hex": "#CBB677"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Kansas Jayhawks",
+      "source": "https://teamcolorcodes.com/kansas-jayhawks-color-codes/",
+      "colors": [
+        {
+          "name": "KU Blue",
+          "hex": "#0051BA"
+        },
+        {
+          "name": "Crimson",
+          "hex": "#E8000D"
+        },
+        {
+          "name": "Jayhawk Yellow",
+          "hex": "#FFC82D"
+        },
+        {
+          "name": "Signature Grey",
+          "hex": "#85898A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Kansas State Wildcats",
+      "source": "https://teamcolorcodes.com/kansas-state-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#512888"
+        },
+        {
+          "name": "Light Gray",
+          "hex": "#D1D1D1"
+        },
+        {
+          "name": "Gray",
+          "hex": "#A7A7A7"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Kennesaw State Owls",
+      "source": "https://teamcolorcodes.com/kennesaw-state-owls-color-codes/",
+      "colors": [
+        {
+          "name": "KSU Gold",
+          "hex": "#FDBB30"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#0B1315"
+        },
+        {
+          "name": "GREY",
+          "hex": "#C5C6C8"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Kent State Golden Flashes",
+      "source": "https://teamcolorcodes.com/kent-state-golden-flashes-color-codes/",
+      "colors": [
+        {
+          "name": "NAVY BLUE",
+          "hex": "#002664"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#EAAB00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Kentucky Wildcats",
+      "source": "https://teamcolorcodes.com/kentucky-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "Wildcat Blue",
+          "hex": "#0033A0"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "La Salle Explorers",
+      "source": "https://teamcolorcodes.com/la-salle-explorers-color-codes/",
+      "colors": [
+        {
+          "name": "GOLD",
+          "hex": "#FFCC00"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#003366"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Lafayette Leopards",
+      "source": "https://teamcolorcodes.com/lafayette-leopards-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#A8996E"
+        },
+        {
+          "name": "Maroon",
+          "hex": "#98002E"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Lamar Cardinals",
+      "source": "https://teamcolorcodes.com/lamar-cardinals-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#DC0032"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FCB034"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Lehigh Mountain Hawks",
+      "source": "https://teamcolorcodes.com/lehigh-mountain-hawks-colors/",
+      "colors": [
+        {
+          "name": "Dark Brown",
+          "hex": "#653600"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFD24F"
+        },
+        {
+          "name": "Red",
+          "hex": "#E51937"
+        },
+        {
+          "name": "Brown",
+          "hex": "#994708"
+        },
+        {
+          "name": "Light Gold",
+          "hex": "#CFAB7A"
+        },
+        {
+          "name": "Green",
+          "hex": "#00703C"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Liberty Flames",
+      "source": "https://teamcolorcodes.com/liberty-flames-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#002D62"
+        },
+        {
+          "name": "Red",
+          "hex": "#C41230"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#C6C8CA"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Lipscomb Bisons",
+      "source": "https://teamcolorcodes.com/lipscomb-university-bisons-color-codes/",
+      "colors": [
+        {
+          "name": "PURPLE",
+          "hex": "#331E54"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#F4AA00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Long Beach State 49ers",
+      "source": "https://teamcolorcodes.com/long-beach-state-49ers-color-codes/",
+      "colors": [
+        {
+          "name": "GO BEACH GOLD",
+          "hex": "#FFC72A"
+        },
+        {
+          "name": "CHAMPIONSHIP BLACK",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Long Island Sharks",
+      "source": "https://teamcolorcodes.com/long-island-university-sharks-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#69B3E7"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFC72C"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Longwood Lancers",
+      "source": "https://teamcolorcodes.com/longwood-lancers-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#15213B"
+        },
+        {
+          "name": "Grey",
+          "hex": "#999D9E"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Louisiana Ragin' Cajuns",
+      "source": "https://teamcolorcodes.com/louisiana-ragin-cajuns-color-codes/",
+      "colors": [
+        {
+          "name": "Gray",
+          "hex": "#C1C5C9"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F18C21"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Louisiana State Tigers",
+      "source": "https://teamcolorcodes.com/louisiana-state-lsu-tigers-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#461D7C"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FDD023"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Louisville Cardinals",
+      "source": "https://teamcolorcodes.com/louisville-cardinals-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#AD0000"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FDB913"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Loyola (MD) Greyhounds",
+      "source": "https://teamcolorcodes.com/loyola-md-greyhounds-colors/ ",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#00694E"
+        },
+        {
+          "name": "Grey",
+          "hex": "#CACAC8"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Loyola Marymount Lions",
+      "source": "https://teamcolorcodes.com/loyola-marymount-lions-colors/",
+      "colors": [
+        {
+          "name": "LMU Red",
+          "hex": "#B62B3A"
+        },
+        {
+          "name": "LMU Blue",
+          "hex": "#00447C"
+        },
+        {
+          "name": "LMU Gray",
+          "hex": "#617080"
+        },
+        {
+          "name": "LMU Black",
+          "hex": "#231F20"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Maine Black Bears",
+      "source": "https://teamcolorcodes.com/maine-black-bears-color-codes/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#003263"
+        },
+        {
+          "name": "Light Blue",
+          "hex": "#B0D7FF"
+        },
+        {
+          "name": "RED",
+          "hex": "#AB0634"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#908C89"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Manhattan",
+      "source": "https://teamcolorcodes.com/manhattan-jaspers-color-codes/",
+      "colors": [
+        {
+          "name": "GREEN",
+          "hex": "#00703C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Marist Red Foxes",
+      "source": "https://teamcolorcodes.com/marist-red-foxes-color-codes/",
+      "colors": [
+        {
+          "name": "MARIST RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "LIGHT GREY",
+          "hex": "#B2B2B2"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Marquette Golden Eagles",
+      "source": "https://teamcolorcodes.com/marquette-colors/",
+      "colors": [
+        {
+          "name": "Marquette Blue",
+          "hex": "#003366"
+        },
+        {
+          "name": "Marquette Gold",
+          "hex": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Marshall Thundering Herd",
+      "source": "https://teamcolorcodes.com/marshall-thundering-herd-color-codes/",
+      "colors": [
+        {
+          "name": "GREEN",
+          "hex": "#00B140"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#A2AAAD"
+        },
+        {
+          "name": "BROWN",
+          "hex": "#693F23"
+        },
+        {
+          "name": "LIGHT BROWN",
+          "hex": "#AD7C59"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#27251F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Maryland E.S. Hawks",
+      "source": "https://teamcolorcodes.com/maryland-eastern-shore-hawks-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#862633"
+        },
+        {
+          "name": "Gray",
+          "hex": "#888B8D"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Maryland Terrapins",
+      "source": "https://teamcolorcodes.com/maryland-terrapins-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#E03A3E"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFD520"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "McNeese Cowboys",
+      "source": "https://teamcolorcodes.com/mcneese-cowboys-colors/",
+      "colors": [
+        {
+          "name": "Royal Blue",
+          "hex": "#00529B"
+        },
+        {
+          "name": "Sunflower Gold",
+          "hex": "#FFD204"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Memphis Tigers",
+      "source": "https://teamcolorcodes.com/memphis-tigers-color-codes/",
+      "colors": [
+        {
+          "name": "BLUE",
+          "hex": "#003087"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#898D8D"
+        },
+        {
+          "name": "ORANGE",
+          "hex": "#F8992E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Mercer Bears",
+      "source": "https://teamcolorcodes.com/mercer-bears-colors/",
+      "colors": [
+        {
+          "name": "Mercer Orange",
+          "hex": "#F76800"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Merrimack Warriors",
+      "source": "https://teamcolorcodes.com/merrimack-warriors-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#003768"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FDB813"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Miami (FL) Hurricanes",
+      "source": "https://teamcolorcodes.com/miami-hurricanes-color-codes/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#F47321"
+        },
+        {
+          "name": "Green",
+          "hex": "#005030"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Miami (OH) Redhawks",
+      "source": "https://teamcolorcodes.com/miami-redhawks-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#B61E2E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Michigan State Spartans",
+      "source": "https://teamcolorcodes.com/michigan-state-spartans-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#18453B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Michigan Wolverines",
+      "source": "https://teamcolorcodes.com/michigan-wolverines-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00274C"
+        },
+        {
+          "name": "Maize",
+          "hex": "#FFCB05"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Milwaukee Panthers",
+      "source": "https://teamcolorcodes.com/milwaukee-panthers-color-codes/",
+      "colors": [
+        {
+          "name": "UWM GOLD",
+          "hex": "#FFBD00"
+        },
+        {
+          "name": "UWM SILVER GRAY",
+          "hex": "#CCCCCC"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Minnesota Golden Gophers",
+      "source": "https://teamcolorcodes.com/minnesota-golden-gophers-colors/",
+      "colors": [
+        {
+          "name": "Gopher Maroon",
+          "hex": "#7A0019"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Mississippi Delta Devils",
+      "source": "https://teamcolorcodes.com/mississippi-valley-state-delta-devils-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#00703C"
+        },
+        {
+          "name": "Red",
+          "hex": "#E51937"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Mississippi State Bulldogs",
+      "source": "https://teamcolorcodes.com/mississippi-state-university-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#660000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Missouri State Bears",
+      "source": "https://teamcolorcodes.com/missouri-state-bears-color-codes/",
+      "colors": [
+        {
+          "name": "MISSOURI STATE MAROON",
+          "hex": "#5E0009"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Missouri Tigers",
+      "source": "https://teamcolorcodes.com/missouri-tigers-colors/",
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gold",
+          "hex": "#F1B82D"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Monmouth Hawks",
+      "source": "https://teamcolorcodes.com/monmouth-hawks-color-codes/",
+      "colors": [
+        {
+          "name": "MIDNIGHT BLUE",
+          "hex": "#041E42"
+        },
+        {
+          "name": "GREY",
+          "hex": "#53565A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Montana Grizzlies",
+      "source": "https://teamcolorcodes.com/montana-grizzlies-color-codes/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#660033"
+        },
+        {
+          "name": "Silver",
+          "hex": "#999999"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Montana State Bobcats",
+      "source": "https://teamcolorcodes.com/montana-state-bobcats-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00205B"
+        },
+        {
+          "name": "Gold",
+          "hex": "#B9975B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Morehead State Eagles",
+      "source": "https://teamcolorcodes.com/morehead-state-eagles-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#FFCF00"
+        },
+        {
+          "name": "Blue",
+          "hex": "#005EB8"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Murray State Racers",
+      "source": "https://teamcolorcodes.com/murray-state-racers-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#ECAC00"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002144"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "N.S. Demons",
+      "source": "https://teamcolorcodes.com/northwestern-state-demons-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#663399"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Orange",
+          "hex": "#FF6600"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "NC State Wolfpack",
+      "source": "https://teamcolorcodes.com/nc-state-wolfpack-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CC0000"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "NJIT Highlanders",
+      "source": "https://teamcolorcodes.com/njit-highlanders-color-codes/",
+      "colors": [
+        {
+          "name": "NJIT RED",
+          "hex": "#D22630"
+        },
+        {
+          "name": "NAVY BLUE",
+          "hex": "#071D49"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#C1C6C8"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Navy Midshipmen",
+      "source": "https://teamcolorcodes.com/navy-midshipmen-color-codes/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#00205B"
+        },
+        {
+          "name": "Gold",
+          "hex": "#C5B783"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Nebraska Cornhuskers",
+      "source": "https://teamcolorcodes.com/nebraska-cornhuskers-colors/",
+      "colors": [
+        {
+          "name": "Husker Red",
+          "hex": "#E41C38"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Nevada Wolfpack",
+      "source": "https://teamcolorcodes.com/nevada-wolfpack-color-codes/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#003366"
+        },
+        {
+          "name": "Gray",
+          "hex": "#807F84"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "New Hampshire Wildcats",
+      "source": "https://teamcolorcodes.com/new-hampshire-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "NAVY BLUE",
+          "hex": "#041E42"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#BBBCBC"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "New Mexico Lobos",
+      "source": "https://teamcolorcodes.com/new-mexico-lobos-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "Silver",
+          "hex": "#A7A8AA"
+        },
+        {
+          "name": "Lobo Gray",
+          "hex": "#63666A"
+        },
+        {
+          "name": "Turquoise",
+          "hex": "#007A86"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "New Mexico State Aggies",
+      "source": "https://teamcolorcodes.com/new-mexico-state-aggies-colors/",
+      "colors": [
+        {
+          "name": "Crimson",
+          "hex": "#861F41"
+        },
+        {
+          "name": "Gray",
+          "hex": "#97999B"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "New Orleans Privateers",
+      "source": "https://teamcolorcodes.com/new-orleans-privateers-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#005CA6"
+        },
+        {
+          "name": "Gray",
+          "hex": "#A3A9AC"
+        },
+        {
+          "name": "Dark Blue",
+          "hex": "#002F56"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Niagara Purple Eagles",
+      "source": "https://teamcolorcodes.com/niagara-purple-eagles-color-codes/",
+      "colors": [
+        {
+          "name": "PURPLE",
+          "hex": "#582C83"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Nicholls Colonels",
+      "source": "https://teamcolorcodes.com/nicholls-colonels-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#AE132A"
+        },
+        {
+          "name": "Gray",
+          "hex": "#72808A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Norfolk State Spartans",
+      "source": "https://teamcolorcodes.com/norfolk-state-spartans-colors/",
+      "colors": [
+        {
+          "name": "NSU Green",
+          "hex": "#007A53"
+        },
+        {
+          "name": "NSU Gold",
+          "hex": "#F3D03E"
+        },
+        {
+          "name": "NSU Gray",
+          "hex": "#54585A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "North Alabama Lions",
+      "source": "https://teamcolorcodes.com/north-alabama-lions-color-codes/",
+      "colors": [
+        {
+          "name": "UNA PURPLE",
+          "hex": "#46166B"
+        },
+        {
+          "name": "UNA GOLD",
+          "hex": "#DB9F11"
+        },
+        {
+          "name": "UNA GREY",
+          "hex": "#5F6062"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "North Carolina Eagles",
+      "source": "https://teamcolorcodes.com/north-carolina-central-eagles-colors/",
+      "colors": [
+        {
+          "name": "NCCU Maroon",
+          "hex": "#880023"
+        },
+        {
+          "name": "NCCU Gray",
+          "hex": "#8E9093"
+        },
+        {
+          "name": "NCCU Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "North Carolina Tar Heels",
+      "source": "https://teamcolorcodes.com/north-carolina-tar-heels-colors/",
+      "colors": [
+        {
+          "name": "Carolina Blue",
+          "hex": "#7BAFD4"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Navy Blue",
+          "hex": "#13294B"
+        },
+        {
+          "name": "Pitch Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Silver",
+          "hex": "#8D9092"
+        },
+        {
+          "name": "Flat Gray",
+          "hex": "#A2AAAD"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "North Dakota State Bison",
+      "source": "https://teamcolorcodes.com/north-dakota-state-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#0A5640"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFC72A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "North Florida Ospreys",
+      "source": "https://teamcolorcodes.com/north-florida-ospreys-color-codes/",
+      "colors": [
+        {
+          "name": "OSPREY BLUE",
+          "hex": "#00246B"
+        },
+        {
+          "name": "OSPREY GRAY",
+          "hex": "#D9D9D9"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northeastern Huskies",
+      "source": "https://teamcolorcodes.com/northeastern-huskies-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#D41B2C"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northern Arizona Lumberjacks",
+      "source": "https://teamcolorcodes.com/northern-arizona-lumberjacks-color-codes/",
+      "colors": [
+        {
+          "name": "NAU Blue",
+          "hex": "#003466"
+        },
+        {
+          "name": "NAU Gold",
+          "hex": "#FFD200"
+        },
+        {
+          "name": "Fall Aspen",
+          "hex": "#FBB040"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northern Colorado Bears",
+      "source": "https://teamcolorcodes.com/northern-colorado-bears-color-codes/",
+      "colors": [
+        {
+          "name": "Bears Blue",
+          "hex": "#013C65"
+        },
+        {
+          "name": "Bears Gold",
+          "hex": "#F6B000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northern Illinois",
+      "source": "https://teamcolorcodes.com/northern-illinois-huskies-color-codes/",
+      "colors": [
+        {
+          "name": "NIU RED",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "NIU SILVER",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northern Iowa",
+      "source": "https://teamcolorcodes.com/northern-iowa-panthers-color-codes/",
+      "colors": [
+        {
+          "name": "PURPLE",
+          "hex": "#4B116F"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northern Kentucky Norse",
+      "source": "https://teamcolorcodes.com/northern-kentucky-norse-color-codes/",
+      "colors": [
+        {
+          "name": "GOLD",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Northwestern Wildcats",
+      "source": "https://teamcolorcodes.com/northwestern-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#4E2A84"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Notre Dame Fighting Irish",
+      "source": "https://teamcolorcodes.com/notre-dame-colors/",
+      "colors": [
+        {
+          "name": "Notre Dame Blue",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "Standard Dome Gold",
+          "hex": "#C99700"
+        },
+        {
+          "name": "Metallic Gold",
+          "hex": "#AE9142"
+        },
+        {
+          "name": "Irish Green",
+          "hex": "#00843D"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Oakland Golden Grizzlies",
+      "source": "https://teamcolorcodes.com/oakland-golden-grizzlies-color-codes/",
+      "colors": [
+        {
+          "name": "METALLIC GOLD",
+          "hex": "#B59A57"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Ohio Bobcats",
+      "source": "https://teamcolorcodes.com/ohio-bobcats-color-codes/",
+      "colors": [
+        {
+          "name": "BOBCAT GREEN",
+          "hex": "#00694E"
+        },
+        {
+          "name": "BOBCAT TAN",
+          "hex": "#CDA077"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Ohio State Buckeyes",
+      "source": "https://teamcolorcodes.com/ohio-state-buckeyes-color-codes/",
+      "colors": [
+        {
+          "name": "Scarlet",
+          "hex": "#BB0000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#666666"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Oklahoma Sooners",
+      "source": "https://teamcolorcodes.com/oklahoma-sooners-color-codes/",
+      "colors": [
+        {
+          "name": "Crimson",
+          "hex": "#841617"
+        },
+        {
+          "name": "Cream",
+          "hex": "#FDF9D8"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Oklahoma State Cowboys",
+      "source": "https://teamcolorcodes.com/oklahoma-state-cowboys-color-codes/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#FF7300"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Ole Miss Rebels",
+      "source": "https://teamcolorcodes.com/ole-miss-rebels-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CE1126"
+        },
+        {
+          "name": "NAVY BLUE",
+          "hex": "#14213D"
+        },
+        {
+          "name": "POWDER BLUE",
+          "hex": "#006BA6"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Omaha Mavericks",
+      "source": "https://teamcolorcodes.com/nebraska-omaha-mavericks-colors/",
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Red",
+          "hex": "#D71920"
+        },
+        {
+          "name": "Dark Grey",
+          "hex": "#636568"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Oral Roberts",
+      "source": "https://teamcolorcodes.com/oral-roberts-golden-eagles-colors/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#002F60"
+        },
+        {
+          "name": "Gold",
+          "hex": "#C5B783"
+        },
+        {
+          "name": "Dark Gold",
+          "hex": "#A28E2A"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Oregon Ducks",
+      "source": "https://teamcolorcodes.com/oregon-ducks-color-codes/",
+      "colors": [
+        {
+          "name": "Oregon Green",
+          "hex": "#154733"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FEE123"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Oregon State Beavers",
+      "source": "https://teamcolorcodes.com/oregon-state-beavers-color-codes/",
+      "colors": [
+        {
+          "name": "Beaver Orange",
+          "hex": "#DC4405"
+        },
+        {
+          "name": "Paddletail Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Bucktooth White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Pacific Tigers",
+      "source": "https://teamcolorcodes.com/pacific-tigers-colors/",
+      "colors": [
+        {
+          "name": "Pacific Athletic Orange",
+          "hex": "#E35205"
+        },
+        {
+          "name": "Pacific Black",
+          "hex": "#231F20"
+        },
+        {
+          "name": "Pacific University Orange",
+          "hex": "#D86018"
+        },
+        {
+          "name": "Pacific Gray",
+          "hex": "#949A90"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Penn Quakers",
+      "source": "https://teamcolorcodes.com/penn-quakers-color-codes/",
+      "colors": [
+        {
+          "name": "Penn Red",
+          "hex": "#990000"
+        },
+        {
+          "name": "PENN BLUE",
+          "hex": "#011F5B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Penn State Nittany Lions",
+      "source": "https://teamcolorcodes.com/penn-state-nittany-lions-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#041E42"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Pepperdine Waves",
+      "source": "https://teamcolorcodes.com/pepperdine-waves-colors/",
+      "colors": [
+        {
+          "name": "Pepperdine Blue",
+          "hex": "#00205C"
+        },
+        {
+          "name": "Pepperdine Orange",
+          "hex": "#EE7624"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Pittsburgh Panthers",
+      "source": "https://teamcolorcodes.com/pittsburgh-panthers-color-codes/",
+      "colors": [
+        {
+          "name": "Game Royal",
+          "hex": "#003594"
+        },
+        {
+          "name": "University Gold",
+          "hex": "#FFB81C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Portland Pilots",
+      "source": "https://teamcolorcodes.com/portland-pilots-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#1E1656"
+        },
+        {
+          "name": "Gray",
+          "hex": "#5E6A71"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Portland State Vikings",
+      "source": "https://teamcolorcodes.com/portland-state-vikings-color-codes/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#154734"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Metallic Silver",
+          "hex": "#A5ACAF"
+        },
+        {
+          "name": "Anthracite",
+          "hex": "#373A36"
+        },
+        {
+          "name": "Black",
+          "hex": "#2C2A29"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Prairie View Panthers",
+      "source": "https://teamcolorcodes.com/prairie-view-am-panthers-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#330066"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFCC33"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Presbyterian Blue Hose",
+      "source": "https://teamcolorcodes.com/presbyterian-blue-hose-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#0060A9"
+        },
+        {
+          "name": "Red",
+          "hex": "#9D2235"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Princeton Tigers",
+      "source": "https://teamcolorcodes.com/princeton-tigers-color-codes/",
+      "colors": [
+        {
+          "name": "PRINCETON ORANGE",
+          "hex": "#FF671F"
+        },
+        {
+          "name": "BLACK",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Providence Friars",
+      "source": "https://teamcolorcodes.com/providence-friars-color-codes/",
+      "colors": [
+        {
+          "name": "SILVER",
+          "hex": "#8A8D8F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Purdue Boilermakers",
+      "source": "https://teamcolorcodes.com/purdue-boilermakers-colors/",
+      "colors": [
+        {
+          "name": "Athletic Gold",
+          "hex": "#CEB888"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#9D968D"
+        },
+        {
+          "name": "Dark Gray",
+          "hex": "#373A36"
+        },
+        {
+          "name": "Campus Gold",
+          "hex": "#C28E0E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Radford Highlanders",
+      "source": "https://teamcolorcodes.com/radford-highlanders-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#C2011B"
+        },
+        {
+          "name": "Gray",
+          "hex": "#D1D3D4"
+        },
+        {
+          "name": "Blue",
+          "hex": "#003C71"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Rhode Island Rams",
+      "source": "https://teamcolorcodes.com/rhode-island-rams-color-codes/",
+      "colors": [
+        {
+          "name": "Keaney BLUE",
+          "hex": "#68ABE8"
+        },
+        {
+          "name": "Navy BLUE",
+          "hex": "#002147"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Richmond Spiders",
+      "source": "https://teamcolorcodes.com/richmond-spiders-color-codes/",
+      "colors": [
+        {
+          "name": "UR BLUE",
+          "hex": "#000066"
+        },
+        {
+          "name": "UR RED",
+          "hex": "#990000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Rider Broncs",
+      "source": "https://teamcolorcodes.com/rider-broncs-color-codes/",
+      "colors": [
+        {
+          "name": "RIDER CRANBERRY",
+          "hex": "#981E32"
+        },
+        {
+          "name": "RIDER GREY",
+          "hex": "#6C6F70"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Robert Morris Colonials",
+      "source": "https://teamcolorcodes.com/robert-morris-colonials-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#14234B"
+        },
+        {
+          "name": "Red",
+          "hex": "#A6192E"
+        },
+        {
+          "name": "Gray",
+          "hex": "#B2B1AE"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Rutgers Scarlet Knights",
+      "source": "https://teamcolorcodes.com/rutgers-scarlet-knights-colors/",
+      "colors": [
+        {
+          "name": "Scarlet",
+          "hex": "#CC0033"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "S.H.S. Bearkats",
+      "source": "https://teamcolorcodes.com/sam-houston-state-bearkats-colors/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#FE5100"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "SE Louisiana Lions",
+      "source": "https://teamcolorcodes.com/se-louisiana-lions-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#006341"
+        },
+        {
+          "name": "Gold",
+          "hex": "#EAAA00"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "SE M.S. Redhawks",
+      "source": "https://teamcolorcodes.com/se-missouri-st-redhawks-colors/",
+      "colors": [
+        {
+          "name": "Rich Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Southeast Red",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "SIUE Cougars",
+      "source": "https://teamcolorcodes.com/siu-edwardsville-cougars-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#EF3829"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Light Brown",
+          "hex": "#CFAA7A"
+        },
+        {
+          "name": "Brown",
+          "hex": "#A68462"
+        },
+        {
+          "name": "Dark Brown 1",
+          "hex": "#896532"
+        },
+        {
+          "name": "Dark Brown 2",
+          "hex": "#5A471C"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "SMU Mustangs",
+      "source": "https://teamcolorcodes.com/smu-mustangs-color-codes/ ",
+      "colors": [
+        {
+          "name": "SMU Blue",
+          "hex": "#0033A0"
+        },
+        {
+          "name": "SMU Red",
+          "hex": "#C8102E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Sacramento State Hornets",
+      "source": "https://teamcolorcodes.com/california-state-university-sacramento-hornets-colors/",
+      "colors": [
+        {
+          "name": "Sac State Green",
+          "hex": "#043927"
+        },
+        {
+          "name": "Sac State Green",
+          "hex": "#C4B581"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Sacred Heart Pioneers",
+      "source": "https://teamcolorcodes.com/sacred-heart-pioneers-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CE1141"
+        },
+        {
+          "name": "Gray",
+          "hex": "#B1B3B6"
+        },
+        {
+          "name": "Black",
+          "hex": "#4D4D4F"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Saint Mary's Gaels",
+      "source": "https://teamcolorcodes.com/saint-marys-gaels-colors/",
+      "colors": [
+        {
+          "name": "SMC Red",
+          "hex": "#D80024"
+        },
+        {
+          "name": "Gray",
+          "hex": "#06315B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Samford Bulldogs",
+      "source": "https://teamcolorcodes.com/samford-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Navy",
+          "hex": "#002649"
+        },
+        {
+          "name": "Red",
+          "hex": "#C4161D"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "San Diego State Aztecs",
+      "source": "https://teamcolorcodes.com/san-diego-state-aztecs-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#A6192E"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "San Diego Toreros",
+      "source": "https://teamcolorcodes.com/san-diego-toreros-colors/",
+      "colors": [
+        {
+          "name": "Founder's Blue",
+          "hex": "#002868"
+        },
+        {
+          "name": "Torero Blue",
+          "hex": "#84BCE8"
+        },
+        {
+          "name": "Immaculata Blue",
+          "hex": "#207BC1"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "San Francisco Dons",
+      "source": "https://teamcolorcodes.com/san-francisco-dons-colors/",
+      "colors": [
+        {
+          "name": "USF Yellow",
+          "hex": "#FDBB30"
+        },
+        {
+          "name": "USF Green",
+          "hex": "#00543C"
+        },
+        {
+          "name": "USF Gray",
+          "hex": "#919194"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "San Jose State Spartans",
+      "source": "https://teamcolorcodes.com/san-jose-state-spartans-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#0055A2"
+        },
+        {
+          "name": "Gold",
+          "hex": "#E5A823"
+        },
+        {
+          "name": "Gray",
+          "hex": "#939597"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Santa Clara",
+      "source": "https://teamcolorcodes.com/santa-clara-broncos-colors/",
+      "colors": [
+        {
+          "name": "Cardinal Red",
+          "hex": "#862633"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Seattle Redhawks",
+      "source": "https://teamcolorcodes.com/seattle-university-redhawks-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#AA0000"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Seton Hall Pirates",
+      "source": "https://teamcolorcodes.com/seton-hall-pirates-colors/",
+      "colors": [
+        {
+          "name": "Seton Hall University Blue",
+          "hex": "#004488"
+        },
+        {
+          "name": "Seton Hall University Gray",
+          "hex": "#A2AAAD"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Siena Saints",
+      "source": "https://teamcolorcodes.com/siena-saints-color-codes/",
+      "colors": [
+        {
+          "name": "SIENA YELLOW",
+          "hex": "#FFC72C"
+        },
+        {
+          "name": "SIENA RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "SIENA GREEN",
+          "hex": "#006747"
+        },
+        {
+          "name": "SIENA BROWN",
+          "hex": "#693F23"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Alabama Jaguars",
+      "source": "https://teamcolorcodes.com/south-alabama-jaguars-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00205B"
+        },
+        {
+          "name": "Red",
+          "hex": "#BF0D3E"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Carolina Bulldogs",
+      "source": "https://teamcolorcodes.com/south-carolina-state-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#862633"
+        },
+        {
+          "name": "Blue",
+          "hex": "#001A72"
+        },
+        {
+          "name": "NCCU Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Carolina Gamecocks",
+      "source": "https://teamcolorcodes.com/south-carolina-gamecocks-color-codes/",
+      "colors": [
+        {
+          "name": "Garnet",
+          "hex": "#73000A"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Carolina Upstate Spartans",
+      "source": "https://teamcolorcodes.com/usc-upstate-spartans-color-codes/",
+      "colors": [
+        {
+          "name": "GREEN",
+          "hex": "#00703C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Dakota Coyotes",
+      "source": "https://teamcolorcodes.com/south-dakota-coyotes-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#AD0000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#B4B4B4"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Dakota State Jackrabbits",
+      "source": "https://teamcolorcodes.com/south-dakota-state-jackrabbits-colors/",
+      "colors": [
+        {
+          "name": "SDSU Blue",
+          "hex": "#0033A0"
+        },
+        {
+          "name": "SDSU Yellow",
+          "hex": "#FFD100"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "South Florida Bulls",
+      "source": "https://teamcolorcodes.com/south-florida-bulls-color-codes/",
+      "colors": [
+        {
+          "name": "USF GREEN",
+          "hex": "#006747"
+        },
+        {
+          "name": "USF GOLD",
+          "hex": "#CFC493"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Southern Illinois",
+      "source": "https://teamcolorcodes.com/southern-illinois-salukis-color-codes/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#720000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Southern Jaguars",
+      "source": "https://teamcolorcodes.com/southern-jaguars-colors/",
+      "colors": [
+        {
+          "name": "Columbia Blue",
+          "hex": "#58B6E7"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFCE34"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Southern Utah Thunderbirds",
+      "source": "https://teamcolorcodes.com/southern-utah-thunderbirds-colors/",
+      "colors": [
+        {
+          "name": "SUU Red",
+          "hex": "#C41425"
+        },
+        {
+          "name": "SUU Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "SUU White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St. Bonaventure Bonnies",
+      "source": "https://teamcolorcodes.com/st-bonaventure-bonnies-color-codes/",
+      "colors": [
+        {
+          "name": "BROWN",
+          "hex": "#54261A"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FDB726"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#BDB6B0"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St. John's Red Storm",
+      "source": "https://teamcolorcodes.com/st-johns-red-storm-color-codes/",
+      "colors": [
+        {
+          "name": "ST. JOHN'S RED",
+          "hex": "#BA0C2F"
+        },
+        {
+          "name": "SJU BLUE",
+          "hex": "#041C2C"
+        },
+        {
+          "name": "SILVER GRAY",
+          "hex": "#A7A8AA"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St. Joseph's Hawks",
+      "source": "https://teamcolorcodes.com/saint-josephs-hawks-color-codes/",
+      "colors": [
+        {
+          "name": "CRIMSON",
+          "hex": "#9E1B32"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#6C6F70"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St. Louis Billikens",
+      "source": "https://teamcolorcodes.com/saint-louis-billikens-color-codes/",
+      "colors": [
+        {
+          "name": "SLU BlUE",
+          "hex": "#003DA5"
+        },
+        {
+          "name": "COLLEGE CHURCH GRAY",
+          "hex": "#C8C9C7"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St. Peter's Peacocks",
+      "source": "https://teamcolorcodes.com/saint-peters-peacocks-color-codes/",
+      "colors": [
+        {
+          "name": "NAVY",
+          "hex": "#003C71"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#0072CE"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#A59C94"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St.Francis Red Flash",
+      "source": "https://teamcolorcodes.com/st-francis-pa-red-flash-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#BD1F25"
+        },
+        {
+          "name": "Dark Red",
+          "hex": "#790000"
+        },
+        {
+          "name": "Silver",
+          "hex": "#8E908F"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St.Francis Terriers",
+      "source": "https://teamcolorcodes.com/st-francis-bkn-terriers-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#005496"
+        },
+        {
+          "name": "Red",
+          "hex": "#E03A3E"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "St.Mary's Mountaineers",
+      "source": "https://teamcolorcodes.com/mt-st-marys-mountaineers-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#002855"
+        },
+        {
+          "name": "Bronze",
+          "hex": "#84754E"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Stanford Cardinal",
+      "source": "https://teamcolorcodes.com/stanford-cardinal-color-codes/",
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Stephen F.A. Lumberjacks",
+      "source": "https://teamcolorcodes.com/stephen-f-austin-lumberjacks-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#613393"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Stetson Hatters",
+      "source": "https://teamcolorcodes.com/stetson-hatters-color-codes/",
+      "colors": [
+        {
+          "name": "Stetson Green",
+          "hex": "#00523E"
+        },
+        {
+          "name": "Hatter Green",
+          "hex": "#3B8729"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Syracuse Orange",
+      "source": "https://teamcolorcodes.com/syracuse-orange-color-codes/",
+      "colors": [
+        {
+          "name": "Syracuse Orange",
+          "hex": "#F76900"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Primary Blue",
+          "hex": "#000E54"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Temple Owls",
+      "source": "https://teamcolorcodes.com/temple-owls-color-codes/",
+      "colors": [
+        {
+          "name": "CHERRY RED",
+          "hex": "#9D2235"
+        },
+        {
+          "name": "YELLOW",
+          "hex": "#FFCD00"
+        },
+        {
+          "name": "METALLIC SILVER",
+          "hex": "#8A8D8F"
+        },
+        {
+          "name": "SILVER",
+          "hex": "#C1C6C8"
+        },
+        {
+          "name": "PMS Black 6 C",
+          "hex": "#000000"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Tennessee Golden Eagles",
+      "source": "https://teamcolorcodes.com/tennessee-tech-golden-eagles-colors/",
+      "colors": [
+        {
+          "name": "Tennessee Tech Purple",
+          "hex": "#4F2984"
+        },
+        {
+          "name": "Tennessee Tech Gold",
+          "hex": "#FFDD00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Tennessee State Tigers",
+      "source": "https://teamcolorcodes.com/tennessee-state-tigers-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#00539F"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Texas A&M Aggies",
+      "source": "https://teamcolorcodes.com/texas-am-aggies-color-codes/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#500000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Texas A&M-CC Islanders",
+      "source": "https://teamcolorcodes.com/texas-am-cc-islanders-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#0067C5"
+        },
+        {
+          "name": "Green",
+          "hex": "#007F3E"
+        },
+        {
+          "name": "Silver",
+          "hex": "#9EA2A4"
+        },
+        {
+          "name": "Dark Blue",
+          "hex": "#002E57"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Texas Christian Horned Frogs",
+      "source": "https://teamcolorcodes.com/texas-christian-horned-frogs-color-codes/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#4D1979"
+        },
+        {
+          "name": "Grey",
+          "hex": "#A3A9AC"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Texas Longhorns",
+      "source": "https://teamcolorcodes.com/texas-longhorns-color-codes/",
+      "colors": [
+        {
+          "name": "Burnt Orange",
+          "hex": "#BF5700"
+        },
+        {
+          "name": "Dark Gray",
+          "hex": "#333F48"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Texas Southern Tigers",
+      "source": "https://teamcolorcodes.com/texas-southern-tigers-colors/",
+      "colors": [
+        {
+          "name": "Maroon",
+          "hex": "#7C183E"
+        },
+        {
+          "name": "Gray",
+          "hex": "#9DA6AB"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Texas Tech Red Raiders",
+      "source": "https://teamcolorcodes.com/texas-tech-red-raiders-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#CC0000"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "The Citadel",
+      "source": "https://teamcolorcodes.com/citadel-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Citadel Blue",
+          "hex": "#3975B7"
+        },
+        {
+          "name": "Navy",
+          "hex": "#1F3A60"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Toledo Rockets",
+      "source": "https://teamcolorcodes.com/toledo-rockets-color-codes/",
+      "colors": [
+        {
+          "name": "BLUE",
+          "hex": "#15397F"
+        },
+        {
+          "name": "LIGHT BLUE",
+          "hex": "#005CB9"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FFDA00"
+        },
+        {
+          "name": "LIGHT GRAY",
+          "hex": "#BEC6C3"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#A0ACAA"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Towson Tigers",
+      "source": "https://teamcolorcodes.com/towson-tigers-colors/",
+      "colors": [
+        {
+          "name": "Gold",
+          "hex": "#FFBB00"
+        },
+        {
+          "name": "Black",
+          "hex": "#3C3C3C"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Gray",
+          "hex": "#DDDDDD"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Troy Trojans",
+      "source": "https://teamcolorcodes.com/troy-trojans-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#8A2432"
+        },
+        {
+          "name": "Grey",
+          "hex": "#B3B5B8"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Tulane Green Wave",
+      "source": "https://teamcolorcodes.com/tulane-green-wave-color-codes/",
+      "colors": [
+        {
+          "name": "DARK GREEN",
+          "hex": "#006747"
+        },
+        {
+          "name": "KELLY GREEN",
+          "hex": "#43B02A"
+        },
+        {
+          "name": "BLUE",
+          "hex": "#418FDE"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Tulsa Golden Hurricane",
+      "source": "https://teamcolorcodes.com/tulsa-golden-hurricane-color-codes/",
+      "colors": [
+        {
+          "name": "Navy Blue",
+          "hex": "#002D72"
+        },
+        {
+          "name": "Red",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "Old Gold",
+          "hex": "#C5B783"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#F3D54E"
+        },
+        {
+          "name": "Metallic Gold",
+          "hex": "#84754E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UC Davis",
+      "source": "https://teamcolorcodes.com/uc-davis-aggies-color-codes/",
+      "colors": [
+        {
+          "name": "YALE BLUE",
+          "hex": "#002855"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#B3A369"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UC Irvine Anteaters",
+      "source": "https://teamcolorcodes.com/uc-irvine-anteaters-color-codes/",
+      "colors": [
+        {
+          "name": "DARK BLUE",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "YELLOW",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UC Riverside Highlanders",
+      "source": "https://teamcolorcodes.com/uc-riverside-highlanders-color-codes/",
+      "colors": [
+        {
+          "name": "UCR BLUE",
+          "hex": "#2D6CC0"
+        },
+        {
+          "name": "UCR NAVY",
+          "hex": "#003066"
+        },
+        {
+          "name": "UCR GOLD",
+          "hex": "#F1AB00"
+        },
+        {
+          "name": "UCR GRAY",
+          "hex": "#7A6E67"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UC Santa Barbara Gauchos",
+      "source": "https://teamcolorcodes.com/uc-santa-barbara-gauchos-color-codes/",
+      "colors": [
+        {
+          "name": "NAVY",
+          "hex": "#003660"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FEBC11"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UCF Knights",
+      "source": "https://teamcolorcodes.com/ucf-knights-color-codes/",
+      "colors": [
+        {
+          "name": "Bright Gold",
+          "hex": "#FFC904"
+        },
+        {
+          "name": "Metallic Gold",
+          "hex": "#BA9B37"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UIC Flames",
+      "source": "https://teamcolorcodes.com/uic-flames-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#AC1E2D"
+        },
+        {
+          "name": "FLAMES BLUE",
+          "hex": "#041E42"
+        },
+        {
+          "name": "YELLOW",
+          "hex": "#FACC09"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UMBC Retrievers",
+      "source": "https://teamcolorcodes.com/umbc-retrievers-colors/",
+      "colors": [
+        {
+          "name": "UMBC Retriever Brown",
+          "hex": "#B18906"
+        },
+        {
+          "name": "UMBC Gold",
+          "hex": "#FFC20E"
+        },
+        {
+          "name": "UMBC Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "UMBC Red",
+          "hex": "#ED1C24"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UMKC Kangaroos",
+      "source": "https://teamcolorcodes.com/umkc-kangaroos-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#005293"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FECB00"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#DCDDDE"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UMass Minutemen",
+      "source": "https://teamcolorcodes.com/university-of-massachusetts-minutemen-color-codes/",
+      "colors": [
+        {
+          "name": "RED",
+          "hex": "#971B2F"
+        },
+        {
+          "name": "DARK RED",
+          "hex": "#572932"
+        },
+        {
+          "name": "GREY",
+          "hex": "#B1B3B3"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UNC Asheville Bulldogs",
+      "source": "https://teamcolorcodes.com/unc-asheville-bulldogs-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#003DA5"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#808285"
+        },
+        {
+          "name": "Light Grey",
+          "hex": "#C7C8CA"
+        },
+        {
+          "name": "Red",
+          "hex": "#E31837"
+        },
+        {
+          "name": "Black",
+          "hex": "#231F20"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UNC Seahawks",
+      "source": "https://teamcolorcodes.com/unc-wilmington-seahawks-colors/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#003366"
+        },
+        {
+          "name": "Teal",
+          "hex": "#006666"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFD600"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UNCG Spartans",
+      "source": "https://teamcolorcodes.com/unc-greensboro-spartans-colors/",
+      "colors": [
+        {
+          "name": "Navy",
+          "hex": "#0F2044"
+        },
+        {
+          "name": "Gold",
+          "hex": "#FFB71B"
+        },
+        {
+          "name": "Grey",
+          "hex": "#BEC0C2"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UNLV Rebels",
+      "source": "https://teamcolorcodes.com/unlv-rebels-color-codes/",
+      "colors": [
+        {
+          "name": "Scarlet",
+          "hex": "#CF0A2C"
+        },
+        {
+          "name": "Gray",
+          "hex": "#CAC8C8"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "USC Trojans",
+      "source": "https://teamcolorcodes.com/usc-trojans-color-codes/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#990000"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFC72C"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UT Martin Skyhawks",
+      "source": "https://teamcolorcodes.com/ut-martin-skyhawks-colors/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#F79728"
+        },
+        {
+          "name": "Blue",
+          "hex": "#002A5B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "UTRGV Vaqueros",
+      "source": "https://teamcolorcodes.com/utrgv-vaqueros-colors/",
+      "colors": [
+        {
+          "name": "Orange",
+          "hex": "#FFA300"
+        },
+        {
+          "name": "Dark Orange",
+          "hex": "#F05023"
+        },
+        {
+          "name": "Green",
+          "hex": "#00843D"
+        },
+        {
+          "name": "Navy Blue",
+          "hex": "#0C2340"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Utah State Aggies",
+      "source": "https://teamcolorcodes.com/utah-state-aggies-color-codes/",
+      "colors": [
+        {
+          "name": "Aggie Blue",
+          "hex": "#00263A"
+        },
+        {
+          "name": "Silver",
+          "hex": "#8A8D8F"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Utah Utes",
+      "source": "https://teamcolorcodes.com/utah-utes-color-codes/",
+      "colors": [
+        {
+          "name": "University Red",
+          "hex": "#CC0000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#808080"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Utah Valley Wolverines",
+      "source": "https://teamcolorcodes.com/utah-valley-wolverines-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#275D38"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#8E8C89"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "VMI Keydets",
+      "source": "https://teamcolorcodes.com/vmi-keydets-colors/",
+      "colors": [
+        {
+          "name": "Red",
+          "hex": "#A71F23"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFD520"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Gray",
+          "hex": "#666766"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Valparaiso Crusaders",
+      "source": "https://teamcolorcodes.com/valparaiso-crusaders-color-codes/",
+      "colors": [
+        {
+          "name": "BROWN",
+          "hex": "#381E0E"
+        },
+        {
+          "name": "LIGHT BROWN",
+          "hex": "#613318"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Vanderbilt Commodores",
+      "source": "https://teamcolorcodes.com/vanderbilt-commodores-color-codes/",
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#000000"
+        },
+        {
+          "name": "Old Gold",
+          "hex": "#866D4B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Villanova Wildcats",
+      "source": "https://teamcolorcodes.com/villanova-wildcats-colors/",
+      "colors": [
+        {
+          "name": "NAVY",
+          "hex": "#00205B"
+        },
+        {
+          "name": "LIGHT BLUE",
+          "hex": "#13B5EA"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#8B634B"
+        },
+        {
+          "name": "WHITE",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Virginia Cavaliers",
+      "source": "https://teamcolorcodes.com/virginia-cavaliers-color-codes/",
+      "colors": [
+        {
+          "name": "Jefferson Blue",
+          "hex": "#232D4B"
+        },
+        {
+          "name": "Virginia Orange",
+          "hex": "#F84C1E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Virginia Commonwealth Rams",
+      "source": "https://teamcolorcodes.com/virginia-commonwealth-rams-color-codes/",
+      "colors": [
+        {
+          "name": "GOLD",
+          "hex": "#FFB300"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Virginia Tech Hokies",
+      "source": "https://teamcolorcodes.com/virginia-tech-hokies-color-codes/",
+      "colors": [
+        {
+          "name": "Chicago Maroon",
+          "hex": "#630031"
+        },
+        {
+          "name": "Orange",
+          "hex": "#CF4420"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wagner Seahawks",
+      "source": "https://teamcolorcodes.com/wagner-seahawks-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#00483A"
+        },
+        {
+          "name": "Gray",
+          "hex": "#B9BBBD"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wake Forest Demon Deacons",
+      "source": "https://teamcolorcodes.com/wake-forest-demon-deacons-color-codes/",
+      "colors": [
+        {
+          "name": "Wake Forest Gold",
+          "hex": "#9E7E38"
+        },
+        {
+          "name": "Black",
+          "hex": "#000000"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Washington Huskies",
+      "source": "https://teamcolorcodes.com/washington-huskies-color-codes/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#4B2E83"
+        },
+        {
+          "name": "Gold",
+          "hex": "#B7A57A"
+        },
+        {
+          "name": "Metallic Gold",
+          "hex": "#85754D"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Washington State Cougars",
+      "source": "https://teamcolorcodes.com/washington-state-cougars-color-codes/",
+      "colors": [
+        {
+          "name": "PMS 7622 C",
+          "hex": "#981E32"
+        },
+        {
+          "name": "PMS 431 C",
+          "hex": "#5E6A71"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Weber State Wildcats",
+      "source": "https://teamcolorcodes.com/weber-state-wildcats-color-codes/",
+      "colors": [
+        {
+          "name": "Wildcat Purple",
+          "hex": "#4B2682"
+        },
+        {
+          "name": "Waldo's Gray",
+          "hex": "#A1A1A4"
+        },
+        {
+          "name": "Black",
+          "hex": "#130C0E"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "West Virginia Mountaineers",
+      "source": "https://teamcolorcodes.com/west-virginia-mountaineers-color-codes/",
+      "colors": [
+        {
+          "name": "Blue",
+          "hex": "#002855"
+        },
+        {
+          "name": "Gold",
+          "hex": "#EAAA00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Western Carolina Catamounts",
+      "source": "https://teamcolorcodes.com/western-carolina-catamounts-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#592C88"
+        },
+        {
+          "name": "Gold",
+          "hex": "#C1A875"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Western Illinois Leathernecks",
+      "source": "https://teamcolorcodes.com/western-illinois-leathernecks-colors/",
+      "colors": [
+        {
+          "name": "Purple",
+          "hex": "#663399"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Western Michigan",
+      "source": "https://teamcolorcodes.com/western-michigan-broncos-color-codes/",
+      "colors": [
+        {
+          "name": "BROWN",
+          "hex": "#6C4023"
+        },
+        {
+          "name": "GOLD",
+          "hex": "#B5A167"
+        },
+        {
+          "name": "GRAY",
+          "hex": "#AAA8AA"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wichita State Shockers",
+      "source": "https://teamcolorcodes.com/wichita-state-shockers-color-codes/",
+      "colors": [
+        {
+          "name": "Wichita State Yellow",
+          "hex": "#FFCD00"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "William & Mary Tribe",
+      "source": "https://teamcolorcodes.com/william-mary-tribe-colors/",
+      "colors": [
+        {
+          "name": "Green",
+          "hex": "#115740"
+        },
+        {
+          "name": "Gold",
+          "hex": "#F0B323"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Winthrop Eagles",
+      "source": "https://teamcolorcodes.com/winthrop-eagles-colors/",
+      "colors": [
+        {
+          "name": "Garnet",
+          "hex": "#660000"
+        },
+        {
+          "name": "Gold",
+          "hex": "#F0B323"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wisconsin Badgers",
+      "source": "https://teamcolorcodes.com/wisconsin-badgers-colors/",
+      "colors": [
+        {
+          "name": "Badger Red",
+          "hex": "#C5050C"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wofford Terriers",
+      "source": "https://teamcolorcodes.com/wofford-terriers-colors/",
+      "colors": [
+        {
+          "name": "Old Gold",
+          "hex": "#886E4C"
+        },
+        {
+          "name": "Black",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Khaki",
+          "hex": "#C7B37F"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wright State Raiders",
+      "source": "https://teamcolorcodes.com/wright-state-raiders-color-codes/",
+      "colors": [
+        {
+          "name": "RAIDER GREEN",
+          "hex": "#026937"
+        },
+        {
+          "name": "RAIDER GOLD",
+          "hex": "#CEA052"
+        },
+        {
+          "name": "MCLIN GOLD",
+          "hex": "#FFE1A5"
+        },
+        {
+          "name": "NUTTER ORANGE",
+          "hex": "#DE6328"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Wyoming Cowboys",
+      "source": "https://teamcolorcodes.com/university-wyoming-cowboys-colors/",
+      "colors": [
+        {
+          "name": "Wyoming Gold",
+          "hex": "#FFC425"
+        },
+        {
+          "name": "Wyoming Brown",
+          "hex": "#492F24"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Xavier Musketeers",
+      "source": "https://teamcolorcodes.com/xavier-university-musketeers-colors/",
+      "colors": [
+        {
+          "name": "Xavier Blue",
+          "hex": "#0C2340"
+        },
+        {
+          "name": "Xavier Silver",
+          "hex": "#9EA2A2"
+        },
+        {
+          "name": "Light Blue",
+          "hex": "#0099CC"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Yale Bulldogs",
+      "source": "https://teamcolorcodes.com/yale-bulldogs-color-codes/",
+      "colors": [
+        {
+          "name": "YALE BLUE",
+          "hex": "#00356B"
+        }
+      ]
+    },
+    {
+      "league": "NCAA D1",
+      "team": "Youngstown State Penguins",
+      "source": "https://teamcolorcodes.com/youngstown-state-penguins-color-codes/",
+      "colors": [
+        {
+          "name": "PENGUIN RED",
+          "hex": "#C8102E"
+        },
+        {
+          "name": "PENGUIN YELLOW",
+          "hex": "#F3D54E"
+        }
+      ]
+    }
+  ]
+}
