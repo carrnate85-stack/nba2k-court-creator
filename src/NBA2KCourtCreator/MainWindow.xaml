@@ -8,37 +8,59 @@
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <HierarchicalDataTemplate DataType="{x:Type models:CourtLayerNode}" ItemsSource="{Binding Children}">
-      <Grid Height="30" MinWidth="420">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="300" />
-        <TextBlock Grid.Column="1" Text="{Binding VisibilityText}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="10,0,0,0" FontWeight="SemiBold" />
-        <StackPanel Grid.Column="2"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Center"
-                    Margin="10,0,0,0"
-                    Visibility="{Binding ShowInlineColorControls, Converter={StaticResource BoolToVisibility}}">
-          <Button Width="24"
-                  Height="24"
-                  Padding="0"
-                  Margin="0,0,6,0"
-                  Tag="{Binding}"
-                  Click="OnInlineColorPick">
-            <Border Width="16" Height="16" Background="{Binding SwatchBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
-          </Button>
-          <TextBox Width="82"
-                   MinHeight="24"
-                   Padding="5,2"
-                   Text="{Binding ActiveHex, Mode=OneWay}"
-                   Tag="{Binding}"
-                   GotKeyboardFocus="OnInlineHexGotKeyboardFocus"
-                   KeyDown="OnInlineHexKeyDown"
-                   LostFocus="OnInlineHexLostFocus" />
-        </StackPanel>
-      </Grid>
+      <Border x:Name="LayerRow"
+              BorderBrush="#E7ECE8"
+              BorderThickness="0,0,0,1"
+              Background="White"
+              Padding="6,0">
+        <Grid Height="28" MinWidth="460">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="62" />
+            <ColumnDefinition Width="122" />
+          </Grid.ColumnDefinitions>
+          <TextBlock x:Name="LayerNameText"
+                     Text="{Binding DisplayName}"
+                     VerticalAlignment="Center"
+                     TextTrimming="CharacterEllipsis"
+                     Foreground="{StaticResource InkBrush}" />
+          <TextBlock x:Name="LayerStateText"
+                     Grid.Column="1"
+                     Text="{Binding VisibilityText}"
+                     VerticalAlignment="Center"
+                     Foreground="{StaticResource MutedBrush}"
+                     FontWeight="SemiBold" />
+          <StackPanel Grid.Column="2"
+                      Orientation="Horizontal"
+                      VerticalAlignment="Center"
+                      Visibility="{Binding ShowInlineColorControls, Converter={StaticResource BoolToVisibility}}">
+            <Button Width="24"
+                    Height="24"
+                    Padding="0"
+                    Margin="0,0,6,0"
+                    Tag="{Binding}"
+                    Click="OnInlineColorPick">
+              <Border Width="16" Height="16" Background="{Binding SwatchBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
+            </Button>
+            <TextBox Width="82"
+                     MinHeight="24"
+                     Padding="5,2"
+                     Text="{Binding ActiveHex, Mode=OneWay}"
+                     Tag="{Binding}"
+                     GotKeyboardFocus="OnInlineHexGotKeyboardFocus"
+                     KeyDown="OnInlineHexKeyDown"
+                     LostFocus="OnInlineHexLostFocus" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <HierarchicalDataTemplate.Triggers>
+        <DataTrigger Binding="{Binding IsGroup}" Value="True">
+          <Setter TargetName="LayerRow" Property="Background" Value="{StaticResource AccentSoftBrush}" />
+          <Setter TargetName="LayerRow" Property="BorderBrush" Value="#BFD3C9" />
+          <Setter TargetName="LayerNameText" Property="FontWeight" Value="Bold" />
+          <Setter TargetName="LayerStateText" Property="Foreground" Value="{StaticResource InkBrush}" />
+        </DataTrigger>
+      </HierarchicalDataTemplate.Triggers>
     </HierarchicalDataTemplate>
   </Window.Resources>
 
@@ -226,11 +248,24 @@
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
               </Grid.RowDefinitions>
               <TextBox x:Name="FloorSearchBox" Grid.Row="0" TextChanged="OnFloorSearchChanged" Margin="0,0,0,8" />
+              <Border Grid.Row="1" Background="{StaticResource AccentSoftBrush}" BorderBrush="#BFD3C9" BorderThickness="0,0,0,1">
+                <Grid Height="29" Margin="10,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="62" />
+                    <ColumnDefinition Width="122" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="Court / section" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
+                  <TextBlock Grid.Column="1" Text="State" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
+                  <TextBlock Grid.Column="2" Text="Color" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
+                </Grid>
+              </Border>
               <TreeView x:Name="LayersTree"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         ItemsSource="{Binding SectionLayerRoots}"
                         SelectedItemChanged="OnLayerSelected"
                         MouseDoubleClick="OnLayerDoubleClick"
