@@ -2,17 +2,17 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:NBA2KCourtCreator.Models"
-        Title="NBA 2K Court Creator" Width="1500" Height="920" MinWidth="1280" MinHeight="720"
+        Title="NBA 2K Court Creator" Width="1740" Height="920" MinWidth="1680" MinHeight="720"
         WindowStartupLocation="CenterScreen">
   <Window.Resources>
     <HierarchicalDataTemplate DataType="{x:Type models:CourtLayerNode}" ItemsSource="{Binding Children}">
       <Grid Height="28" MinWidth="420">
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="58" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-        <TextBlock Grid.Column="1" Text="{Binding VisibilityText}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource InkBrush}" />
+        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="540" />
+        <TextBlock Grid.Column="1" Text="{Binding VisibilityText}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="10,0,0,0" FontWeight="SemiBold" />
       </Grid>
     </HierarchicalDataTemplate>
   </Window.Resources>
@@ -130,14 +130,14 @@
 
         <Grid Grid.Row="2">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="520" />
+            <ColumnDefinition Width="760" />
             <ColumnDefinition Width="14" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
           <Grid.RowDefinitions>
-            <RowDefinition Height="330" />
+            <RowDefinition Height="380" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
@@ -217,7 +217,7 @@
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="780" />
+            <ColumnDefinition Width="600" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
@@ -229,20 +229,11 @@
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="26" />
                 <RowDefinition Height="*" />
               </Grid.RowDefinitions>
               <TextBox x:Name="FloorSearchBox" Grid.Row="0" TextChanged="OnFloorSearchChanged" Margin="0,0,0,8" />
-              <Grid Grid.Row="1" Margin="27,0,11,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="58" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Layer" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" />
-                <TextBlock Grid.Column="1" Text="State" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-              </Grid>
               <TreeView x:Name="LayersTree"
-                        Grid.Row="2"
+                        Grid.Row="1"
                         ItemsSource="{Binding SectionLayerRoots}"
                         SelectedItemChanged="OnLayerSelected"
                         MouseDoubleClick="OnLayerDoubleClick"
