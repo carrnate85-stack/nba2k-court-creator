@@ -973,6 +973,7 @@ public partial class MainWindow : Window
         var changed = false;
 
         changed |= SetLogoValue(_selectedLogo.Visible, LogoVisibleCheck.IsChecked == true, value => _selectedLogo.Visible = value);
+        changed |= SetLogoValue(_selectedLogo.ScaleLocked, LogoScaleLockCheck.IsChecked == true, value => _selectedLogo.ScaleLocked = value);
         changed |= SetLogoNumber(LogoXBox.Text, _selectedLogo.X, value => _selectedLogo.X = value);
         changed |= SetLogoNumber(LogoYBox.Text, _selectedLogo.Y, value => _selectedLogo.Y = value);
         changed |= SetLogoNumber(LogoWidthBox.Text, _selectedLogo.Width, value => _selectedLogo.Width = Math.Max(1, value));
@@ -993,6 +994,7 @@ public partial class MainWindow : Window
         _syncing = true;
         var hasLogo = _selectedLogo is not null;
         LogoVisibleCheck.IsEnabled = hasLogo;
+        LogoScaleLockCheck.IsEnabled = hasLogo;
         RemoveLogoButton.IsEnabled = hasLogo;
         LogoXBox.IsEnabled = hasLogo;
         LogoYBox.IsEnabled = hasLogo;
@@ -1002,6 +1004,7 @@ public partial class MainWindow : Window
         LogoOpacityBox.IsEnabled = hasLogo;
 
         LogoVisibleCheck.IsChecked = _selectedLogo?.Visible ?? false;
+        LogoScaleLockCheck.IsChecked = _selectedLogo?.ScaleLocked ?? true;
         LogoXBox.Text = hasLogo ? LogoNumber(_selectedLogo!.X) : string.Empty;
         LogoYBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Y) : string.Empty;
         LogoWidthBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Width) : string.Empty;
@@ -1065,6 +1068,7 @@ public partial class MainWindow : Window
             {
                 _logoEditorPollTimer?.Stop();
                 _logoEditor.Stop();
+                BringAppToFront();
                 SetStatus("Logo editor changes returned.");
             }
         }
@@ -1072,6 +1076,19 @@ public partial class MainWindow : Window
         {
             _syncingLogoEditor = false;
         }
+    }
+
+    private void BringAppToFront()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
     }
 
     private void OnOpenPsd(object sender, RoutedEventArgs e)
@@ -1354,6 +1371,7 @@ public partial class MainWindow : Window
                 opacity = logo.Opacity,
                 flipX = logo.FlipX,
                 flipY = logo.FlipY,
+                scaleLocked = logo.ScaleLocked,
             }).ToList()
             : [];
 
@@ -1393,35 +1411,6 @@ public partial class MainWindow : Window
         bitmap.Freeze();
         PreviewImage.Source = bitmap;
         PreviewEmptyText.Visibility = Visibility.Collapsed;
-    }
-
-    private void OnPreviewClicked(object sender, MouseButtonEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(_previewPath) || !File.Exists(_previewPath))
-        {
-            SetStatus("Preview is not ready yet.");
-            return;
-        }
-
-        var image = new System.Windows.Controls.Image
-        {
-            Source = LoadBitmap(_previewPath),
-            Stretch = Stretch.Uniform,
-        };
-        RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
-        var window = new Window
-        {
-            Title = "Court Preview",
-            Owner = this,
-            Width = 1180,
-            Height = 760,
-            MinWidth = 800,
-            MinHeight = 520,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = (WpfBrush)new BrushConverter().ConvertFromString("#20242B")!,
-            Content = image,
-        };
-        window.Show();
     }
 
     private static BitmapImage LoadBitmap(string path)
@@ -1596,6 +1585,7 @@ public partial class MainWindow : Window
                 Opacity = Math.Clamp(JsonDouble(item, "opacity", 100), 0, 100),
                 FlipX = JsonBool(item, "flipX", false),
                 FlipY = JsonBool(item, "flipY", false),
+                ScaleLocked = JsonBool(item, "scaleLocked", true),
             });
         }
 
@@ -1638,6 +1628,7 @@ public partial class MainWindow : Window
             Opacity = logo.Opacity,
             FlipX = logo.FlipX,
             FlipY = logo.FlipY,
+            ScaleLocked = logo.ScaleLocked,
         };
 
     private static (double Width, double Height) ReadImageSize(string path)

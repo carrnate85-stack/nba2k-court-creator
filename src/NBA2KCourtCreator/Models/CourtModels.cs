@@ -136,6 +136,7 @@ public sealed class CourtLogo : INotifyPropertyChanged
     private double _opacity = 100;
     private bool _flipX;
     private bool _flipY;
+    private bool _scaleLocked = true;
 
     [JsonPropertyName("id")]
     public string Id
@@ -219,6 +220,13 @@ public sealed class CourtLogo : INotifyPropertyChanged
     {
         get => _flipY;
         set => SetField(ref _flipY, value);
+    }
+
+    [JsonPropertyName("scaleLocked")]
+    public bool ScaleLocked
+    {
+        get => _scaleLocked;
+        set => SetField(ref _scaleLocked, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

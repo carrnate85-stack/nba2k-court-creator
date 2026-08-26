@@ -52,6 +52,7 @@ public sealed class CourtLogoWebSessionService : IDisposable
                     opacity = logo.Opacity,
                     flipX = logo.FlipX,
                     flipY = logo.FlipY,
+                    scaleLocked = logo.ScaleLocked,
                 }).ToList(),
             },
         };
