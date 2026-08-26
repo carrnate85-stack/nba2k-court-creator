@@ -7,9 +7,11 @@ src/**/obj/
 
 outputs/
 custom_floors/
+logos/
 
 # Keep large and personal template assets local.
 templates/*.psd
 
 # Personal preset slots stay on this computer.
 data/court_presets.json
+data/court_logos.json

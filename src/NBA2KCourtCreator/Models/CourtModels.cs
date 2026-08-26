@@ -124,14 +124,25 @@ public sealed class TeamColor
 
 public sealed class CourtLogo : INotifyPropertyChanged
 {
+    private string _id = Guid.NewGuid().ToString("N");
     private string _name = string.Empty;
     private string _path = string.Empty;
     private bool _visible = true;
     private double _x = 840;
     private double _y = 430;
     private double _width = 320;
+    private double _height = 160;
     private double _rotation;
     private double _opacity = 100;
+    private bool _flipX;
+    private bool _flipY;
+
+    [JsonPropertyName("id")]
+    public string Id
+    {
+        get => _id;
+        set => SetField(ref _id, string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString("N") : value);
+    }
 
     [JsonPropertyName("name")]
     public string Name
@@ -175,6 +186,13 @@ public sealed class CourtLogo : INotifyPropertyChanged
         set => SetField(ref _width, value);
     }
 
+    [JsonPropertyName("height")]
+    public double Height
+    {
+        get => _height;
+        set => SetField(ref _height, value);
+    }
+
     [JsonPropertyName("rotation")]
     public double Rotation
     {
@@ -187,6 +205,20 @@ public sealed class CourtLogo : INotifyPropertyChanged
     {
         get => _opacity;
         set => SetField(ref _opacity, value);
+    }
+
+    [JsonPropertyName("flipX")]
+    public bool FlipX
+    {
+        get => _flipX;
+        set => SetField(ref _flipX, value);
+    }
+
+    [JsonPropertyName("flipY")]
+    public bool FlipY
+    {
+        get => _flipY;
+        set => SetField(ref _flipY, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

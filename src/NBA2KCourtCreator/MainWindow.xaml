@@ -251,7 +251,15 @@
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
 
-              <Button Grid.Row="0" Style="{StaticResource PrimaryButton}" Content="Import Logo" Click="OnImportLogo" Padding="12,8" Margin="0,0,0,8" />
+              <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="8" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Style="{StaticResource PrimaryButton}" Content="Import Logo" Click="OnImportLogo" Padding="12,8" />
+                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="Open Web Logo Editor" Click="OnOpenLogoEditor" Padding="12,8" Margin="0" />
+              </Grid>
 
               <ListBox x:Name="LogosList"
                        Grid.Row="1"
@@ -282,13 +290,15 @@
                 <TextBlock Grid.Row="1" Grid.Column="3" Text="Top" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" />
                 <TextBox x:Name="LogoYBox" Grid.Row="1" Grid.Column="4" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Size" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Width" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
                 <TextBox x:Name="LogoWidthBox" Grid.Row="2" Grid.Column="1" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" Margin="0,8,0,0" />
-                <TextBlock Grid.Row="2" Grid.Column="3" Text="Turn" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
-                <TextBox x:Name="LogoRotationBox" Grid.Row="2" Grid.Column="4" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" Margin="0,8,0,0" />
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="Height" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
+                <TextBox x:Name="LogoHeightBox" Grid.Row="2" Grid.Column="4" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" Margin="0,8,0,0" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Opacity" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
-                <TextBox x:Name="LogoOpacityBox" Grid.Row="3" Grid.Column="1" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" Margin="0,8,0,0" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Turn" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
+                <TextBox x:Name="LogoRotationBox" Grid.Row="3" Grid.Column="1" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" Margin="0,8,0,0" />
+                <TextBlock Grid.Row="3" Grid.Column="3" Text="Opacity" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
+                <TextBox x:Name="LogoOpacityBox" Grid.Row="3" Grid.Column="4" KeyDown="OnLogoTextKeyDown" LostFocus="OnLogoControlLostFocus" Margin="0,8,0,0" />
               </Grid>
             </Grid>
           </GroupBox>

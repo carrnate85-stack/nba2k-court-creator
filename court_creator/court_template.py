@@ -567,7 +567,7 @@ def _composite_custom_floor(
     scale: float,
 ) -> None:
     try:
-        from PIL import Image
+        from PIL import Image, ImageOps
     except ImportError as exc:
         raise RuntimeError("Court preview export requires Pillow.") from exc
 
@@ -606,6 +606,7 @@ def _composite_logo(
         x = float(logo.get("x", 0))
         y = float(logo.get("y", 0))
         width = max(1.0, float(logo.get("width", 100)))
+        height = max(1.0, float(logo.get("height", width)))
         rotation = float(logo.get("rotation", 0))
         opacity = max(0.0, min(100.0, float(logo.get("opacity", 100)))) / 100.0
     except (TypeError, ValueError):
@@ -616,8 +617,12 @@ def _composite_logo(
 
     if image.width <= 0:
         return
+    if bool(logo.get("flipX", False)):
+        image = ImageOps.mirror(image)
+    if bool(logo.get("flipY", False)):
+        image = ImageOps.flip(image)
     target_width = max(1, round(width * scale))
-    target_height = max(1, round(image.height * (target_width / image.width)))
+    target_height = max(1, round(height * scale))
     image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
     if abs(rotation) > 0.001:
@@ -627,7 +632,12 @@ def _composite_logo(
         alpha = image.getchannel("A").point(lambda value: round(value * opacity))
         image.putalpha(alpha)
 
-    canvas.alpha_composite(image, (round(x * scale), round(y * scale)))
+    center_x = (x + width / 2) * scale
+    center_y = (y + height / 2) * scale
+    canvas.alpha_composite(
+        image,
+        (round(center_x - image.width / 2), round(center_y - image.height / 2)),
+    )
 
 
 def _is_court_floor_group_name(name: str) -> bool:

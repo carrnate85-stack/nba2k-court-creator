@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using WpfButton = System.Windows.Controls.Button;
 using WpfBrush = System.Windows.Media.Brush;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -26,6 +27,7 @@ namespace NBA2KCourtCreator;
 public partial class MainWindow : Window
 {
     private readonly BackendClient _backend = new();
+    private readonly CourtLogoWebSessionService _logoEditor;
     private readonly ObservableCollection<CourtLayerNode> _layerRoots = [];
     private readonly ObservableCollection<CourtLayerNode> _sectionLayerRoots = [];
     private readonly Dictionary<string, CourtLayerNode> _layersById = [];
@@ -47,7 +49,12 @@ public partial class MainWindow : Window
     private CourtLayerNode? _activeHexTarget;
     private CourtLogo? _selectedLogo;
     private bool _syncing;
+    private bool _syncingLogoEditor;
     private long _renderVersion;
+    private int _documentWidth;
+    private int _documentHeight;
+    private int _lastLogoEditorRevision = -1;
+    private DispatcherTimer? _logoEditorPollTimer;
 
     public ObservableCollection<CourtLayerNode> LayerRoots => _layerRoots;
     public ObservableCollection<CourtLayerNode> SectionLayerRoots => _sectionLayerRoots;
@@ -55,9 +62,11 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        _logoEditor = new CourtLogoWebSessionService(_backend.ProjectRoot);
         InitializeComponent();
         DataContext = this;
         Loaded += async (_, _) => await LoadWorkspaceAsync();
+        Closed += (_, _) => _logoEditor.Dispose();
     }
 
     private async Task LoadWorkspaceAsync()
@@ -101,12 +110,15 @@ public partial class MainWindow : Window
 
         _templatePath = root.GetProperty("templatePath").GetString() ?? string.Empty;
         _previewPath = root.GetProperty("previewPath").GetString() ?? string.Empty;
+        var document = root.GetProperty("document");
+        _documentWidth = document.GetProperty("width").GetInt32();
+        _documentHeight = document.GetProperty("height").GetInt32();
         _presetsPath = Path.Combine(_backend.ProjectRoot, "data", "court_presets.json");
         _logosPath = Path.Combine(_backend.ProjectRoot, "data", "court_logos.json");
         ProjectNameText.Text = "NBA 2K Court Creator";
         ProjectStateText.Text = "Ready";
 
-        foreach (var layerJson in root.GetProperty("document").GetProperty("layers").EnumerateArray())
+        foreach (var layerJson in document.GetProperty("layers").EnumerateArray())
         {
             AddLayer(ReadLayer(layerJson, isCustomFloor: false));
         }
@@ -880,6 +892,8 @@ public partial class MainWindow : Window
                 Path = Path.GetRelativePath(_backend.ProjectRoot, destination),
                 Visible = true,
             };
+            var size = ReadImageSize(source);
+            logo.Height = Math.Max(1, Math.Round(logo.Width * size.Height / Math.Max(1.0, size.Width), 2));
             _logoImages.Add(logo);
             _selectedLogo = logo;
             LogosList.SelectedItem = logo;
@@ -950,6 +964,7 @@ public partial class MainWindow : Window
         changed |= SetLogoNumber(LogoXBox.Text, _selectedLogo.X, value => _selectedLogo.X = value);
         changed |= SetLogoNumber(LogoYBox.Text, _selectedLogo.Y, value => _selectedLogo.Y = value);
         changed |= SetLogoNumber(LogoWidthBox.Text, _selectedLogo.Width, value => _selectedLogo.Width = Math.Max(1, value));
+        changed |= SetLogoNumber(LogoHeightBox.Text, _selectedLogo.Height, value => _selectedLogo.Height = Math.Max(1, value));
         changed |= SetLogoNumber(LogoRotationBox.Text, _selectedLogo.Rotation, value => _selectedLogo.Rotation = value);
         changed |= SetLogoNumber(LogoOpacityBox.Text, _selectedLogo.Opacity, value => _selectedLogo.Opacity = Math.Clamp(value, 0, 100));
 
@@ -970,6 +985,7 @@ public partial class MainWindow : Window
         LogoXBox.IsEnabled = hasLogo;
         LogoYBox.IsEnabled = hasLogo;
         LogoWidthBox.IsEnabled = hasLogo;
+        LogoHeightBox.IsEnabled = hasLogo;
         LogoRotationBox.IsEnabled = hasLogo;
         LogoOpacityBox.IsEnabled = hasLogo;
 
@@ -977,9 +993,73 @@ public partial class MainWindow : Window
         LogoXBox.Text = hasLogo ? LogoNumber(_selectedLogo!.X) : string.Empty;
         LogoYBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Y) : string.Empty;
         LogoWidthBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Width) : string.Empty;
+        LogoHeightBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Height) : string.Empty;
         LogoRotationBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Rotation) : string.Empty;
         LogoOpacityBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Opacity) : string.Empty;
         _syncing = false;
+    }
+
+    private async void OnOpenLogoEditor(object sender, RoutedEventArgs e)
+    {
+        if (_logoImages.Count == 0)
+        {
+            SetStatus("Import a logo first.");
+            return;
+        }
+
+        try
+        {
+            SetStatus("Opening web logo editor...");
+            var backgroundPath = Path.Combine(Path.GetTempPath(), $"nba2k-court-logo-background-{Guid.NewGuid():N}.png");
+            using var response = await _backend.RenderAsync(RenderRequest(includeLogos: false, outputPath: backgroundPath));
+            var cleanPreview = response.RootElement.GetProperty("previewPath").GetString() ?? backgroundPath;
+            await _logoEditor.StartAsync(cleanPreview, _documentWidth, _documentHeight, _logoImages);
+            _lastLogoEditorRevision = -1;
+            StartLogoEditorPolling();
+            SetStatus("Web logo editor opened.");
+        }
+        catch (Exception ex)
+        {
+            ShowError("Logo Editor", ex);
+        }
+    }
+
+    private void StartLogoEditorPolling()
+    {
+        _logoEditorPollTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _logoEditorPollTimer.Tick -= OnLogoEditorPoll;
+        _logoEditorPollTimer.Tick += OnLogoEditorPoll;
+        _logoEditorPollTimer.Start();
+    }
+
+    private async void OnLogoEditorPoll(object? sender, EventArgs e)
+    {
+        if (_syncingLogoEditor) return;
+        using var state = _logoEditor.ReadState();
+        if (state is null) return;
+
+        var root = state.RootElement;
+        var revision = root.TryGetProperty("revision", out var revisionJson) ? revisionJson.GetInt32() : 0;
+        var returnRequested = root.TryGetProperty("returnRequested", out var returnedJson) && returnedJson.GetBoolean();
+        if (revision == _lastLogoEditorRevision && !returnRequested) return;
+
+        _syncingLogoEditor = true;
+        try
+        {
+            _lastLogoEditorRevision = revision;
+            ApplyLogoEditorState(root);
+            await RefreshPreviewAsync();
+            if (returnRequested)
+            {
+                _logoEditorPollTimer?.Stop();
+                _logoEditor.Stop();
+                SetStatus("Logo editor changes returned.");
+            }
+        }
+        finally
+        {
+            _syncingLogoEditor = false;
+        }
     }
 
     private void OnOpenPsd(object sender, RoutedEventArgs e)
@@ -1226,32 +1306,7 @@ public partial class MainWindow : Window
         SetStatus("Refreshing preview...");
         try
         {
-            var request = new
-            {
-                templatePath = _templatePath,
-                visibility = _visibility,
-                colorOverrides = _colorOverrides,
-                customFloorImages = _customFloorImages.Select(image => new
-                {
-                    id = image.Id,
-                    name = image.Name,
-                    path = image.Path,
-                    bbox = image.Bbox,
-                    visible = _visibility.GetValueOrDefault(image.Id, false),
-                }).ToList(),
-                logoImages = _logoImages.Select(logo => new
-                {
-                    name = logo.Name,
-                    path = logo.Path,
-                    visible = logo.Visible,
-                    x = logo.X,
-                    y = logo.Y,
-                    width = logo.Width,
-                    rotation = logo.Rotation,
-                    opacity = logo.Opacity,
-                }).ToList(),
-            };
-            using var response = await _backend.RenderAsync(request);
+            using var response = await _backend.RenderAsync(RenderRequest(includeLogos: true));
             if (version != _renderVersion) return;
             _previewPath = response.RootElement.GetProperty("previewPath").GetString() ?? _previewPath;
             LoadPreviewImage();
@@ -1261,6 +1316,44 @@ public partial class MainWindow : Window
         {
             SetStatus($"Preview failed: {ex.Message}");
         }
+    }
+
+    private object RenderRequest(bool includeLogos, string? outputPath = null)
+    {
+        var logoImages = includeLogos
+            ? _logoImages.Select(logo => (object)new
+            {
+                id = logo.Id,
+                name = logo.Name,
+                path = logo.Path,
+                visible = logo.Visible,
+                x = logo.X,
+                y = logo.Y,
+                width = logo.Width,
+                height = logo.Height,
+                rotation = logo.Rotation,
+                opacity = logo.Opacity,
+                flipX = logo.FlipX,
+                flipY = logo.FlipY,
+            }).ToList()
+            : [];
+
+        return new
+        {
+            templatePath = _templatePath,
+            visibility = _visibility,
+            colorOverrides = _colorOverrides,
+            outputPath,
+            customFloorImages = _customFloorImages.Select(image => new
+            {
+                id = image.Id,
+                name = image.Name,
+                path = image.Path,
+                bbox = image.Bbox,
+                visible = _visibility.GetValueOrDefault(image.Id, false),
+            }).ToList(),
+            logoImages,
+        };
     }
 
     private void LoadPreviewImage()
@@ -1402,6 +1495,14 @@ public partial class MainWindow : Window
             if (file is null) return;
             foreach (var logo in file.Logos.Where(logo => !string.IsNullOrWhiteSpace(logo.Path)))
             {
+                if (string.IsNullOrWhiteSpace(logo.Id))
+                {
+                    logo.Id = Guid.NewGuid().ToString("N");
+                }
+                if (logo.Height <= 0)
+                {
+                    logo.Height = Math.Max(1, logo.Width);
+                }
                 _logoImages.Add(logo);
             }
             _selectedLogo = _logoImages.FirstOrDefault();
@@ -1422,6 +1523,41 @@ public partial class MainWindow : Window
         Directory.CreateDirectory(Path.GetDirectoryName(_logosPath)!);
         var payload = new LogoFile { Logos = _logoImages.Select(CloneLogo).ToList() };
         File.WriteAllText(_logosPath, JsonSerializer.Serialize(payload, _jsonOptions));
+    }
+
+    private void ApplyLogoEditorState(JsonElement root)
+    {
+        if (!root.TryGetProperty("project", out var project) || !project.TryGetProperty("items", out var itemsJson)) return;
+        var selectedId = project.TryGetProperty("selectedId", out var selectedJson) ? selectedJson.GetString() : null;
+
+        _logoImages.Clear();
+        foreach (var item in itemsJson.EnumerateArray())
+        {
+            var id = JsonString(item, "id", Guid.NewGuid().ToString("N"));
+            var path = JsonString(item, "path", string.Empty);
+            if (string.IsNullOrWhiteSpace(path)) continue;
+            _logoImages.Add(new CourtLogo
+            {
+                Id = id,
+                Name = JsonString(item, "name", "Logo"),
+                Path = path,
+                Visible = JsonBool(item, "visible", true),
+                X = JsonDouble(item, "x", 0),
+                Y = JsonDouble(item, "y", 0),
+                Width = Math.Max(1, JsonDouble(item, "width", 1)),
+                Height = Math.Max(1, JsonDouble(item, "height", 1)),
+                Rotation = JsonDouble(item, "rotation", 0),
+                Opacity = Math.Clamp(JsonDouble(item, "opacity", 100), 0, 100),
+                FlipX = JsonBool(item, "flipX", false),
+                FlipY = JsonBool(item, "flipY", false),
+            });
+        }
+
+        _selectedLogo = _logoImages.FirstOrDefault(logo => logo.Id == selectedId) ?? _logoImages.FirstOrDefault();
+        LogosList.SelectedItem = _selectedLogo;
+        SaveLogosFile();
+        RefreshLogoControls();
+        RefreshSelectionText();
     }
 
     private void DeleteLocalLogoFile(CourtLogo logo)
@@ -1446,13 +1582,48 @@ public partial class MainWindow : Window
         {
             Name = logo.Name,
             Path = logo.Path,
+            Id = logo.Id,
             Visible = logo.Visible,
             X = logo.X,
             Y = logo.Y,
             Width = logo.Width,
+            Height = logo.Height,
             Rotation = logo.Rotation,
             Opacity = logo.Opacity,
+            FlipX = logo.FlipX,
+            FlipY = logo.FlipY,
         };
+
+    private static (double Width, double Height) ReadImageSize(string path)
+    {
+        try
+        {
+            var decoder = BitmapDecoder.Create(new Uri(path), BitmapCreateOptions.IgnoreImageCache, BitmapCacheOption.OnLoad);
+            var frame = decoder.Frames.FirstOrDefault();
+            if (frame is not null && frame.PixelWidth > 0 && frame.PixelHeight > 0)
+            {
+                return (frame.PixelWidth, frame.PixelHeight);
+            }
+        }
+        catch { }
+
+        return (2, 1);
+    }
+
+    private static string JsonString(JsonElement item, string name, string fallback)
+        => item.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? fallback
+            : fallback;
+
+    private static bool JsonBool(JsonElement item, string name, bool fallback)
+        => item.TryGetProperty(name, out var value) && value.ValueKind is JsonValueKind.True or JsonValueKind.False
+            ? value.GetBoolean()
+            : fallback;
+
+    private static double JsonDouble(JsonElement item, string name, double fallback)
+        => item.TryGetProperty(name, out var value) && value.TryGetDouble(out var result)
+            ? result
+            : fallback;
 
     private static bool SetLogoValue<T>(T current, T next, Action<T> setValue)
     {

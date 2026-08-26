@@ -163,6 +163,7 @@ def render_preview(request_path: Path) -> dict:
     request = json.loads(request_path.read_text(encoding="utf-8"))
     template_path = Path(request.get("templatePath") or default_template_path())
     document = parse_court_psd_layers(template_path)
+    output_path = Path(request.get("outputPath") or PREVIEW_CACHE)
     visibility = {str(key): bool(value) for key, value in request.get("visibility", {}).items()}
     for layer_id in built_in_court_floor_layer_ids(document.layers):
         visibility[layer_id] = False
@@ -185,12 +186,12 @@ def render_preview(request_path: Path) -> dict:
         template_path,
         document,
         visibility,
-        PREVIEW_CACHE,
+        output_path,
         color_overrides=color_overrides,
         custom_floor_images=custom_floor_images,
         logo_images=logo_images,
     )
-    return {"ok": True, "previewPath": str(PREVIEW_CACHE)}
+    return {"ok": True, "previewPath": str(output_path)}
 
 
 def sample_color(layer_id: str) -> dict:
