@@ -64,12 +64,16 @@ public partial class MainWindow : Window
             ReadLoadResponse(response.RootElement);
             BuildLayerTree();
             RefreshSection();
-            SelectCurrentCourtFloor();
             BuildPresetButtons();
             BuildPalettePanel();
-            RefreshSelectionText();
-            await RefreshPreviewAsync();
-            SetStatus("Court workspace ready.");
+            var loadedStartupPreset = await ApplyStartupPresetAsync();
+            if (!loadedStartupPreset)
+            {
+                SelectCurrentCourtFloor();
+                RefreshSelectionText();
+                await RefreshPreviewAsync();
+            }
+            SetStatus(loadedStartupPreset ? "NBA preset loaded." : "Court workspace ready.");
         }
         catch (Exception ex)
         {
@@ -993,6 +997,17 @@ public partial class MainWindow : Window
         await RefreshPreviewAsync();
     }
 
+    private async Task<bool> ApplyStartupPresetAsync()
+    {
+        var preset = _presets.FirstOrDefault(item => string.Equals(item?.Name, "NBA", StringComparison.OrdinalIgnoreCase));
+        if (preset is null) return false;
+
+        await ApplyPresetAsync(preset);
+        SelectCurrentCourtFloor();
+        RefreshSelectionText();
+        return true;
+    }
+
     private void SavePreset(int slot)
     {
         while (_presets.Count <= slot)
@@ -1146,7 +1161,6 @@ public partial class MainWindow : Window
     {
         PaletteHost.Children.Clear();
         var query = PaletteSearchBox.Text.Trim();
-        var shown = 0;
         foreach (var palette in _teamPalettes)
         {
             var colors = palette.Colors
@@ -1156,7 +1170,9 @@ public partial class MainWindow : Window
 
             var expander = new Expander
             {
-                Header = $"{palette.Team}  {palette.League}",
+                Header = string.IsNullOrWhiteSpace(query)
+                    ? $"{palette.Team}  {palette.League}  {palette.Colors.Count} colors"
+                    : $"{palette.Team}  {palette.League}  {colors.Count}/{palette.Colors.Count}",
                 IsExpanded = !string.IsNullOrWhiteSpace(query),
                 Margin = new Thickness(0, 0, 0, 6),
             };
@@ -1167,8 +1183,6 @@ public partial class MainWindow : Window
             }
             expander.Content = wrap;
             PaletteHost.Children.Add(expander);
-            shown++;
-            if (shown >= 90) break;
         }
     }
 
