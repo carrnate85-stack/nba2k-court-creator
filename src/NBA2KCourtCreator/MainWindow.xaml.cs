@@ -1528,30 +1528,75 @@ public partial class MainWindow : Window
     {
         PaletteHost.Children.Clear();
         var query = PaletteSearchBox.Text.Trim();
-        foreach (var palette in _teamPalettes)
-        {
-            var colors = palette.Colors
-                .Where(color => PaletteMatches(palette, color, query))
-                .ToList();
-            if (colors.Count == 0) continue;
+        var groupedPalettes = _teamPalettes
+            .Select(palette => new
+            {
+                Palette = palette,
+                Colors = palette.Colors.Where(color => PaletteMatches(palette, color, query)).ToList(),
+            })
+            .Where(item => item.Colors.Count > 0)
+            .GroupBy(item => PaletteLeagueLabel(item.Palette.League))
+            .OrderBy(group => PaletteLeagueSortKey(group.Key))
+            .ThenBy(group => group.Key);
 
-            var expander = new Expander
+        foreach (var leagueGroup in groupedPalettes)
+        {
+            PaletteHost.Children.Add(new Border
             {
-                Header = string.IsNullOrWhiteSpace(query)
-                    ? $"{palette.Team}  {palette.League}  {palette.Colors.Count} colors"
-                    : $"{palette.Team}  {palette.League}  {colors.Count}/{palette.Colors.Count}",
-                IsExpanded = !string.IsNullOrWhiteSpace(query),
-                Margin = new Thickness(0, 0, 0, 6),
-            };
-            var wrap = new WrapPanel { Margin = new Thickness(0, 6, 0, 2) };
-            foreach (var color in colors)
+                Background = (WpfBrush)System.Windows.Application.Current.Resources["AccentSoftBrush"],
+                BorderBrush = (WpfBrush)System.Windows.Application.Current.Resources["BorderBrush"],
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(0, 4, 0, 6),
+                Child = new TextBlock
+                {
+                    Text = leagueGroup.Key,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = (WpfBrush)System.Windows.Application.Current.Resources["InkBrush"],
+                },
+            });
+
+            foreach (var item in leagueGroup.OrderBy(item => item.Palette.Team))
             {
-                wrap.Children.Add(PaletteButton(color));
+                var expander = new Expander
+                {
+                    Header = string.IsNullOrWhiteSpace(query)
+                        ? $"{item.Palette.Team}  {item.Palette.Colors.Count} colors"
+                        : $"{item.Palette.Team}  {item.Colors.Count}/{item.Palette.Colors.Count}",
+                    IsExpanded = !string.IsNullOrWhiteSpace(query),
+                    Margin = new Thickness(0, 0, 0, 6),
+                };
+                var wrap = new WrapPanel { Margin = new Thickness(0, 6, 0, 2) };
+                foreach (var color in item.Colors)
+                {
+                    wrap.Children.Add(PaletteButton(color));
+                }
+                expander.Content = wrap;
+                PaletteHost.Children.Add(expander);
             }
-            expander.Content = wrap;
-            PaletteHost.Children.Add(expander);
         }
     }
+
+    private static string PaletteLeagueLabel(string league)
+    {
+        var normalized = NormalizeName(league);
+        return normalized switch
+        {
+            "ncaa d1" => "College",
+            "ncaa" => "College",
+            "college" => "College",
+            "nba" => "NBA",
+            _ => string.IsNullOrWhiteSpace(league) ? "Other" : league.Trim(),
+        };
+    }
+
+    private static int PaletteLeagueSortKey(string league)
+        => NormalizeName(league) switch
+        {
+            "nba" => 0,
+            "college" => 1,
+            _ => 99,
+        };
 
     private WpfButton PaletteButton(TeamColor color)
     {
