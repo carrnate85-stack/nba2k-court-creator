@@ -532,6 +532,8 @@ def category_for_floor_template(item: dict) -> str:
         return "Historic NBA"
     if floor_id in EVENT_ARENA_IDS:
         return "All-Star & Events"
+    if floor_id is not None and floor_id.startswith("4"):
+        return "Unknown"
     if "allstar" in token or "_event_" in token or " event " in token:
         return "All-Star & Events"
     if any(name in token for name in COLLEGE_FLOOR_KEYS):
@@ -571,6 +573,7 @@ def floor_id_for_template(item: dict) -> str | None:
 def category_rank(category: str) -> int:
     order = {
         "NBA": 0,
+        "Unknown": 5,
         "City Edition": 10,
         "Statement Edition": 20,
         "Classic Edition": 30,

@@ -491,6 +491,8 @@ def category_for_name(name: str) -> str:
         return "International"
     if any(key in token for key in MODE_FLOOR_KEYS):
         return "Modes & Generic"
+    if re.search(r"\(4\d{2}\)", spaced) or re.match(r"4\d{2}courtwood", token):
+        return "Unknown"
     if re.search(r"\(\d{3}\)", spaced) and all(
         variant not in token for variant in ("city", "statement", "classic", "event")
     ):
