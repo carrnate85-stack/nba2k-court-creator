@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import re
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from export_2k26_court_texture import (
     choose_format,
@@ -32,6 +32,7 @@ def main() -> None:
     parser.add_argument("--output", required=True)
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--save-dds", action="store_true")
+    parser.add_argument("--no-clean-speckles", action="store_true")
     args = parser.parse_args()
 
     game_root = Path(args.game_root)
@@ -63,7 +64,11 @@ def main() -> None:
         name = friendly_name(mip0_path)
         png_path = image_root / f"{template_id}.png"
         with Image.open(BytesIO(dds_data)) as image:
-            image.convert("RGBA").save(png_path)
+            display_image = image.convert("RGBA")
+        if not args.no_clean_speckles:
+            display_image = clean_decode_speckles(display_image)
+        display_image.putalpha(255)
+        display_image.save(png_path)
 
         dds_path = None
         if args.save_dds:
@@ -81,6 +86,7 @@ def main() -> None:
                 "width": width,
                 "height": display_height,
                 "format": fourcc,
+                "cleaned": not args.no_clean_speckles,
             }
         )
         print(f"{index}/{len(candidates)} {name}")
@@ -142,6 +148,45 @@ def friendly_name(path: Path) -> str:
         else:
             titled.append(word.title())
     return " ".join(titled)
+
+
+def clean_decode_speckles(image: Image.Image) -> Image.Image:
+    source = image.convert("RGBA")
+    source_alpha = source.getchannel("A")
+    cleaned = source.convert("RGB")
+    for _ in range(2):
+        median = cleaned.filter(ImageFilter.MedianFilter(3))
+        mask = Image.new("L", cleaned.size, 0)
+        pixels = cleaned.load()
+        median_pixels = median.load()
+        alpha_pixels = source_alpha.load()
+        mask_pixels = mask.load()
+        width, height = cleaned.size
+        for y in range(height):
+            for x in range(width):
+                red, green, blue = pixels[x, y]
+                median_red, median_green, median_blue = median_pixels[x, y]
+                luma = (red * 30 + green * 59 + blue * 11) // 100
+                median_luma = (
+                    median_red * 30 + median_green * 59 + median_blue * 11
+                ) // 100
+                color_delta = (
+                    abs(red - median_red)
+                    + abs(green - median_green)
+                    + abs(blue - median_blue)
+                )
+                dark_outlier = median_luma - luma > 24 and luma < 170 and color_delta > 30
+                blue_outlier = (
+                    blue > green + 10
+                    or blue > red + 8
+                    or (blue > median_blue + 18 and color_delta > 24)
+                )
+                transparent_outlier = alpha_pixels[x, y] < 255
+                if transparent_outlier or dark_outlier or blue_outlier:
+                    mask_pixels[x, y] = 255
+        cleaned = Image.composite(median, cleaned, mask)
+    cleaned.putalpha(255)
+    return cleaned
 
 
 def relative_to_asset_root(path: Path | None) -> str | None:

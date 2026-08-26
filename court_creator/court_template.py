@@ -576,9 +576,9 @@ def _composite_custom_floor(
 
     with Image.open(path) as opened:
         image = opened.convert("RGBA")
-    image = image.resize(
+    image = _fit_image_to_box(
+        image,
         (max(1, round(width * scale)), max(1, round(height * scale))),
-        Image.Resampling.LANCZOS,
     )
     canvas.alpha_composite(image, (round(left * scale), round(top * scale)))
 
@@ -586,6 +586,20 @@ def _composite_custom_floor(
 def _is_court_floor_group_name(name: str) -> bool:
     normalized = " ".join(name.casefold().replace("_", " ").replace("-", " ").split())
     return normalized in {"court floors", "court floor", "floor options", "floors"}
+
+
+def _fit_image_to_box(image, size: tuple[int, int]):
+    try:
+        from PIL import Image, ImageOps
+    except ImportError as exc:
+        raise RuntimeError("Court preview export requires Pillow.") from exc
+
+    return ImageOps.fit(
+        image,
+        size,
+        method=Image.Resampling.LANCZOS,
+        centering=(0.5, 0.5),
+    )
 
 
 def _average_visible_color(image) -> tuple[int, int, int] | None:
