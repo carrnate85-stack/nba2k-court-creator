@@ -318,6 +318,7 @@ public partial class MainWindow : Window
         PalettePanel.Visibility = paint || team ? Visibility.Visible : Visibility.Collapsed;
         PresetPanel.Visibility = presets ? Visibility.Visible : Visibility.Collapsed;
         ExportPanel.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
+        RefreshInlineColorControls();
     }
 
     private IEnumerable<CourtLayerNode> PaintAndLineRoots()
@@ -387,12 +388,16 @@ public partial class MainWindow : Window
         await LoadSelectedLayerColorAsync();
     }
 
-    private void OnSectionChanged(object sender, RoutedEventArgs e)
+    private async void OnSectionChanged(object sender, RoutedEventArgs e)
     {
         if (sender is not System.Windows.Controls.RadioButton { Tag: string section }) return;
         if (!IsLoaded) return;
         _currentSection = section;
         RefreshSection();
+        if (_currentSection == "paint")
+        {
+            await LoadVisibleInlineColorsAsync();
+        }
     }
 
     private void OnFloorSearchChanged(object sender, TextChangedEventArgs e)
@@ -419,30 +424,36 @@ public partial class MainWindow : Window
 
     private async Task LoadSelectedLayerColorAsync()
     {
-        if (_selectedLayer is null || !IsColorableLayer(_selectedLayer)) return;
-        if (_colorOverrides.TryGetValue(_selectedLayer.Id, out var overrideColor))
+        if (_selectedLayer is null) return;
+        await LoadLayerColorAsync(_selectedLayer);
+    }
+
+    private async Task LoadLayerColorAsync(CourtLayerNode layer)
+    {
+        if (!IsColorableLayer(layer)) return;
+        if (_colorOverrides.TryGetValue(layer.Id, out var overrideColor))
         {
-            SetLayerHex(_selectedLayer, RgbToHex(overrideColor), rememberAsTemplate: false);
+            SetLayerHex(layer, RgbToHex(overrideColor), rememberAsTemplate: false);
             RefreshSelectionText();
             return;
         }
 
-        if (_templateColors.TryGetValue(_selectedLayer.Id, out var cached))
+        if (_templateColors.TryGetValue(layer.Id, out var cached))
         {
-            SetLayerHex(_selectedLayer, cached, rememberAsTemplate: false);
+            SetLayerHex(layer, cached, rememberAsTemplate: false);
             RefreshSelectionText();
             return;
         }
 
         try
         {
-            using var response = await _backend.SampleColorAsync(_selectedLayer.Id);
+            using var response = await _backend.SampleColorAsync(layer.Id);
             if (response.RootElement.TryGetProperty("color", out var color) && color.ValueKind == JsonValueKind.Array)
             {
                 var rgb = color.EnumerateArray().Select(x => x.GetInt32()).ToArray();
                 if (rgb.Length >= 3)
                 {
-                    SetLayerHex(_selectedLayer, RgbToHex(rgb), rememberAsTemplate: true);
+                    SetLayerHex(layer, RgbToHex(rgb), rememberAsTemplate: true);
                     RefreshSelectionText();
                 }
             }
@@ -450,6 +461,14 @@ public partial class MainWindow : Window
         catch
         {
             // Color sampling is helpful, but layer editing can continue without it.
+        }
+    }
+
+    private async Task LoadVisibleInlineColorsAsync()
+    {
+        foreach (var layer in _layersById.Values.Where(layer => layer.ShowInlineColorControls && string.IsNullOrWhiteSpace(layer.ActiveHex)).ToList())
+        {
+            await LoadLayerColorAsync(layer);
         }
     }
 
@@ -498,6 +517,7 @@ public partial class MainWindow : Window
         }
 
         RefreshSelectionText();
+        RefreshInlineColorControls();
         await RefreshPreviewAsync();
     }
 
@@ -583,6 +603,12 @@ public partial class MainWindow : Window
     private async Task ApplyHexAsync(string hex)
     {
         if (_selectedLayer is null || !IsColorableLayer(_selectedLayer)) return;
+        await ApplyHexAsync(_selectedLayer, hex);
+    }
+
+    private async Task ApplyHexAsync(CourtLayerNode layer, string hex)
+    {
+        if (!IsColorableLayer(layer)) return;
         var normalized = NormalizeHex(hex);
         if (normalized is null)
         {
@@ -590,10 +616,43 @@ public partial class MainWindow : Window
             return;
         }
 
-        _colorOverrides[_selectedLayer.Id] = HexToRgb(normalized);
-        SetLayerHex(_selectedLayer, normalized, rememberAsTemplate: false);
+        _selectedLayer = layer;
+        _colorOverrides[layer.Id] = HexToRgb(normalized);
+        SetLayerHex(layer, normalized, rememberAsTemplate: false);
         RefreshSelectionText();
         await RefreshPreviewAsync();
+    }
+
+    private async void OnInlineColorPick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: CourtLayerNode layer } || !IsColorableLayer(layer)) return;
+        _selectedLayer = layer;
+        SelectTreeItem(layer);
+        await LoadLayerColorAsync(layer);
+
+        var dialog = new System.Windows.Forms.ColorDialog { FullOpen = true };
+        if (NormalizeHex(layer.ActiveHex) is { } current)
+        {
+            var rgb = HexToRgb(current);
+            dialog.Color = System.Drawing.Color.FromArgb(rgb[0], rgb[1], rgb[2]);
+        }
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+        await ApplyHexAsync(layer, $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}");
+    }
+
+    private async void OnInlineHexKeyDown(object sender, WpfKeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || sender is not WpfTextBox { Tag: CourtLayerNode layer } textBox) return;
+        await ApplyHexAsync(layer, textBox.Text);
+        e.Handled = true;
+    }
+
+    private async void OnInlineHexLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is not WpfTextBox { Tag: CourtLayerNode layer } textBox) return;
+        if (string.Equals(NormalizeHex(textBox.Text), NormalizeHex(layer.ActiveHex), StringComparison.OrdinalIgnoreCase)) return;
+        await ApplyHexAsync(layer, textBox.Text);
     }
 
     private async void OnPickColor(object sender, RoutedEventArgs e)
@@ -1151,6 +1210,14 @@ public partial class MainWindow : Window
         if (layer.IsGroup) return false;
         if (NormalizeName(layer.Name) == "outside color") return true;
         return Ancestors(layer).Any(parent => NormalizeName(parent.Name) is "paint colors" or "lines");
+    }
+
+    private void RefreshInlineColorControls()
+    {
+        foreach (var layer in _layersById.Values)
+        {
+            layer.ShowInlineColorControls = _currentSection == "paint" && layer.Visible && IsColorableLayer(layer);
+        }
     }
 
     private bool IsInsideCourtFloor(CourtLayerNode layer) => CourtFloorGroupFor(layer) is not null;

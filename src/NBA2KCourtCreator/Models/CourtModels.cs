@@ -11,6 +11,7 @@ public sealed class CourtLayerNode : INotifyPropertyChanged
     private string _displayName = string.Empty;
     private bool _visible;
     private string _activeHex = string.Empty;
+    private bool _showInlineColorControls;
 
     public string Id { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
@@ -59,6 +60,17 @@ public sealed class CourtLayerNode : INotifyPropertyChanged
             _activeHex = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(SwatchBrush));
+        }
+    }
+
+    public bool ShowInlineColorControls
+    {
+        get => _showInlineColorControls;
+        set
+        {
+            if (_showInlineColorControls == value) return;
+            _showInlineColorControls = value;
+            OnPropertyChanged();
         }
     }
 

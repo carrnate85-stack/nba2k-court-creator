@@ -5,14 +5,37 @@
         Title="NBA 2K Court Creator" Width="1760" Height="920" MinWidth="1720" MinHeight="720"
         WindowStartupLocation="CenterScreen">
   <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <HierarchicalDataTemplate DataType="{x:Type models:CourtLayerNode}" ItemsSource="{Binding Children}">
-      <Grid Height="28" MinWidth="420">
+      <Grid Height="30" MinWidth="420">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="540" />
+        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="300" />
         <TextBlock Grid.Column="1" Text="{Binding VisibilityText}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="10,0,0,0" FontWeight="SemiBold" />
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    Margin="10,0,0,0"
+                    Visibility="{Binding ShowInlineColorControls, Converter={StaticResource BoolToVisibility}}">
+          <Button Width="24"
+                  Height="24"
+                  Padding="0"
+                  Margin="0,0,6,0"
+                  Tag="{Binding}"
+                  Click="OnInlineColorPick">
+            <Border Width="16" Height="16" Background="{Binding SwatchBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
+          </Button>
+          <TextBox Width="82"
+                   MinHeight="24"
+                   Padding="5,2"
+                   Text="{Binding ActiveHex, Mode=OneWay}"
+                   Tag="{Binding}"
+                   KeyDown="OnInlineHexKeyDown"
+                   LostFocus="OnInlineHexLostFocus" />
+        </StackPanel>
       </Grid>
     </HierarchicalDataTemplate>
   </Window.Resources>
