@@ -311,6 +311,7 @@ public partial class MainWindow : Window
         FloorSearchBox.Visibility = floors ? Visibility.Visible : Visibility.Collapsed;
         FloorActions.Visibility = Visibility.Collapsed;
         ExportActions.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
+        PresetStrip.Visibility = paint ? Visibility.Visible : Visibility.Collapsed;
         LayerPanel.Visibility = floors || paint ? Visibility.Visible : Visibility.Collapsed;
         SelectedLayerPanel.Visibility = floors || paint || team ? Visibility.Visible : Visibility.Collapsed;
         PalettePanel.Visibility = paint || team ? Visibility.Visible : Visibility.Collapsed;
@@ -404,7 +405,7 @@ public partial class MainWindow : Window
     private void RefreshSelectionText()
     {
         _syncing = true;
-        SelectedLayerText.Text = _selectedLayer is null ? "No layer selected." : _selectedLayer.DisplayName;
+        SelectedLayerText.Text = _selectedLayer is null ? "Court: No court selected." : $"Court: {_selectedLayer.DisplayName}";
         VisibleCheck.IsEnabled = _selectedLayer is not null;
         VisibleCheck.IsChecked = _selectedLayer?.Visible ?? false;
         var colorable = _selectedLayer is not null && IsColorableLayer(_selectedLayer);

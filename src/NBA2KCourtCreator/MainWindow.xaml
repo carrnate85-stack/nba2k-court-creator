@@ -59,9 +59,7 @@
       <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="18,12">
         <Grid>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220" />
-            <ColumnDefinition Width="120" />
-            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="420" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
@@ -69,20 +67,7 @@
             <TextBlock x:Name="ProjectNameText" Text="NBA 2K Court Creator" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
             <TextBlock x:Name="ProjectStateText" Text="Starting workspace..." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,3,0,0" />
           </StackPanel>
-          <StackPanel Grid.Column="1" Margin="10,0,8,0">
-            <TextBlock Text="Game" Foreground="{StaticResource MutedBrush}" FontSize="10" />
-            <ComboBox SelectedIndex="0">
-              <ComboBoxItem Content="NBA 2K25" />
-              <ComboBoxItem Content="NBA 2K26" />
-            </ComboBox>
-          </StackPanel>
-          <StackPanel Grid.Column="2" Margin="0,0,10,0">
-            <TextBlock Text="Template" Foreground="{StaticResource MutedBrush}" FontSize="10" />
-            <ComboBox x:Name="TemplatePicker" SelectedIndex="0">
-              <ComboBoxItem Content="RedLite2K Court" />
-            </ComboBox>
-          </StackPanel>
-          <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+          <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
             <Button Content="New" Click="OnResetDefault" />
             <Button Content="Open" Click="OnLoadState" />
             <Button Content="Save" Click="OnSaveState" />
@@ -130,14 +115,14 @@
 
         <Grid Grid.Row="2">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="900" />
+            <ColumnDefinition Width="940" />
             <ColumnDefinition Width="14" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
           <Grid.RowDefinitions>
-            <RowDefinition Height="450" />
+            <RowDefinition Height="470" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
@@ -156,30 +141,11 @@
 
           <GroupBox x:Name="SelectedLayerPanel" Grid.Row="1" Header="Selected">
             <Grid>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-              </Grid.RowDefinitions>
-              <TextBlock x:Name="SelectedLayerText" Text="No layer selected." FontWeight="SemiBold" TextWrapping="Wrap" />
-              <Grid Grid.Row="1" Margin="0,8,0,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="28" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <CheckBox x:Name="VisibleCheck" Content="Visible" VerticalAlignment="Center" Checked="OnVisibleChecked" Unchecked="OnVisibleChecked" />
-                <Border x:Name="SelectedColorBox" Grid.Column="1" Width="18" Height="18" Margin="8,0,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
-                <TextBox x:Name="HexBox" Grid.Column="2" Margin="6,0,0,0" Text="#FFFFFF" KeyDown="OnHexKeyDown" />
-                <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,8,0,0">
-                  <Button Content="Apply" Click="OnApplyHex" />
-                  <Button Content="Pick" Click="OnPickColor" />
-                  <Button Content="Reset" Click="OnResetColor" />
-                  <Button Content="Add Floor" Click="OnAddCustomFloor" />
-                </StackPanel>
+              <TextBlock x:Name="SelectedLayerText" Text="Court: No court selected." FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Grid Visibility="Collapsed">
+                <CheckBox x:Name="VisibleCheck" Checked="OnVisibleChecked" Unchecked="OnVisibleChecked" />
+                <Border x:Name="SelectedColorBox" />
+                <TextBox x:Name="HexBox" KeyDown="OnHexKeyDown" />
               </Grid>
             </Grid>
           </GroupBox>
@@ -217,11 +183,11 @@
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="540" />
+            <ColumnDefinition Width="500" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
-          <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+          <Border x:Name="PresetStrip" Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10" Margin="0,0,0,10" Visibility="Collapsed">
             <UniformGrid x:Name="PresetHost" Rows="1" Columns="5" />
           </Border>
 
