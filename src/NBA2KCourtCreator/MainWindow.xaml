@@ -15,7 +15,7 @@
               Padding="4,0">
         <Grid Height="26" HorizontalAlignment="Stretch">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="315" />
+            <ColumnDefinition Width="260" />
             <ColumnDefinition Width="52" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
@@ -264,7 +264,7 @@
               <Border Grid.Row="1" Background="{StaticResource AccentSoftBrush}" BorderBrush="#BFD3C9" BorderThickness="0,0,0,1">
                 <Grid Height="29" Margin="14,0,4,0">
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="315" />
+                    <ColumnDefinition Width="260" />
                     <ColumnDefinition Width="52" />
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
@@ -278,8 +278,11 @@
                         ItemsSource="{Binding SectionLayerRoots}"
                         SelectedItemChanged="OnLayerSelected"
                         MouseDoubleClick="OnLayerDoubleClick"
+                        PreviewMouseWheel="OnLayersTreePreviewMouseWheel"
                         PreviewMouseRightButtonDown="OnLayerRightClick"
-                        VirtualizingStackPanel.IsVirtualizing="True">
+                        ScrollViewer.CanContentScroll="True"
+                        VirtualizingStackPanel.IsVirtualizing="True"
+                        VirtualizingPanel.ScrollUnit="Pixel">
                 <TreeView.Resources>
                   <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#DCEDE9" />
                   <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#DCEDE9" />

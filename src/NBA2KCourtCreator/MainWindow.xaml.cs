@@ -54,6 +54,9 @@ public partial class MainWindow : Window
     private int _documentWidth;
     private int _documentHeight;
     private int _lastLogoEditorRevision = -1;
+    private ScrollViewer? _layersScrollViewer;
+    private DispatcherTimer? _layersScrollTimer;
+    private double _layersScrollTarget;
     private DispatcherTimer? _logoEditorPollTimer;
 
     public ObservableCollection<CourtLayerNode> LayerRoots => _layerRoots;
@@ -385,6 +388,11 @@ public partial class MainWindow : Window
         var parent = ParentOf(layer);
         if (parent is not null && IsCourtFloorGroup(parent))
         {
+            if (layer.IsGroup || IsFloorTemplateCategory(layer))
+            {
+                return FloorCategorySortKey(layer);
+            }
+
             return layer.IsCustomFloor ? 10000 : FloorNumber(layer.DisplayName);
         }
 
@@ -400,6 +408,25 @@ public partial class MainWindow : Window
         }
 
         return layer.PsdIndex;
+    }
+
+    private static int FloorCategorySortKey(CourtLayerNode layer)
+    {
+        var name = NormalizeName(layer.DisplayName);
+        return name switch
+        {
+            "nba" => 0,
+            "wnba" => 100,
+            "historic nba" => 200,
+            "historic" => 200,
+            "college" => 300,
+            "high school" => 400,
+            "event" => 500,
+            "events" => 500,
+            "custom" => 900,
+            "unknown" => 999,
+            _ => 600,
+        };
     }
 
     private static int FloorNumber(string value)
@@ -528,6 +555,48 @@ public partial class MainWindow : Window
             item.IsSelected = true;
             e.Handled = true;
         }
+    }
+
+    private void OnLayersTreePreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        var scrollViewer = _layersScrollViewer ??= FindChild<ScrollViewer>(LayersTree);
+        if (scrollViewer is null) return;
+
+        var currentTarget = _layersScrollTimer?.IsEnabled == true ? _layersScrollTarget : scrollViewer.VerticalOffset;
+        _layersScrollTarget = Math.Clamp(currentTarget - e.Delta * 0.55, 0, scrollViewer.ScrollableHeight);
+
+        if (_layersScrollTimer is null)
+        {
+            _layersScrollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(15) };
+            _layersScrollTimer.Tick += OnLayersScrollTimerTick;
+        }
+
+        if (!_layersScrollTimer.IsEnabled)
+        {
+            _layersScrollTimer.Start();
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnLayersScrollTimerTick(object? sender, EventArgs e)
+    {
+        if (_layersScrollViewer is null)
+        {
+            _layersScrollTimer?.Stop();
+            return;
+        }
+
+        var offset = _layersScrollViewer.VerticalOffset;
+        var remaining = _layersScrollTarget - offset;
+        if (Math.Abs(remaining) < 0.5)
+        {
+            _layersScrollViewer.ScrollToVerticalOffset(_layersScrollTarget);
+            _layersScrollTimer?.Stop();
+            return;
+        }
+
+        _layersScrollViewer.ScrollToVerticalOffset(offset + remaining * 0.28);
     }
 
     private async void OnVisibleChecked(object sender, RoutedEventArgs e)
@@ -1929,6 +1998,19 @@ public partial class MainWindow : Window
         {
             if (child is T typed) return typed;
             child = VisualTreeHelper.GetParent(child);
+        }
+        return null;
+    }
+
+    private static T? FindChild<T>(DependencyObject? parent) where T : DependencyObject
+    {
+        if (parent is null) return null;
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T typed) return typed;
+            var descendant = FindChild<T>(child);
+            if (descendant is not null) return descendant;
         }
         return null;
     }
