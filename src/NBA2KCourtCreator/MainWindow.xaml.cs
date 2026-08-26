@@ -333,6 +333,8 @@ public partial class MainWindow : Window
             _ => "Choose one court floor at a time, including custom and NBA 2K26 templates.",
         };
         LayerPanel.Header = paint ? "Paint & Lines" : "Court Floors";
+        LayerNameHeader.Text = paint ? "Layer / section" : "Court";
+        LayerColorHeader.Visibility = paint ? Visibility.Visible : Visibility.Collapsed;
         FloorSearchBox.Visibility = floors ? Visibility.Visible : Visibility.Collapsed;
         FloorActions.Visibility = Visibility.Collapsed;
         ExportActions.Visibility = export ? Visibility.Visible : Visibility.Collapsed;

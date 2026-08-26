@@ -12,12 +12,12 @@
               BorderBrush="#E7ECE8"
               BorderThickness="0,0,0,1"
               Background="White"
-              Padding="6,0">
-        <Grid Height="28" MinWidth="460">
+              Padding="4,0">
+        <Grid Height="26" HorizontalAlignment="Stretch">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="62" />
-            <ColumnDefinition Width="122" />
+            <ColumnDefinition Width="315" />
+            <ColumnDefinition Width="52" />
+            <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <TextBlock x:Name="LayerNameText"
                      Text="{Binding DisplayName}"
@@ -54,10 +54,19 @@
         </Grid>
       </Border>
       <HierarchicalDataTemplate.Triggers>
+        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem}, Path=(ItemsControl.AlternationIndex)}" Value="1">
+          <Setter TargetName="LayerRow" Property="Background" Value="{StaticResource RowAltBrush}" />
+        </DataTrigger>
         <DataTrigger Binding="{Binding IsGroup}" Value="True">
           <Setter TargetName="LayerRow" Property="Background" Value="{StaticResource AccentSoftBrush}" />
           <Setter TargetName="LayerRow" Property="BorderBrush" Value="#BFD3C9" />
           <Setter TargetName="LayerNameText" Property="FontWeight" Value="Bold" />
+          <Setter TargetName="LayerStateText" Property="Foreground" Value="{StaticResource InkBrush}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=TreeViewItem}}" Value="True">
+          <Setter TargetName="LayerRow" Property="Background" Value="{StaticResource RowSelectedBrush}" />
+          <Setter TargetName="LayerRow" Property="BorderBrush" Value="#AACDBD" />
+          <Setter TargetName="LayerNameText" Property="FontWeight" Value="SemiBold" />
           <Setter TargetName="LayerStateText" Property="Foreground" Value="{StaticResource InkBrush}" />
         </DataTrigger>
       </HierarchicalDataTemplate.Triggers>
@@ -253,15 +262,15 @@
               </Grid.RowDefinitions>
               <TextBox x:Name="FloorSearchBox" Grid.Row="0" TextChanged="OnFloorSearchChanged" Margin="0,0,0,8" />
               <Border Grid.Row="1" Background="{StaticResource AccentSoftBrush}" BorderBrush="#BFD3C9" BorderThickness="0,0,0,1">
-                <Grid Height="29" Margin="10,0">
+                <Grid Height="29" Margin="14,0,4,0">
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="62" />
-                    <ColumnDefinition Width="122" />
+                    <ColumnDefinition Width="315" />
+                    <ColumnDefinition Width="52" />
+                    <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
-                  <TextBlock Text="Court / section" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
+                  <TextBlock x:Name="LayerNameHeader" Text="Court" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
                   <TextBlock Grid.Column="1" Text="State" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
-                  <TextBlock Grid.Column="2" Text="Color" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
+                  <TextBlock x:Name="LayerColorHeader" Grid.Column="2" Text="Color" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource InkBrush}" Visibility="Collapsed" />
                 </Grid>
               </Border>
               <TreeView x:Name="LayersTree"

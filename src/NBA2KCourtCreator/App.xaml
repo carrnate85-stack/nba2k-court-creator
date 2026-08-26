@@ -10,6 +10,8 @@
     <Color x:Key="Border">#D5DDD8</Color>
     <Color x:Key="Accent">#216C50</Color>
     <Color x:Key="AccentSoft">#DDECE5</Color>
+    <Color x:Key="RowAlt">#F7FAF7</Color>
+    <Color x:Key="RowSelected">#CFE8DC</Color>
     <Color x:Key="Sidebar">#19583F</Color>
     <SolidColorBrush x:Key="InkBrush" Color="{StaticResource Ink}" />
     <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource Muted}" />
@@ -18,6 +20,8 @@
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
     <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource AccentSoft}" />
+    <SolidColorBrush x:Key="RowAltBrush" Color="{StaticResource RowAlt}" />
+    <SolidColorBrush x:Key="RowSelectedBrush" Color="{StaticResource RowSelected}" />
     <SolidColorBrush x:Key="SidebarBrush" Color="{StaticResource Sidebar}" />
     <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource AccentSoft}" />
     <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="{StaticResource AccentSoft}" />
@@ -174,13 +178,66 @@
       <Setter Property="Background" Value="White" />
       <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Padding" Value="6" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="AlternationCount" Value="2" />
     </Style>
 
     <Style TargetType="TreeViewItem">
       <Setter Property="IsExpanded" Value="True" />
-      <Setter Property="Padding" Value="3" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="AlternationCount" Value="2" />
       <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="TreeViewItem">
+            <StackPanel>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="10" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton x:Name="Expander"
+                              Width="10"
+                              Height="20"
+                              Padding="0"
+                              Margin="0"
+                              IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                              Visibility="Hidden"
+                              Focusable="False">
+                  <TextBlock Text="+" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </ToggleButton>
+                <Border x:Name="Bd"
+                        Grid.Column="1"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Padding="{TemplateBinding Padding}">
+                  <ContentPresenter x:Name="PART_Header"
+                                    ContentSource="Header"
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                </Border>
+              </Grid>
+              <ItemsPresenter x:Name="ItemsHost" Margin="0" />
+            </StackPanel>
+            <ControlTemplate.Triggers>
+              <Trigger Property="HasItems" Value="True">
+                <Setter TargetName="Expander" Property="Visibility" Value="Visible" />
+              </Trigger>
+              <Trigger Property="IsExpanded" Value="False">
+                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed" />
+              </Trigger>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#EEF5F0" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
 
     <Style TargetType="ListBox">
