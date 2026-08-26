@@ -126,6 +126,10 @@ def main() -> None:
 def load_state(template_path: Path | None = None) -> dict:
     template_path = template_path or default_template_path()
     document = parse_court_psd_layers(template_path)
+    hidden_builtin_floor_ids = built_in_court_floor_layer_ids(document.layers)
+    visible_layers = [
+        layer for layer in document.layers if layer.id not in hidden_builtin_floor_ids
+    ]
     ensure_preview(template_path)
     custom_floor_layers, custom_floor_images = load_custom_floor_layers(document)
     template_floor_layers, template_floor_images = load_floor_template_layers(
@@ -140,9 +144,12 @@ def load_state(template_path: Path | None = None) -> dict:
             "path": str(template_path),
             "width": document.width,
             "height": document.height,
-            "layers": [asdict(layer) for layer in document.layers],
+            "layers": [asdict(layer) for layer in visible_layers],
         },
-        "visibility": {layer.id: layer.visible for layer in document.layers},
+        "visibility": {
+            **{layer.id: layer.visible for layer in visible_layers},
+            **{layer_id: False for layer_id in hidden_builtin_floor_ids},
+        },
         "customFloorLayers": [
             asdict(layer) for layer in [*custom_floor_layers, *template_floor_layers]
         ],
@@ -157,6 +164,8 @@ def render_preview(request_path: Path) -> dict:
     template_path = Path(request.get("templatePath") or default_template_path())
     document = parse_court_psd_layers(template_path)
     visibility = {str(key): bool(value) for key, value in request.get("visibility", {}).items()}
+    for layer_id in built_in_court_floor_layer_ids(document.layers):
+        visibility[layer_id] = False
     color_overrides = normalize_color_overrides(request.get("colorOverrides", {}))
     custom_floor_images = []
     for item in request.get("customFloorImages", []):
@@ -321,6 +330,7 @@ def load_floor_template_layers(
             if not path.exists():
                 continue
             category = str(item.get("category") or category_for_floor_template(item))
+            default_visible = template_index == 0
             if category not in category_groups:
                 group = CourtLayer(
                     id=f"floor_template_category_{safe_stem(category)}",
@@ -329,7 +339,7 @@ def load_floor_template_layers(
                     parent_id=floor_group.id,
                     psd_index=10900 + category_rank(category),
                     depth=1,
-                    visible=False,
+                    visible=default_visible,
                     opacity=255,
                     blend_mode="pass",
                     bbox=fallback_bbox,
@@ -344,7 +354,7 @@ def load_floor_template_layers(
                 parent_id=category_groups[category].id,
                 psd_index=11000 + category_rank(category) * 1000 + start_index + template_index,
                 depth=2,
-                visible=False,
+                visible=default_visible,
                 opacity=255,
                 blend_mode="norm",
                 bbox=fallback_bbox,
@@ -438,6 +448,19 @@ def court_floor_bbox(layers, floor_group: CourtLayer | None) -> tuple[int, int, 
         if layer.parent_id == floor_group.id and layer.kind == "layer" and layer.bbox[2] > 0 and layer.bbox[3] > 0:
             return layer.bbox
     return None
+
+
+def built_in_court_floor_layer_ids(layers) -> set[str]:
+    floor_group = court_floor_group(layers)
+    if floor_group is None:
+        return set()
+    return {
+        layer.id
+        for layer in layers
+        if layer.parent_id == floor_group.id
+        and layer.kind == "layer"
+        and normalize_name(layer.name).startswith("full floor")
+    }
 
 
 def normalize_color_overrides(color_overrides: object) -> dict[str, tuple[int, int, int]]:

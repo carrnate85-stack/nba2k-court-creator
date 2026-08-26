@@ -68,7 +68,7 @@
             <ColumnDefinition Width="220" />
             <ColumnDefinition Width="120" />
             <ColumnDefinition Width="150" />
-            <ColumnDefinition Width="560" />
+            <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <StackPanel VerticalAlignment="Center">
@@ -136,56 +136,29 @@
 
         <Grid Grid.Row="2">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="560" />
-            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="330" />
+            <ColumnDefinition Width="14" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
           <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
+            <RowDefinition Height="210" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="260" />
+            <RowDefinition Height="*" />
           </Grid.RowDefinitions>
 
-          <GroupBox x:Name="LayerPanel" Header="Court Floors">
+          <Border Background="#20242B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" MouseLeftButtonUp="OnPreviewClicked" Cursor="Hand" Margin="0,0,0,8">
             <Grid>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="26" />
-                <RowDefinition Height="*" />
-              </Grid.RowDefinitions>
-              <TextBox x:Name="FloorSearchBox" Grid.Row="0" TextChanged="OnFloorSearchChanged" Margin="0,0,0,8" />
-              <Grid Grid.Row="1" Margin="27,0,11,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="54" />
-                  <ColumnDefinition Width="28" />
-                  <ColumnDefinition Width="76" />
-                  <ColumnDefinition Width="52" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Layer" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" />
-                <TextBlock Grid.Column="1" Text="Visible" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="2" Text="" />
-                <TextBlock Grid.Column="3" Text="Hex" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="4" Text="Opacity" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
-              </Grid>
-              <TreeView x:Name="LayersTree"
-                        Grid.Row="2"
-                        ItemsSource="{Binding SectionLayerRoots}"
-                        SelectedItemChanged="OnLayerSelected"
-                        MouseDoubleClick="OnLayerDoubleClick"
-                        PreviewMouseRightButtonDown="OnLayerRightClick"
-                        VirtualizingStackPanel.IsVirtualizing="True">
-                <TreeView.ContextMenu>
-                  <ContextMenu>
-                    <MenuItem Header="Rename" Click="OnRenameLayer" />
-                    <MenuItem Header="Remove Custom Floor" Click="OnRemoveCustomFloor" />
-                  </ContextMenu>
-                </TreeView.ContextMenu>
-              </TreeView>
+              <Image x:Name="PreviewImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+              <TextBlock x:Name="PreviewEmptyText"
+                         Text="Loading court preview..."
+                         Foreground="#D8DDE8"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         FontSize="13" />
             </Grid>
-          </GroupBox>
+          </Border>
 
           <GroupBox x:Name="SelectedLayerPanel" Grid.Row="1" Header="Selected">
             <Grid>
@@ -198,19 +171,21 @@
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="28" />
-                  <ColumnDefinition Width="90" />
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <CheckBox x:Name="VisibleCheck" Content="Visible" VerticalAlignment="Center" Checked="OnVisibleChecked" Unchecked="OnVisibleChecked" />
                 <Border x:Name="SelectedColorBox" Grid.Column="1" Width="18" Height="18" Margin="8,0,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
                 <TextBox x:Name="HexBox" Grid.Column="2" Margin="6,0,0,0" Text="#FFFFFF" KeyDown="OnHexKeyDown" />
-                <Button Grid.Column="3" Content="Apply" Margin="6,0,0,0" Click="OnApplyHex" />
-                <Button Grid.Column="4" Content="Pick" Click="OnPickColor" />
-                <Button Grid.Column="5" Content="Reset" Click="OnResetColor" />
-                <Button Grid.Column="6" Content="Add Floor" Click="OnAddCustomFloor" />
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,8,0,0">
+                  <Button Content="Apply" Click="OnApplyHex" />
+                  <Button Content="Pick" Click="OnPickColor" />
+                  <Button Content="Reset" Click="OnResetColor" />
+                  <Button Content="Add Floor" Click="OnAddCustomFloor" />
+                </StackPanel>
               </Grid>
             </Grid>
           </GroupBox>
@@ -252,17 +227,44 @@
             <UniformGrid x:Name="PresetHost" Rows="1" Columns="5" />
           </Border>
 
-          <Border Grid.Row="1" Background="#20242B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" MouseLeftButtonUp="OnPreviewClicked" Cursor="Hand">
+          <GroupBox x:Name="LayerPanel" Grid.Row="1" Header="Court Floors" Margin="0">
             <Grid>
-              <Image x:Name="PreviewImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
-              <TextBlock x:Name="PreviewEmptyText"
-                         Text="Loading court preview..."
-                         Foreground="#D8DDE8"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center"
-                         FontSize="16" />
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="26" />
+                <RowDefinition Height="*" />
+              </Grid.RowDefinitions>
+              <TextBox x:Name="FloorSearchBox" Grid.Row="0" TextChanged="OnFloorSearchChanged" Margin="0,0,0,8" />
+              <Grid Grid.Row="1" Margin="27,0,11,0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="54" />
+                  <ColumnDefinition Width="28" />
+                  <ColumnDefinition Width="76" />
+                  <ColumnDefinition Width="52" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Layer" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" />
+                <TextBlock Grid.Column="1" Text="Visible" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="" />
+                <TextBlock Grid.Column="3" Text="Hex" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="4" Text="Opacity" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
+              </Grid>
+              <TreeView x:Name="LayersTree"
+                        Grid.Row="2"
+                        ItemsSource="{Binding SectionLayerRoots}"
+                        SelectedItemChanged="OnLayerSelected"
+                        MouseDoubleClick="OnLayerDoubleClick"
+                        PreviewMouseRightButtonDown="OnLayerRightClick"
+                        VirtualizingStackPanel.IsVirtualizing="True">
+                <TreeView.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="Rename" Click="OnRenameLayer" />
+                    <MenuItem Header="Remove Custom Floor" Click="OnRemoveCustomFloor" />
+                  </ContextMenu>
+                </TreeView.ContextMenu>
+              </TreeView>
             </Grid>
-          </Border>
+          </GroupBox>
         </Grid>
         </Grid>
       </Grid>
