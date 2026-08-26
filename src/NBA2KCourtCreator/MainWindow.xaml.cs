@@ -259,7 +259,10 @@ public partial class MainWindow : Window
             var query = FloorSearchBox.Text.Trim();
             if (string.IsNullOrWhiteSpace(query))
             {
-                _sectionLayerRoots.Add(floorGroup);
+                foreach (var layer in floorGroup.Children)
+                {
+                    _sectionLayerRoots.Add(layer);
+                }
                 return;
             }
 

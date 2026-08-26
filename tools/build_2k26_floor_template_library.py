@@ -64,15 +64,230 @@ HISTORIC_NBA_FLOOR_KEYS = {
     "timberwolves2011",
     "wizards2014",
 }
-INTERNATIONAL_FLOOR_KEYS = {"barcelona", "madrid", "paris"}
+INTERNATIONAL_FLOOR_KEYS = {
+    "barcelona",
+    "basquetmadrid",
+    "fcmalaga",
+    "fiba",
+    "fibagame",
+    "madrid",
+    "multileague",
+    "paris",
+    "strasbourg",
+}
 MODE_FLOOR_KEYS = {
     "aau",
+    "aaugym",
     "clutchtime",
     "gleagueignite",
+    "hsgym",
     "matchmaking",
     "myteam",
     "scrimmage",
+    "statechampionship",
     "summerleaguegeneric",
+}
+ARENA_TEAM_NAMES = {
+    "000": "Philadelphia 76ers",
+    "001": "Milwaukee Bucks",
+    "002": "Washington Wizards",
+    "003": "Chicago Bulls",
+    "004": "Cleveland Cavaliers",
+    "005": "Boston Celtics",
+    "006": "Los Angeles Clippers",
+    "008": "Memphis Grizzlies",
+    "009": "Atlanta Hawks",
+    "010": "Miami Heat",
+    "011": "New Orleans Pelicans",
+    "012": "Utah Jazz",
+    "013": "Sacramento Kings",
+    "014": "New York Knicks",
+    "015": "Los Angeles Lakers",
+    "016": "Orlando Magic",
+    "017": "Dallas Mavericks",
+    "018": "Brooklyn Nets",
+    "019": "Denver Nuggets",
+    "020": "Indiana Pacers",
+    "021": "Detroit Pistons",
+    "022": "Toronto Raptors",
+    "023": "Houston Rockets",
+    "024": "Oklahoma City Thunder",
+    "025": "San Antonio Spurs",
+    "026": "Phoenix Suns",
+    "027": "Minnesota Timberwolves",
+    "028": "Portland Trail Blazers",
+    "029": "Golden State Warriors",
+    "031": "Charlotte Hornets / Bobcats",
+}
+WNBA_ARENA_NAMES = {
+    "300": "Las Vegas Aces",
+    "301": "Atlanta Dream",
+    "302": "Indiana Fever / Pacers Arena",
+    "303": "New York Liberty / Nets Arena",
+    "304": "Minnesota Lynx / Timberwolves Arena",
+    "305": "Phoenix Mercury / Suns Arena",
+    "306": "Washington Mystics",
+    "307": "Chicago Sky",
+    "308": "Los Angeles Sparks / Lakers Arena",
+    "309": "Seattle Storm",
+    "310": "Connecticut Sun",
+    "311": "Dallas Wings",
+    "315": "Golden State Valkyries / Chase Center",
+    "316": "Toronto Tempo",
+    "317": "Portland Fire",
+}
+HISTORIC_ARENA_NAMES = {
+    "551": "1985-86 Chicago Bulls",
+    "552": "1985-86 Boston Celtics / Boston Garden",
+    "553": "1987-93 Chicago Bulls / Chicago Stadium",
+    "554": "1986-87 Atlanta Hawks",
+    "555": "1980-90 Cleveland Cavaliers",
+    "556": "1989-90 Detroit Pistons",
+    "557": "1990-91 Los Angeles Lakers",
+    "558": "1990-91 Portland Trail Blazers",
+    "559": "1995-96 Chicago Bulls / United Center",
+    "560": "1994-95 New York Knicks",
+    "562": "1995-96 Seattle SuperSonics",
+    "564": "1997-98 Utah Jazz",
+    "570": "1964-65 Los Angeles Lakers",
+    "571": "1970-71 Milwaukee Bucks",
+    "572": "1971-72 Los Angeles Lakers",
+    "574": "1971-72 New York Knicks",
+    "576": "1984-85 Milwaukee Bucks",
+    "583": "1990-91 Golden State Warriors",
+    "586": "1992-93 Charlotte Hornets",
+    "588": "1993-94 Denver Nuggets",
+    "589": "1993-94 Houston Rockets",
+    "590": "1994-95 Orlando Magic",
+    "591": "1997-98 Los Angeles Lakers",
+    "592": "1997-98 San Antonio Spurs",
+    "593": "2001-02 Sacramento Kings",
+    "594": "1976-77 Philadelphia 76ers",
+    "595": "2000-01 Philadelphia 76ers",
+    "620": "1999-00 Toronto Raptors",
+    "621": "1999-00 Portland Trail Blazers",
+    "622": "2000-01 Los Angeles Lakers",
+    "623": "2002-03 Dallas Mavericks",
+    "624": "2003-04 Detroit Pistons",
+    "625": "2003-04 Minnesota Timberwolves",
+    "626": "2004-05 Phoenix Suns",
+    "627": "2005-06 Miami Heat",
+    "628": "2006-07 Cleveland Cavaliers",
+    "629": "2007-08 Boston Celtics",
+    "630": "2007-08 Houston Rockets",
+    "631": "2012-13 Miami Heat",
+    "632": "1996-97 Miami Heat",
+    "633": "1999-00 New York Knicks",
+    "634": "2015-16 / 2016-17 Golden State Warriors",
+    "635": "2001-02 New Jersey Nets",
+    "636": "2004-05 San Antonio Spurs",
+    "637": "2006-07 Golden State Warriors",
+    "638": "2006-07 Washington Wizards",
+    "639": "2007-08 Denver Nuggets",
+    "641": "2010-11 Chicago Bulls",
+    "642": "2010-11 Dallas Mavericks",
+    "644": "2011-12 New York Knicks",
+    "645": "2002-03 Phoenix Suns",
+    "646": "2009-10 Portland Trail Blazers",
+    "647": "2013-14 San Antonio Spurs",
+    "648": "2013-14 Los Angeles Clippers",
+    "649": "2015-16 Cleveland Cavaliers",
+    "924": "2018-19 Toronto Raptors",
+}
+EVENT_ARENA_NAMES = {
+    "700": "Summer League",
+    "701": "Generic Event Arena",
+    "728": "2K Sports Practice Gym",
+    "729": "2K15 / 2K Sports Practice Gym",
+    "800": "Historic Decades Arena",
+    "852": "Expansion Arena 852",
+    "853": "Expansion Arena 853",
+    "854": "Expansion Arena 854",
+    "855": "Expansion Arena 855",
+    "856": "Expansion Arena 856",
+    "857": "Expansion Arena 857",
+    "858": "Expansion Arena 858",
+    "859": "Expansion Arena 859",
+    "860": "Expansion Arena 860",
+    "861": "Expansion Arena 861",
+    "906": "Rec Center Gym",
+}
+VARIANT_LABELS = {
+    "city": "City",
+    "statement": "Statement",
+    "classic": "Classic",
+    "event": "Event",
+}
+SPECIAL_FLOOR_NAMES = {
+    "305rebel": "UNLV Rebels",
+    "aau": "AAU",
+    "aaugym": "AAU Gym",
+    "allstar2021": "NBA All-Star 2021",
+    "allstar2022": "NBA All-Star 2022",
+    "arizonawildcats": "Arizona Wildcats",
+    "barcelona": "Barcelona",
+    "basquetmadrid": "Basquet Madrid",
+    "baylorbears": "Baylor Bears",
+    "bobcats2011": "Charlotte Bobcats 2011",
+    "bucks2015": "Milwaukee Bucks 2015",
+    "bulls2016": "Chicago Bulls 2016",
+    "cavaliers2011": "Cleveland Cavaliers 2011",
+    "cavaliers2016": "Cleveland Cavaliers 2016",
+    "clippers2015": "Los Angeles Clippers 2015",
+    "clippers2022": "Los Angeles Clippers 2022",
+    "clutchtime": "Clutch Time",
+    "clutchtime1980": "Clutch Time 1980s",
+    "clutchtime1990": "Clutch Time 1990s",
+    "clutchtime2000": "Clutch Time 2000s",
+    "dukebluedevils": "Duke Blue Devils",
+    "floridagators": "Florida Gators",
+    "decades": "Decades All-Star Arena",
+    "fcmalaga": "FC Malaga",
+    "fiba": "FIBA / International Arena",
+    "fibagame": "FIBA Game Arena",
+    "gleagueignite": "G League Ignite",
+    "grizzlies2016": "Memphis Grizzlies 2005-06 / 2012-13",
+    "houstoncougars": "Houston Cougars",
+    "hsgym": "High School Gym",
+    "jazz2016": "Utah Jazz 2016",
+    "kansasjayhawks": "Kansas Jayhawks",
+    "kentuckywildcats": "Kentucky Wildcats",
+    "kentuckywildcatswomens": "Kentucky Wildcats Womens",
+    "kings2016": "Sacramento Kings 2016",
+    "knicks2016": "New York Knicks 2016",
+    "lakers1983": "1986-87 Los Angeles Lakers",
+    "louisvillecardinals": "Louisville Cardinals",
+    "madrid": "Madrid",
+    "matchmakingb1sponsor": "Matchmaking B1 Sponsor",
+    "michiganstatespartans": "Michigan State Spartans",
+    "michiganwolverines": "Michigan Wolverines",
+    "multileague": "Multi-League Arena",
+    "myteam": "MyTEAM",
+    "nets2012": "Brooklyn Nets 2012",
+    "nuggets2016": "Denver Nuggets 2016",
+    "ohiostatebuckeyes": "Ohio State Buckeyes",
+    "pacers2005": "Indiana Pacers 2005",
+    "paris": "Paris",
+    "pistons2016": "Detroit Pistons 2016",
+    "purdueboilermakers": "Purdue Boilermakers",
+    "raptors2016": "Toronto Raptors 2016",
+    "rockets2003": "Houston Rockets 2003",
+    "rockets2016": "Houston Rockets 2016",
+    "scrimmage5v5": "Scrimmage 5v5",
+    "spurs1998": "San Antonio Spurs 1998",
+    "statechampionship": "State Championship / Academy Arena",
+    "strasbourg": "Strasbourg / Minneapolis Lakers",
+    "summerleaguegeneric": "Summer League Generic",
+    "suns2016": "Phoenix Suns 2016",
+    "texaslonghorns": "Texas Longhorns",
+    "thunder2016": "Oklahoma City Thunder 2016",
+    "timberwolves2011": "Minnesota Timberwolves 2011",
+    "uclabruins": "UCLA Bruins",
+    "uconnhuskies": "UConn Huskies",
+    "unctarheels": "UNC Tar Heels",
+    "unctarheelswomens": "UNC Tar Heels Womens",
+    "wizards2014": "Washington Wizards 2014",
+    "wnbaallstar2025": "WNBA All-Star 2025",
 }
 
 
@@ -190,16 +405,58 @@ def template_id_for(path: Path) -> str:
 
 
 def friendly_name(path: Path) -> str:
-    name = path.name.rsplit(".", 2)[0]
-    name = re.sub(r"^floor_", "", name, flags=re.IGNORECASE)
-    name = re.sub(r"_basecolor$", "", name, flags=re.IGNORECASE)
-    words = name.replace("_", " ").split()
+    match = WOOD_FLOOR.match(path.name)
+    if not match:
+        return path.stem
+
+    floor_token = match.group("floor").casefold()
+    wood = f"Wood{match.group('wood') or '1'}"
+    mapped = team_floor_name(floor_token, wood)
+    if mapped is not None:
+        return mapped
+    if floor_token in WNBA_ARENA_NAMES:
+        return f"{WNBA_ARENA_NAMES[floor_token]} ({floor_token}) Court {wood}"
+    if floor_token in HISTORIC_ARENA_NAMES:
+        return f"{HISTORIC_ARENA_NAMES[floor_token]} ({floor_token}) Court {wood}"
+    if floor_token in EVENT_ARENA_NAMES:
+        return f"{EVENT_ARENA_NAMES[floor_token]} ({floor_token}) Court {wood}"
+    if floor_token in SPECIAL_FLOOR_NAMES:
+        return f"{SPECIAL_FLOOR_NAMES[floor_token]} Court {wood}"
+
+    return f"{title_floor_token(floor_token)} Court {wood}"
+
+
+def team_floor_name(floor_token: str, wood: str) -> str | None:
+    if floor_token in ARENA_TEAM_NAMES:
+        return f"{ARENA_TEAM_NAMES[floor_token]} ({floor_token}) Court {wood}"
+
+    match = re.fullmatch(r"(?P<arena>\d{3})(?P<variant>[a-z]+)", floor_token)
+    if not match:
+        return None
+
+    arena = match.group("arena")
+    team = ARENA_TEAM_NAMES.get(arena)
+    if team is None:
+        return None
+
+    variant = VARIANT_LABELS.get(match.group("variant"), match.group("variant").title())
+    return f"{team} ({arena}) {variant} Court {wood}"
+
+
+def title_floor_token(value: str) -> str:
+    words = re.findall(r"[a-z]+|\d+", value)
     titled = []
     for word in words:
-        if word.isdigit():
-            titled.append(f"Floor {int(word):03d}")
-        elif re.fullmatch(r"wood\d+", word, flags=re.IGNORECASE):
-            titled.append(word.capitalize())
+        if word == "allstar":
+            titled.append("All-Star")
+        elif word == "aau":
+            titled.append("AAU")
+        elif word == "myteam":
+            titled.append("MyTEAM")
+        elif word == "wnba":
+            titled.append("WNBA")
+        elif word == "5v5":
+            titled.append("5v5")
         else:
             titled.append(word.title())
     return " ".join(titled)
@@ -216,6 +473,8 @@ def category_for_name(name: str) -> str:
         return "Classic Edition"
     if "wnba" in token:
         return "WNBA"
+    if re.search(r"\((30[0-9]|31[01567])\)", spaced):
+        return "WNBA"
     if "allstar" in token or "event" in token:
         return "All-Star & Events"
     if any(key in token for key in COLLEGE_FLOOR_KEYS):
@@ -226,7 +485,9 @@ def category_for_name(name: str) -> str:
         return "International"
     if any(key in token for key in MODE_FLOOR_KEYS):
         return "Modes & Generic"
-    if re.search(r"\bfloor\s+\d+\b", spaced):
+    if re.search(r"\(\d{3}\)", spaced) and all(
+        variant not in token for variant in ("city", "statement", "classic", "event")
+    ):
         return "Numbered Courts"
     return "Special"
 
