@@ -4,6 +4,7 @@ from dataclasses import asdict
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
 import struct
 import sys
@@ -27,6 +28,59 @@ ONEDRIVE_ASSET_ROOT = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
 CUSTOM_FLOORS_DIR = LOCAL_ASSET_ROOT / "custom_floors"
 CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
 FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k26_floor_templates.json"
+COLLEGE_FLOOR_KEYS = {
+    "arizonawildcats",
+    "baylorbears",
+    "dukebluedevils",
+    "floridagators",
+    "houstoncougars",
+    "kansasjayhawks",
+    "kentuckywildcats",
+    "louisvillecardinals",
+    "michiganstatespartans",
+    "michiganwolverines",
+    "ohiostatebuckeyes",
+    "purdueboilermakers",
+    "texaslonghorns",
+    "uclabruins",
+    "uconnhuskies",
+    "unctarheels",
+}
+HISTORIC_NBA_FLOOR_KEYS = {
+    "bobcats2011",
+    "bucks2015",
+    "bulls2016",
+    "cavaliers2011",
+    "cavaliers2016",
+    "clippers2015",
+    "clippers2022",
+    "grizzlies2016",
+    "jazz2016",
+    "kings2016",
+    "knicks2016",
+    "nets2012",
+    "nuggets2016",
+    "pacers2005",
+    "pistons2016",
+    "raptors2016",
+    "rockets2003",
+    "rockets2016",
+    "spurs1998",
+    "suns2016",
+    "thunder2016",
+    "timberwolves2011",
+    "wizards2014",
+}
+INTERNATIONAL_FLOOR_KEYS = {"barcelona", "madrid", "paris"}
+MODE_FLOOR_KEYS = {
+    "aau",
+    "clutchtime",
+    "gleagueignite",
+    "matchmaking",
+    "myteam",
+    "scrimmage",
+    "summerleaguegeneric",
+}
 PROJECT_COURT_TEMPLATE_PSD = (
     LOCAL_ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
 )
@@ -259,20 +313,37 @@ def load_floor_template_layers(
         return layers, images
 
     template_index = 0
+    category_groups: dict[str, CourtLayer] = {}
     for meta_path in ONEDRIVE_ASSET_ROOT.glob(FLOOR_TEMPLATE_META_GLOB):
         data = json.loads(meta_path.read_text(encoding="utf-8"))
         for item in data.get("templates", []):
             path = resolve_asset_path(str(item.get("path", "")))
             if not path.exists():
                 continue
+            category = str(item.get("category") or category_for_floor_template(item))
+            if category not in category_groups:
+                group = CourtLayer(
+                    id=f"floor_template_category_{safe_stem(category)}",
+                    name=category,
+                    kind="group",
+                    parent_id=floor_group.id,
+                    psd_index=10900 + category_rank(category),
+                    depth=1,
+                    visible=False,
+                    opacity=255,
+                    blend_mode="pass",
+                    bbox=fallback_bbox,
+                )
+                category_groups[category] = group
+                layers.append(group)
             layer_id = str(item.get("id") or f"floor_template_{template_index}")
             layer = CourtLayer(
                 id=layer_id,
                 name=str(item.get("name") or path.stem),
                 kind="layer",
-                parent_id=floor_group.id,
-                psd_index=11000 + start_index + template_index,
-                depth=1,
+                parent_id=category_groups[category].id,
+                psd_index=11000 + category_rank(category) * 1000 + start_index + template_index,
+                depth=2,
                 visible=False,
                 opacity=255,
                 blend_mode="norm",
@@ -288,12 +359,58 @@ def load_floor_template_layers(
                     else str(path),
                     "bbox": layer.bbox,
                     "isTemplate": True,
+                    "category": category,
                     "sourceMip0": item.get("sourceMip0"),
                     "sourceTld": item.get("sourceTld"),
                 }
             )
             template_index += 1
     return layers, images
+
+
+def category_for_floor_template(item: dict) -> str:
+    token = " ".join(
+        str(value or "")
+        for value in (item.get("id"), item.get("name"), item.get("sourceMip0"))
+    ).casefold()
+    if "_city_" in token or " city " in token:
+        return "City Edition"
+    if "_statement_" in token or " statement " in token:
+        return "Statement Edition"
+    if "_classic_" in token or " classic " in token:
+        return "Classic Edition"
+    if "wnba" in token:
+        return "WNBA"
+    if "allstar" in token or "_event_" in token or " event " in token:
+        return "All-Star & Events"
+    if any(name in token for name in COLLEGE_FLOOR_KEYS):
+        return "College"
+    if any(name in token for name in HISTORIC_NBA_FLOOR_KEYS):
+        return "Historic NBA"
+    if any(name in token for name in INTERNATIONAL_FLOOR_KEYS):
+        return "International"
+    if any(name in token for name in MODE_FLOOR_KEYS):
+        return "Modes & Generic"
+    if re.search(r"floor[_ -]\d+[_ -]court[_ -]wood", token):
+        return "Numbered Courts"
+    return "Special"
+
+
+def category_rank(category: str) -> int:
+    order = {
+        "Numbered Courts": 0,
+        "City Edition": 10,
+        "Statement Edition": 20,
+        "Classic Edition": 30,
+        "Historic NBA": 40,
+        "College": 50,
+        "WNBA": 60,
+        "All-Star & Events": 70,
+        "International": 80,
+        "Modes & Generic": 90,
+        "Special": 100,
+    }
+    return order.get(category, 999)
 
 
 def save_custom_floor_metadata(images: list[dict]) -> None:

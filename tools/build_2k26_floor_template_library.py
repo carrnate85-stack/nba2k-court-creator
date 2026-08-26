@@ -21,6 +21,59 @@ WOOD_FLOOR = re.compile(
     r"^floor_(?P<floor>[a-z0-9]+)_court_wood(?P<wood>\d*)_basecolor\.[0-9a-f]+\.mip0$",
     re.IGNORECASE,
 )
+COLLEGE_FLOOR_KEYS = {
+    "arizonawildcats",
+    "baylorbears",
+    "dukebluedevils",
+    "floridagators",
+    "houstoncougars",
+    "kansasjayhawks",
+    "kentuckywildcats",
+    "louisvillecardinals",
+    "michiganstatespartans",
+    "michiganwolverines",
+    "ohiostatebuckeyes",
+    "purdueboilermakers",
+    "texaslonghorns",
+    "uclabruins",
+    "uconnhuskies",
+    "unctarheels",
+}
+HISTORIC_NBA_FLOOR_KEYS = {
+    "bobcats2011",
+    "bucks2015",
+    "bulls2016",
+    "cavaliers2011",
+    "cavaliers2016",
+    "clippers2015",
+    "clippers2022",
+    "grizzlies2016",
+    "jazz2016",
+    "kings2016",
+    "knicks2016",
+    "nets2012",
+    "nuggets2016",
+    "pacers2005",
+    "pistons2016",
+    "raptors2016",
+    "rockets2003",
+    "rockets2016",
+    "spurs1998",
+    "suns2016",
+    "thunder2016",
+    "timberwolves2011",
+    "wizards2014",
+}
+INTERNATIONAL_FLOOR_KEYS = {"barcelona", "madrid", "paris"}
+MODE_FLOOR_KEYS = {
+    "aau",
+    "clutchtime",
+    "gleagueignite",
+    "matchmaking",
+    "myteam",
+    "scrimmage",
+    "summerleaguegeneric",
+}
 
 
 def main() -> None:
@@ -62,6 +115,7 @@ def main() -> None:
 
         template_id = template_id_for(mip0_path)
         name = friendly_name(mip0_path)
+        category = category_for_name(name)
         png_path = image_root / f"{template_id}.png"
         with Image.open(BytesIO(dds_data)) as image:
             display_image = image.convert("RGBA")
@@ -87,6 +141,7 @@ def main() -> None:
                 "height": display_height,
                 "format": fourcc,
                 "cleaned": not args.no_clean_speckles,
+                "category": category,
             }
         )
         print(f"{index}/{len(candidates)} {name}")
@@ -150,7 +205,72 @@ def friendly_name(path: Path) -> str:
     return " ".join(titled)
 
 
+def category_for_name(name: str) -> str:
+    token = name.casefold().replace(" ", "")
+    spaced = name.casefold()
+    if "city" in token:
+        return "City Edition"
+    if "statement" in token:
+        return "Statement Edition"
+    if "classic" in token:
+        return "Classic Edition"
+    if "wnba" in token:
+        return "WNBA"
+    if "allstar" in token or "event" in token:
+        return "All-Star & Events"
+    if any(key in token for key in COLLEGE_FLOOR_KEYS):
+        return "College"
+    if any(key in token for key in HISTORIC_NBA_FLOOR_KEYS):
+        return "Historic NBA"
+    if any(key in token for key in INTERNATIONAL_FLOOR_KEYS):
+        return "International"
+    if any(key in token for key in MODE_FLOOR_KEYS):
+        return "Modes & Generic"
+    if re.search(r"\bfloor\s+\d+\b", spaced):
+        return "Numbered Courts"
+    return "Special"
+
+
 def clean_decode_speckles(image: Image.Image) -> Image.Image:
+    try:
+        import numpy as np
+    except ImportError:
+        return clean_decode_speckles_slow(image)
+
+    source = image.convert("RGBA")
+    source_alpha = source.getchannel("A")
+    cleaned = source.convert("RGB")
+    alpha_array = np.asarray(source_alpha)
+    for _ in range(2):
+        median = cleaned.filter(ImageFilter.MedianFilter(3))
+        pixels = np.asarray(cleaned, dtype=np.int16)
+        median_pixels = np.asarray(median, dtype=np.int16)
+        luma = (
+            pixels[:, :, 0] * 30 + pixels[:, :, 1] * 59 + pixels[:, :, 2] * 11
+        ) // 100
+        median_luma = (
+            median_pixels[:, :, 0] * 30
+            + median_pixels[:, :, 1] * 59
+            + median_pixels[:, :, 2] * 11
+        ) // 100
+        color_delta = np.abs(pixels - median_pixels).sum(axis=2)
+        dark_outlier = (median_luma - luma > 24) & (luma < 170) & (color_delta > 30)
+        blue_outlier = (
+            (pixels[:, :, 2] > pixels[:, :, 1] + 10)
+            | (pixels[:, :, 2] > pixels[:, :, 0] + 8)
+            | ((pixels[:, :, 2] > median_pixels[:, :, 2] + 18) & (color_delta > 24))
+        )
+        transparent_outlier = alpha_array < 255
+        mask_array = np.where(
+            transparent_outlier | dark_outlier | blue_outlier, 255, 0
+        ).astype("uint8")
+        mask = Image.fromarray(mask_array)
+        cleaned = Image.composite(median, cleaned, mask)
+    cleaned.putalpha(255)
+    return cleaned
+
+
+def clean_decode_speckles_slow(image: Image.Image) -> Image.Image:
     source = image.convert("RGBA")
     source_alpha = source.getchannel("A")
     cleaned = source.convert("RGB")

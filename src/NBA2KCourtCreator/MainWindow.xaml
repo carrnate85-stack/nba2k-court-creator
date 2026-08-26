@@ -45,12 +45,11 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="0,10,0,10">
-            <RadioButton Style="{StaticResource NavButton}" Content="Court Workspace" IsChecked="True" />
-            <RadioButton Style="{StaticResource NavButton}" Content="Floors" />
-            <RadioButton Style="{StaticResource NavButton}" Content="Paint &amp; Lines" />
-            <RadioButton Style="{StaticResource NavButton}" Content="Team Colors" />
-            <RadioButton Style="{StaticResource NavButton}" Content="Presets" />
-            <RadioButton Style="{StaticResource NavButton}" Content="Export" />
+            <RadioButton x:Name="FloorsNav" Style="{StaticResource NavButton}" Content="Court Floors" Tag="floors" IsChecked="True" Checked="OnSectionChanged" />
+            <RadioButton x:Name="PaintNav" Style="{StaticResource NavButton}" Content="Paint &amp; Lines" Tag="paint" Checked="OnSectionChanged" />
+            <RadioButton x:Name="TeamNav" Style="{StaticResource NavButton}" Content="Team Colors" Tag="team" Checked="OnSectionChanged" />
+            <RadioButton x:Name="PresetsNav" Style="{StaticResource NavButton}" Content="Presets" Tag="presets" Checked="OnSectionChanged" />
+            <RadioButton x:Name="ExportNav" Style="{StaticResource NavButton}" Content="Export" Tag="export" Checked="OnSectionChanged" />
           </StackPanel>
         </ScrollViewer>
       </DockPanel>
@@ -69,7 +68,7 @@
             <ColumnDefinition Width="220" />
             <ColumnDefinition Width="120" />
             <ColumnDefinition Width="150" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="560" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <StackPanel VerticalAlignment="Center">
@@ -107,10 +106,10 @@
           <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel>
-          <TextBlock Text="Court Workspace" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}" />
-          <TextBlock Text="Build the court layout, choose one floor, tune paint and line colors, then export the preview." Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
+          <TextBlock x:Name="WorkspaceTitle" Text="Court Floors" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}" />
+          <TextBlock x:Name="WorkspaceSubtitle" Text="Choose one court floor at a time, including custom and NBA 2K26 templates." Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
         </StackPanel>
-        <Grid Grid.Row="1" Margin="0,14,0,14">
+        <Grid x:Name="FloorActions" Grid.Row="1" Margin="0,14,0,14">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
@@ -119,14 +118,26 @@
           </Grid.ColumnDefinitions>
           <Button Grid.Column="0" Style="{StaticResource PrimaryButton}" Content="Load Court PSD" Click="OnLoadPsd" Padding="12,8" />
           <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Add Custom Floor" Click="OnAddCustomFloor" Padding="12,8" />
-          <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="Refresh Preview" Click="OnRefreshPreview" Padding="12,8" />
+          <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="Remove Custom Floor" Click="OnRemoveCustomFloor" Padding="12,8" />
           <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Content="Export PNG" Click="OnExportPng" Padding="12,8" Margin="0" />
+        </Grid>
+        <Grid x:Name="ExportActions" Grid.Row="1" Margin="0,14,0,14" Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Button Grid.Column="0" Style="{StaticResource PrimaryButton}" Content="Refresh Preview" Click="OnRefreshPreview" Padding="12,8" />
+          <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Export PNG" Click="OnExportPng" Padding="12,8" />
+          <Button Grid.Column="2" Content="Save State" Click="OnSaveState" Padding="12,8" />
+          <Button Grid.Column="3" Content="Open PSD" Click="OnOpenPsd" Padding="12,8" Margin="0" />
         </Grid>
 
         <Grid Grid.Row="2">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="480" />
-            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="560" />
+            <ColumnDefinition Width="10" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
@@ -137,13 +148,15 @@
             <RowDefinition Height="260" />
           </Grid.RowDefinitions>
 
-          <GroupBox Header="Court Layers">
+          <GroupBox x:Name="LayerPanel" Header="Court Floors">
             <Grid>
               <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="26" />
                 <RowDefinition Height="*" />
               </Grid.RowDefinitions>
-              <Grid Grid.Row="0" Margin="27,0,11,0">
+              <TextBox x:Name="FloorSearchBox" Grid.Row="0" TextChanged="OnFloorSearchChanged" Margin="0,0,0,8" />
+              <Grid Grid.Row="1" Margin="27,0,11,0">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="54" />
@@ -158,8 +171,8 @@
                 <TextBlock Grid.Column="4" Text="Opacity" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
               </Grid>
               <TreeView x:Name="LayersTree"
-                        Grid.Row="1"
-                        ItemsSource="{Binding LayerRoots}"
+                        Grid.Row="2"
+                        ItemsSource="{Binding SectionLayerRoots}"
                         SelectedItemChanged="OnLayerSelected"
                         MouseDoubleClick="OnLayerDoubleClick"
                         PreviewMouseRightButtonDown="OnLayerRightClick"
@@ -174,7 +187,7 @@
             </Grid>
           </GroupBox>
 
-          <GroupBox Grid.Row="1" Header="Selected Layer">
+          <GroupBox x:Name="SelectedLayerPanel" Grid.Row="1" Header="Selected">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -202,7 +215,7 @@
             </Grid>
           </GroupBox>
 
-          <GroupBox Grid.Row="2" Header="Team Colors">
+          <GroupBox x:Name="PalettePanel" Grid.Row="2" Header="Team Colors" Visibility="Collapsed">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -213,6 +226,19 @@
                 <StackPanel x:Name="PaletteHost" />
               </ScrollViewer>
             </Grid>
+          </GroupBox>
+          <GroupBox x:Name="PresetPanel" Grid.Row="2" Header="Presets" Visibility="Collapsed">
+            <StackPanel>
+              <UniformGrid x:Name="PresetSectionHost" Rows="5" Columns="1" />
+            </StackPanel>
+          </GroupBox>
+          <GroupBox x:Name="ExportPanel" Grid.Row="2" Header="Export" Visibility="Collapsed">
+            <StackPanel>
+              <Button Style="{StaticResource PrimaryButton}" Content="Refresh Preview" Click="OnRefreshPreview" Padding="12,8" Margin="0,0,0,8" />
+              <Button Style="{StaticResource PrimaryButton}" Content="Export PNG" Click="OnExportPng" Padding="12,8" Margin="0,0,0,8" />
+              <Button Content="Save State" Click="OnSaveState" Padding="12,8" Margin="0,0,0,8" />
+              <Button Content="Open Court PSD" Click="OnOpenPsd" Padding="12,8" Margin="0" />
+            </StackPanel>
           </GroupBox>
         </Grid>
 
@@ -226,7 +252,7 @@
             <UniformGrid x:Name="PresetHost" Rows="1" Columns="5" />
           </Border>
 
-          <Border Grid.Row="1" Background="#20242B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+          <Border Grid.Row="1" Background="#20242B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" MouseLeftButtonUp="OnPreviewClicked" Cursor="Hand">
             <Grid>
               <Image x:Name="PreviewImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
               <TextBlock x:Name="PreviewEmptyText"

@@ -26,6 +26,7 @@ public partial class MainWindow : Window
 {
     private readonly BackendClient _backend = new();
     private readonly ObservableCollection<CourtLayerNode> _layerRoots = [];
+    private readonly ObservableCollection<CourtLayerNode> _sectionLayerRoots = [];
     private readonly Dictionary<string, CourtLayerNode> _layersById = [];
     private readonly Dictionary<string, bool> _visibility = [];
     private readonly Dictionary<string, int[]> _colorOverrides = [];
@@ -38,11 +39,13 @@ public partial class MainWindow : Window
     private string _templatePath = string.Empty;
     private string _previewPath = string.Empty;
     private string _presetsPath = string.Empty;
+    private string _currentSection = "floors";
     private CourtLayerNode? _selectedLayer;
     private bool _syncing;
     private long _renderVersion;
 
     public ObservableCollection<CourtLayerNode> LayerRoots => _layerRoots;
+    public ObservableCollection<CourtLayerNode> SectionLayerRoots => _sectionLayerRoots;
 
     public MainWindow()
     {
@@ -59,6 +62,7 @@ public partial class MainWindow : Window
             using var response = await _backend.LoadAsync();
             ReadLoadResponse(response.RootElement);
             BuildLayerTree();
+            RefreshSection();
             BuildPresetButtons();
             BuildPalettePanel();
             RefreshSelectionText();
@@ -130,6 +134,10 @@ public partial class MainWindow : Window
             {
                 layer.IsTemplateFloor = true;
             }
+        }
+        foreach (var layer in _layersById.Values.Where(IsFloorTemplateCategory))
+        {
+            layer.IsTemplateFloor = true;
         }
 
         if (root.TryGetProperty("teamPalettes", out var palettes))
@@ -239,6 +247,105 @@ public partial class MainWindow : Window
         }
     }
 
+    private void RefreshSection()
+    {
+        _sectionLayerRoots.Clear();
+        UpdateSectionUi();
+
+        if (_currentSection == "floors")
+        {
+            var floorGroup = _layersById.Values.FirstOrDefault(IsCourtFloorGroup);
+            if (floorGroup is null) return;
+            var query = FloorSearchBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                _sectionLayerRoots.Add(floorGroup);
+                return;
+            }
+
+            foreach (var layer in Descendants(floorGroup).Where(layer => !layer.IsGroup && FloorMatches(layer, query)).OrderBy(CourtSortKey).ThenBy(l => l.DisplayName))
+            {
+                _sectionLayerRoots.Add(layer);
+            }
+            return;
+        }
+
+        if (_currentSection == "paint")
+        {
+            foreach (var layer in PaintAndLineRoots())
+            {
+                _sectionLayerRoots.Add(layer);
+            }
+            return;
+        }
+    }
+
+    private void UpdateSectionUi()
+    {
+        var floors = _currentSection == "floors";
+        var paint = _currentSection == "paint";
+        var team = _currentSection == "team";
+        var presets = _currentSection == "presets";
+        var export = _currentSection == "export";
+
+        WorkspaceTitle.Text = _currentSection switch
+        {
+            "paint" => "Paint & Lines",
+            "team" => "Team Colors",
+            "presets" => "Presets",
+            "export" => "Export",
+            _ => "Court Floors",
+        };
+        WorkspaceSubtitle.Text = _currentSection switch
+        {
+            "paint" => "Choose paint and line layers, then apply exact colors or team palette swatches.",
+            "team" => "Search NBA and college palettes, then apply colors to the selected paint or line layer.",
+            "presets" => "Load saved layouts or right click a preset to save the current court.",
+            "export" => "Refresh, save, and export the current court preview.",
+            _ => "Choose one court floor at a time, including custom and NBA 2K26 templates.",
+        };
+        LayerPanel.Header = paint ? "Paint & Lines" : "Court Floors";
+        FloorSearchBox.Visibility = floors ? Visibility.Visible : Visibility.Collapsed;
+        FloorActions.Visibility = floors ? Visibility.Visible : Visibility.Collapsed;
+        ExportActions.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
+        LayerPanel.Visibility = floors || paint ? Visibility.Visible : Visibility.Collapsed;
+        SelectedLayerPanel.Visibility = floors || paint || team ? Visibility.Visible : Visibility.Collapsed;
+        PalettePanel.Visibility = paint || team ? Visibility.Visible : Visibility.Collapsed;
+        PresetPanel.Visibility = presets ? Visibility.Visible : Visibility.Collapsed;
+        ExportPanel.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private IEnumerable<CourtLayerNode> PaintAndLineRoots()
+    {
+        var wantedGroups = new[] { "paint colors", "lines" };
+        foreach (var name in wantedGroups)
+        {
+            var group = _layersById.Values.FirstOrDefault(layer => layer.IsGroup && NormalizeName(layer.Name) == name);
+            if (group is not null)
+            {
+                yield return group;
+            }
+        }
+
+        foreach (var layer in _layersById.Values.Where(layer => !layer.IsGroup && NormalizeName(layer.Name) == "outside color").OrderBy(layer => layer.PsdIndex))
+        {
+            yield return layer;
+        }
+    }
+
+    private bool FloorMatches(CourtLayerNode layer, string query)
+    {
+        var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var haystack = string.Join(" ", new[]
+        {
+            layer.DisplayName,
+            layer.Name,
+            ParentOf(layer)?.DisplayName ?? string.Empty,
+            ParentOf(layer)?.Name ?? string.Empty,
+        }).ToLowerInvariant();
+        return words.All(word => haystack.Contains(word.ToLowerInvariant()));
+    }
+
     private object CourtSortKey(CourtLayerNode layer)
     {
         var parent = ParentOf(layer);
@@ -273,6 +380,22 @@ public partial class MainWindow : Window
         _selectedLayer = e.NewValue as CourtLayerNode;
         RefreshSelectionText();
         await LoadSelectedLayerColorAsync();
+    }
+
+    private void OnSectionChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.RadioButton { Tag: string section }) return;
+        if (!IsLoaded) return;
+        _currentSection = section;
+        RefreshSection();
+    }
+
+    private void OnFloorSearchChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_currentSection == "floors")
+        {
+            RefreshSection();
+        }
     }
 
     private void RefreshSelectionText()
@@ -386,6 +509,12 @@ public partial class MainWindow : Window
             ApplyVisibility(layer, true, includeChildren: layer.IsGroup);
             return;
         }
+        if (IsFloorTemplateCategory(selectedRoot))
+        {
+            ApplyVisibility(selectedRoot, true, includeChildren: false);
+            ShowAncestors(selectedRoot);
+            return;
+        }
 
         ApplyVisibility(group, true, includeChildren: false);
         ShowAncestors(group);
@@ -393,7 +522,8 @@ public partial class MainWindow : Window
         {
             ApplyVisibility(option, false, includeChildren: true);
         }
-        ApplyVisibility(selectedRoot, true, includeChildren: true);
+        ApplyVisibility(selectedRoot, true, includeChildren: selectedRoot.IsGroup);
+        ShowAncestors(selectedRoot);
     }
 
     private void ShowAncestors(CourtLayerNode layer)
@@ -479,6 +609,7 @@ public partial class MainWindow : Window
             using var response = await _backend.LoadAsync(dialog.FileName);
             ReadLoadResponse(response.RootElement);
             BuildLayerTree();
+            RefreshSection();
             BuildPresetButtons();
             BuildPalettePanel();
             RefreshSelectionText();
@@ -540,6 +671,7 @@ public partial class MainWindow : Window
             layer.Visible = false;
             _visibility[layer.Id] = false;
             BuildLayerTree();
+            RefreshSection();
             SetStatus("Custom floor added.");
         }
         catch (Exception ex)
@@ -568,6 +700,7 @@ public partial class MainWindow : Window
         _nameOverrides.Remove(layer.Id);
         RemoveCustomFloorMetadata(layer.Id);
         BuildLayerTree();
+        RefreshSection();
         _selectedLayer = null;
         RefreshSelectionText();
         await RefreshPreviewAsync();
@@ -645,24 +778,32 @@ public partial class MainWindow : Window
     private void BuildPresetButtons()
     {
         PresetHost.Children.Clear();
+        PresetSectionHost.Children.Clear();
         for (var index = 0; index < 5; index++)
         {
             var slot = index;
-            var button = new WpfButton
+            var button = PresetButton(slot, new Thickness(0, 0, slot == 4 ? 0 : 7, 0));
+            PresetHost.Children.Add(button);
+            PresetSectionHost.Children.Add(PresetButton(slot, new Thickness(0, 0, 0, 8)));
+        }
+    }
+
+    private WpfButton PresetButton(int slot, Thickness margin)
+    {
+        var button = new WpfButton
             {
                 Content = PresetName(slot),
-                Margin = new Thickness(0, 0, slot == 4 ? 0 : 7, 0),
+            Margin = margin,
             };
-            button.Click += async (_, _) => await LoadPresetAsync(slot);
-            button.ContextMenu = PresetMenu(slot);
-            button.PreviewMouseRightButtonDown += (_, args) =>
-            {
-                button.ContextMenu.PlacementTarget = button;
-                button.ContextMenu.IsOpen = true;
-                args.Handled = true;
-            };
-            PresetHost.Children.Add(button);
-        }
+        button.Click += async (_, _) => await LoadPresetAsync(slot);
+        button.ContextMenu = PresetMenu(slot);
+        button.PreviewMouseRightButtonDown += (_, args) =>
+        {
+            button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.IsOpen = true;
+            args.Handled = true;
+        };
+        return button;
     }
 
     private ContextMenu PresetMenu(int slot)
@@ -842,6 +983,47 @@ public partial class MainWindow : Window
         PreviewEmptyText.Visibility = Visibility.Collapsed;
     }
 
+    private void OnPreviewClicked(object sender, MouseButtonEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_previewPath) || !File.Exists(_previewPath))
+        {
+            SetStatus("Preview is not ready yet.");
+            return;
+        }
+
+        var image = new System.Windows.Controls.Image
+        {
+            Source = LoadBitmap(_previewPath),
+            Stretch = Stretch.Uniform,
+        };
+        RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+        var window = new Window
+        {
+            Title = "Court Preview",
+            Owner = this,
+            Width = 1180,
+            Height = 760,
+            MinWidth = 800,
+            MinHeight = 520,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Background = (WpfBrush)new BrushConverter().ConvertFromString("#20242B")!,
+            Content = image,
+        };
+        window.Show();
+    }
+
+    private static BitmapImage LoadBitmap(string path)
+    {
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+        bitmap.UriSource = new Uri(path);
+        bitmap.EndInit();
+        bitmap.Freeze();
+        return bitmap;
+    }
+
     private void BuildPalettePanel()
     {
         PaletteHost.Children.Clear();
@@ -948,6 +1130,7 @@ public partial class MainWindow : Window
     private CourtLayerNode? FloorRootFor(CourtLayerNode layer, CourtLayerNode? floorGroup)
     {
         if (floorGroup is null || layer.Id == floorGroup.Id) return null;
+        if (layer.IsCustomFloor || layer.IsTemplateFloor || IsFloorTemplateCategory(layer)) return layer;
         var root = layer;
         while (root.ParentId is not null && root.ParentId != floorGroup.Id)
         {
@@ -960,6 +1143,9 @@ public partial class MainWindow : Window
 
     private bool IsCourtFloorGroup(CourtLayerNode layer)
         => NormalizeName(layer.Name) is "court floors" or "court floor" or "floor options" or "floors";
+
+    private static bool IsFloorTemplateCategory(CourtLayerNode layer)
+        => layer.Id.StartsWith("floor_template_category_", StringComparison.OrdinalIgnoreCase);
 
     private IEnumerable<CourtLayerNode> Ancestors(CourtLayerNode layer)
     {

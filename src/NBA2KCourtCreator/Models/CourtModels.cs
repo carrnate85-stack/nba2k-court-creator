@@ -24,6 +24,7 @@ public sealed class CourtLayerNode : INotifyPropertyChanged
     public int[] Bbox { get; init; } = [0, 0, 0, 0];
     public bool IsCustomFloor { get; init; }
     public bool IsTemplateFloor { get; set; }
+    public bool IsSectionGroup { get; init; }
     public ObservableCollection<CourtLayerNode> Children { get; } = [];
 
     public string DisplayName
