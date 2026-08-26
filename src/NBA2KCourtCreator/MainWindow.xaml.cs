@@ -63,6 +63,7 @@ public partial class MainWindow : Window
             ReadLoadResponse(response.RootElement);
             BuildLayerTree();
             RefreshSection();
+            SelectCurrentCourtFloor();
             BuildPresetButtons();
             BuildPalettePanel();
             RefreshSelectionText();
@@ -89,8 +90,8 @@ public partial class MainWindow : Window
         _templatePath = root.GetProperty("templatePath").GetString() ?? string.Empty;
         _previewPath = root.GetProperty("previewPath").GetString() ?? string.Empty;
         _presetsPath = Path.Combine(_backend.ProjectRoot, "data", "court_presets.json");
-        ProjectNameText.Text = Path.GetFileName(_templatePath);
-        ProjectStateText.Text = "Loaded template";
+        ProjectNameText.Text = "NBA 2K Court Creator";
+        ProjectStateText.Text = "Ready";
 
         foreach (var layerJson in root.GetProperty("document").GetProperty("layers").EnumerateArray())
         {
@@ -641,6 +642,7 @@ public partial class MainWindow : Window
             ReadLoadResponse(response.RootElement);
             BuildLayerTree();
             RefreshSection();
+            SelectCurrentCourtFloor();
             BuildPresetButtons();
             BuildPalettePanel();
             RefreshSelectionText();
@@ -667,6 +669,7 @@ public partial class MainWindow : Window
             _visibility[layer.Id] = layer.Visible;
         }
 
+        SelectCurrentCourtFloor();
         RefreshSelectionText();
         BuildPalettePanel();
         await RefreshPreviewAsync();
@@ -1202,6 +1205,28 @@ public partial class MainWindow : Window
 
     private CourtLayerNode? ParentOf(CourtLayerNode layer)
         => !string.IsNullOrWhiteSpace(layer.ParentId) && _layersById.TryGetValue(layer.ParentId, out var parent) ? parent : null;
+
+    private void SelectCurrentCourtFloor()
+    {
+        var floorGroup = _layersById.Values.FirstOrDefault(IsCourtFloorGroup);
+        if (floorGroup is null)
+        {
+            _selectedLayer = null;
+            return;
+        }
+
+        var selectedFloor = Descendants(floorGroup)
+            .Where(layer => !layer.IsGroup && layer.Visible)
+            .OrderBy(CourtSortKey)
+            .ThenBy(layer => layer.DisplayName)
+            .FirstOrDefault();
+
+        _selectedLayer = selectedFloor;
+        if (selectedFloor is not null)
+        {
+            SelectTreeItem(selectedFloor);
+        }
+    }
 
     private string FriendlyLayerName(CourtLayerNode layer)
     {
