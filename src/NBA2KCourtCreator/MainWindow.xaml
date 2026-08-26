@@ -33,6 +33,7 @@
                    Padding="5,2"
                    Text="{Binding ActiveHex, Mode=OneWay}"
                    Tag="{Binding}"
+                   GotKeyboardFocus="OnInlineHexGotKeyboardFocus"
                    KeyDown="OnInlineHexKeyDown"
                    LostFocus="OnInlineHexLostFocus" />
         </StackPanel>

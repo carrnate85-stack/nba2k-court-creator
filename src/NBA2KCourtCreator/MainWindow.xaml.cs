@@ -41,6 +41,7 @@ public partial class MainWindow : Window
     private string _presetsPath = string.Empty;
     private string _currentSection = "floors";
     private CourtLayerNode? _selectedLayer;
+    private CourtLayerNode? _activeHexTarget;
     private bool _syncing;
     private long _renderVersion;
 
@@ -602,8 +603,9 @@ public partial class MainWindow : Window
 
     private async Task ApplyHexAsync(string hex)
     {
-        if (_selectedLayer is null || !IsColorableLayer(_selectedLayer)) return;
-        await ApplyHexAsync(_selectedLayer, hex);
+        var target = CurrentColorTarget();
+        if (target is null) return;
+        await ApplyHexAsync(target, hex);
     }
 
     private async Task ApplyHexAsync(CourtLayerNode layer, string hex)
@@ -617,6 +619,7 @@ public partial class MainWindow : Window
         }
 
         _selectedLayer = layer;
+        _activeHexTarget = layer;
         _colorOverrides[layer.Id] = HexToRgb(normalized);
         SetLayerHex(layer, normalized, rememberAsTemplate: false);
         RefreshSelectionText();
@@ -627,6 +630,7 @@ public partial class MainWindow : Window
     {
         if (sender is not FrameworkElement { Tag: CourtLayerNode layer } || !IsColorableLayer(layer)) return;
         _selectedLayer = layer;
+        _activeHexTarget = layer;
         SelectTreeItem(layer);
         await LoadLayerColorAsync(layer);
 
@@ -641,9 +645,19 @@ public partial class MainWindow : Window
         await ApplyHexAsync(layer, $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}");
     }
 
+    private void OnInlineHexGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (sender is not WpfTextBox { Tag: CourtLayerNode layer } || !IsColorableLayer(layer)) return;
+        _activeHexTarget = layer;
+        _selectedLayer = layer;
+        SelectTreeItem(layer);
+        RefreshSelectionText();
+    }
+
     private async void OnInlineHexKeyDown(object sender, WpfKeyEventArgs e)
     {
         if (e.Key != Key.Enter || sender is not WpfTextBox { Tag: CourtLayerNode layer } textBox) return;
+        _activeHexTarget = layer;
         await ApplyHexAsync(layer, textBox.Text);
         e.Handled = true;
     }
@@ -651,8 +665,19 @@ public partial class MainWindow : Window
     private async void OnInlineHexLostFocus(object sender, RoutedEventArgs e)
     {
         if (sender is not WpfTextBox { Tag: CourtLayerNode layer } textBox) return;
+        _activeHexTarget = layer;
         if (string.Equals(NormalizeHex(textBox.Text), NormalizeHex(layer.ActiveHex), StringComparison.OrdinalIgnoreCase)) return;
         await ApplyHexAsync(layer, textBox.Text);
+    }
+
+    private CourtLayerNode? CurrentColorTarget()
+    {
+        if (_activeHexTarget is not null && _activeHexTarget.Visible && IsColorableLayer(_activeHexTarget))
+        {
+            return _activeHexTarget;
+        }
+
+        return _selectedLayer is not null && IsColorableLayer(_selectedLayer) ? _selectedLayer : null;
     }
 
     private async void OnPickColor(object sender, RoutedEventArgs e)
