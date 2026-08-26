@@ -309,7 +309,7 @@ public partial class MainWindow : Window
         };
         LayerPanel.Header = paint ? "Paint & Lines" : "Court Floors";
         FloorSearchBox.Visibility = floors ? Visibility.Visible : Visibility.Collapsed;
-        FloorActions.Visibility = floors ? Visibility.Visible : Visibility.Collapsed;
+        FloorActions.Visibility = Visibility.Collapsed;
         ExportActions.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
         LayerPanel.Visibility = floors || paint ? Visibility.Visible : Visibility.Collapsed;
         SelectedLayerPanel.Visibility = floors || paint || team ? Visibility.Visible : Visibility.Collapsed;
