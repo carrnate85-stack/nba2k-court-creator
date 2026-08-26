@@ -775,21 +775,33 @@ public partial class MainWindow : Window
 
     private async void OnResetDefault(object sender, RoutedEventArgs e)
     {
-        _colorOverrides.Clear();
-        _nameOverrides.Clear();
-        foreach (var layer in _layersById.Values)
+        _logoEditorPollTimer?.Stop();
+        _logoEditor.Stop();
+        var nbaPreset = NbaPreset();
+        if (nbaPreset is not null)
         {
-            layer.DisplayName = FriendlyLayerName(layer);
-            layer.ActiveHex = _templateColors.GetValueOrDefault(layer.Id, string.Empty);
-            layer.Visible = layer.IsCustomFloor ? false : layer.OriginalVisible;
-            _visibility[layer.Id] = layer.Visible;
+            ApplyPresetLayout(nbaPreset, includeLogos: false);
+        }
+        else
+        {
+            _colorOverrides.Clear();
+            _nameOverrides.Clear();
+            foreach (var layer in _layersById.Values)
+            {
+                layer.DisplayName = FriendlyLayerName(layer);
+                layer.ActiveHex = _templateColors.GetValueOrDefault(layer.Id, string.Empty);
+                layer.Visible = layer.IsCustomFloor ? false : layer.OriginalVisible;
+                _visibility[layer.Id] = layer.Visible;
+            }
         }
 
+        ClearLogos(deleteFiles: true);
         SelectCurrentCourtFloor();
+        RefreshSection();
         RefreshSelectionText();
         BuildPalettePanel();
         await RefreshPreviewAsync();
-        SetStatus("Court reset to the template default.");
+        SetStatus("New NBA court started.");
     }
 
     private async void OnAddCustomFloor(object sender, RoutedEventArgs e)
@@ -1177,6 +1189,13 @@ public partial class MainWindow : Window
 
     private async Task ApplyPresetAsync(CourtPreset preset)
     {
+        ApplyPresetLayout(preset, includeLogos: true);
+        RefreshSelectionText();
+        await RefreshPreviewAsync();
+    }
+
+    private void ApplyPresetLayout(CourtPreset preset, bool includeLogos)
+    {
         _visibility.Clear();
         foreach (var layer in _layersById.Values)
         {
@@ -1201,7 +1220,7 @@ public partial class MainWindow : Window
             _nameOverrides[item.Key] = item.Value;
         }
 
-        if (preset.Logos.Count > 0)
+        if (includeLogos && preset.Logos.Count > 0)
         {
             _logoImages.Clear();
             foreach (var logo in preset.Logos)
@@ -1227,14 +1246,11 @@ public partial class MainWindow : Window
             _selectedLayer = selected;
             SelectTreeItem(selected);
         }
-
-        RefreshSelectionText();
-        await RefreshPreviewAsync();
     }
 
     private async Task<bool> ApplyStartupPresetAsync()
     {
-        var preset = _presets.FirstOrDefault(item => string.Equals(item?.Name, "NBA", StringComparison.OrdinalIgnoreCase));
+        var preset = NbaPreset();
         if (preset is null) return false;
 
         await ApplyPresetAsync(preset);
@@ -1242,6 +1258,9 @@ public partial class MainWindow : Window
         RefreshSelectionText();
         return true;
     }
+
+    private CourtPreset? NbaPreset()
+        => _presets.FirstOrDefault(item => string.Equals(item?.Name, "NBA", StringComparison.OrdinalIgnoreCase));
 
     private void SavePreset(int slot)
     {
@@ -1523,6 +1542,33 @@ public partial class MainWindow : Window
         Directory.CreateDirectory(Path.GetDirectoryName(_logosPath)!);
         var payload = new LogoFile { Logos = _logoImages.Select(CloneLogo).ToList() };
         File.WriteAllText(_logosPath, JsonSerializer.Serialize(payload, _jsonOptions));
+    }
+
+    private void ClearLogos(bool deleteFiles)
+    {
+        if (deleteFiles)
+        {
+            foreach (var logo in _logoImages.ToList())
+            {
+                DeleteLocalLogoFile(logo);
+            }
+        }
+
+        _logoImages.Clear();
+        _selectedLogo = null;
+        LogosList.SelectedItem = null;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(_logosPath) && File.Exists(_logosPath))
+            {
+                File.Delete(_logosPath);
+            }
+        }
+        catch
+        {
+            SaveLogosFile();
+        }
+        RefreshLogoControls();
     }
 
     private void ApplyLogoEditorState(JsonElement root)
