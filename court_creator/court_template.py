@@ -124,6 +124,7 @@ def create_visible_court_preview_png(
     *,
     color_overrides: dict[str, tuple[int, int, int]] | None = None,
     custom_floor_images: list[dict] | None = None,
+    logo_images: list[dict] | None = None,
     max_size: tuple[int, int] | None = (2048, 1024),
 ) -> None:
     try:
@@ -152,6 +153,7 @@ def create_visible_court_preview_png(
     raw_by_index = {raw["psd_index"]: raw for raw in raw_layers}
     color_overrides = color_overrides or {}
     custom_floor_images = custom_floor_images or []
+    logo_images = logo_images or []
 
     with Path(psd_path).open("rb") as handle:
         for layer in document.layers:
@@ -177,6 +179,9 @@ def create_visible_court_preview_png(
                 )
                 layer_image.putalpha(alpha)
             canvas.alpha_composite(layer_image, position)
+
+    for logo in logo_images:
+        _composite_logo(canvas, logo, scale)
 
     if canvas.getbbox() is None:
         create_court_preview_png(psd_path, output_path, max_size=max_size)
@@ -581,6 +586,48 @@ def _composite_custom_floor(
         (max(1, round(width * scale)), max(1, round(height * scale))),
     )
     canvas.alpha_composite(image, (round(left * scale), round(top * scale)))
+
+
+def _composite_logo(
+    canvas,
+    logo: dict,
+    scale: float,
+) -> None:
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise RuntimeError("Court preview export requires Pillow.") from exc
+
+    path = Path(str(logo.get("path", "")))
+    if not path.exists():
+        return
+
+    try:
+        x = float(logo.get("x", 0))
+        y = float(logo.get("y", 0))
+        width = max(1.0, float(logo.get("width", 100)))
+        rotation = float(logo.get("rotation", 0))
+        opacity = max(0.0, min(100.0, float(logo.get("opacity", 100)))) / 100.0
+    except (TypeError, ValueError):
+        return
+
+    with Image.open(path) as opened:
+        image = opened.convert("RGBA")
+
+    if image.width <= 0:
+        return
+    target_width = max(1, round(width * scale))
+    target_height = max(1, round(image.height * (target_width / image.width)))
+    image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
+
+    if abs(rotation) > 0.001:
+        image = image.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
+
+    if opacity < 0.999:
+        alpha = image.getchannel("A").point(lambda value: round(value * opacity))
+        image.putalpha(alpha)
+
+    canvas.alpha_composite(image, (round(x * scale), round(y * scale)))
 
 
 def _is_court_floor_group_name(name: str) -> bool:

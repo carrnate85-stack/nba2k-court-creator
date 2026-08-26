@@ -174,6 +174,13 @@ def render_preview(request_path: Path) -> dict:
         image = dict(item)
         image["path"] = str(resolve_asset_path(str(item.get("path", ""))))
         custom_floor_images.append(image)
+    logo_images = []
+    for item in request.get("logoImages", []):
+        if not item.get("visible"):
+            continue
+        image = dict(item)
+        image["path"] = str(resolve_asset_path(str(item.get("path", ""))))
+        logo_images.append(image)
     create_visible_court_preview_png(
         template_path,
         document,
@@ -181,6 +188,7 @@ def render_preview(request_path: Path) -> dict:
         PREVIEW_CACHE,
         color_overrides=color_overrides,
         custom_floor_images=custom_floor_images,
+        logo_images=logo_images,
     )
     return {"ok": True, "previewPath": str(PREVIEW_CACHE)}
 

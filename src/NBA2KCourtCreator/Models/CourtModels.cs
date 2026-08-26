@@ -122,6 +122,83 @@ public sealed class TeamColor
     public string Hex { get; init; } = string.Empty;
 }
 
+public sealed class CourtLogo : INotifyPropertyChanged
+{
+    private string _name = string.Empty;
+    private string _path = string.Empty;
+    private bool _visible = true;
+    private double _x = 840;
+    private double _y = 430;
+    private double _width = 320;
+    private double _rotation;
+    private double _opacity = 100;
+
+    [JsonPropertyName("name")]
+    public string Name
+    {
+        get => _name;
+        set => SetField(ref _name, value);
+    }
+
+    [JsonPropertyName("path")]
+    public string Path
+    {
+        get => _path;
+        set => SetField(ref _path, value);
+    }
+
+    [JsonPropertyName("visible")]
+    public bool Visible
+    {
+        get => _visible;
+        set => SetField(ref _visible, value);
+    }
+
+    [JsonPropertyName("x")]
+    public double X
+    {
+        get => _x;
+        set => SetField(ref _x, value);
+    }
+
+    [JsonPropertyName("y")]
+    public double Y
+    {
+        get => _y;
+        set => SetField(ref _y, value);
+    }
+
+    [JsonPropertyName("width")]
+    public double Width
+    {
+        get => _width;
+        set => SetField(ref _width, value);
+    }
+
+    [JsonPropertyName("rotation")]
+    public double Rotation
+    {
+        get => _rotation;
+        set => SetField(ref _rotation, value);
+    }
+
+    [JsonPropertyName("opacity")]
+    public double Opacity
+    {
+        get => _opacity;
+        set => SetField(ref _opacity, value);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
+
 public sealed class CourtPreset
 {
     [JsonPropertyName("name")]
@@ -141,4 +218,7 @@ public sealed class CourtPreset
 
     [JsonPropertyName("selected_layer_id")]
     public string? SelectedLayerId { get; set; }
+
+    [JsonPropertyName("logos")]
+    public List<CourtLogo> Logos { get; set; } = [];
 }

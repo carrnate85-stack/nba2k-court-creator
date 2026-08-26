@@ -3,6 +3,7 @@ using NBA2KCourtCreator.Services;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -33,20 +34,24 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, string> _nameOverrides = [];
     private readonly Dictionary<string, string> _templateColors = [];
     private readonly List<CustomFloorImage> _customFloorImages = [];
+    private readonly ObservableCollection<CourtLogo> _logoImages = [];
     private readonly List<TeamPalette> _teamPalettes = [];
     private readonly List<CourtPreset?> _presets = [];
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
     private string _templatePath = string.Empty;
     private string _previewPath = string.Empty;
     private string _presetsPath = string.Empty;
+    private string _logosPath = string.Empty;
     private string _currentSection = "floors";
     private CourtLayerNode? _selectedLayer;
     private CourtLayerNode? _activeHexTarget;
+    private CourtLogo? _selectedLogo;
     private bool _syncing;
     private long _renderVersion;
 
     public ObservableCollection<CourtLayerNode> LayerRoots => _layerRoots;
     public ObservableCollection<CourtLayerNode> SectionLayerRoots => _sectionLayerRoots;
+    public ObservableCollection<CourtLogo> LogoImages => _logoImages;
 
     public MainWindow()
     {
@@ -89,12 +94,15 @@ public partial class MainWindow : Window
         _nameOverrides.Clear();
         _templateColors.Clear();
         _customFloorImages.Clear();
+        _logoImages.Clear();
         _teamPalettes.Clear();
         _presets.Clear();
+        _selectedLogo = null;
 
         _templatePath = root.GetProperty("templatePath").GetString() ?? string.Empty;
         _previewPath = root.GetProperty("previewPath").GetString() ?? string.Empty;
         _presetsPath = Path.Combine(_backend.ProjectRoot, "data", "court_presets.json");
+        _logosPath = Path.Combine(_backend.ProjectRoot, "data", "court_logos.json");
         ProjectNameText.Text = "NBA 2K Court Creator";
         ProjectStateText.Text = "Ready";
 
@@ -186,6 +194,8 @@ public partial class MainWindow : Window
         {
             _presets.Add(null);
         }
+
+        LoadLogosFile();
 
         foreach (var layer in _layersById.Values)
         {
@@ -293,23 +303,20 @@ public partial class MainWindow : Window
     {
         var floors = _currentSection == "floors";
         var paint = _currentSection == "paint";
-        var team = _currentSection == "team";
-        var presets = _currentSection == "presets";
+        var logos = _currentSection == "logos";
         var export = _currentSection == "export";
 
         WorkspaceTitle.Text = _currentSection switch
         {
             "paint" => "Paint & Lines",
-            "team" => "Team Colors",
-            "presets" => "Presets",
+            "logos" => "Logos",
             "export" => "Export",
             _ => "Court Floors",
         };
         WorkspaceSubtitle.Text = _currentSection switch
         {
             "paint" => "Choose paint and line layers, then apply exact colors or team palette swatches.",
-            "team" => "Search NBA and college palettes, then apply colors to the selected paint or line layer.",
-            "presets" => "Load saved layouts or right click a preset to save the current court.",
+            "logos" => "Import logo images, then place them on the court preview.",
             "export" => "Refresh, save, and export the current court preview.",
             _ => "Choose one court floor at a time, including custom and NBA 2K26 templates.",
         };
@@ -319,11 +326,13 @@ public partial class MainWindow : Window
         ExportActions.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
         PresetStrip.Visibility = paint ? Visibility.Visible : Visibility.Collapsed;
         LayerPanel.Visibility = floors || paint ? Visibility.Visible : Visibility.Collapsed;
-        SelectedLayerPanel.Visibility = floors || paint || team ? Visibility.Visible : Visibility.Collapsed;
-        PalettePanel.Visibility = paint || team ? Visibility.Visible : Visibility.Collapsed;
-        PresetPanel.Visibility = presets ? Visibility.Visible : Visibility.Collapsed;
+        LogoPanel.Visibility = logos ? Visibility.Visible : Visibility.Collapsed;
+        SelectedLayerPanel.Visibility = floors || paint || logos ? Visibility.Visible : Visibility.Collapsed;
+        PalettePanel.Visibility = paint ? Visibility.Visible : Visibility.Collapsed;
+        PresetPanel.Visibility = Visibility.Collapsed;
         ExportPanel.Visibility = export ? Visibility.Visible : Visibility.Collapsed;
         RefreshInlineColorControls();
+        RefreshLogoControls();
     }
 
     private IEnumerable<CourtLayerNode> PaintAndLineRoots()
@@ -416,7 +425,14 @@ public partial class MainWindow : Window
     private void RefreshSelectionText()
     {
         _syncing = true;
-        SelectedLayerText.Text = _selectedLayer is null ? "Court: No court selected." : $"Court: {_selectedLayer.DisplayName}";
+        if (_currentSection == "logos")
+        {
+            SelectedLayerText.Text = _selectedLogo is null ? "Logo: No logo selected." : $"Logo: {_selectedLogo.Name}";
+        }
+        else
+        {
+            SelectedLayerText.Text = _selectedLayer is null ? "Court: No court selected." : $"Court: {_selectedLayer.DisplayName}";
+        }
         VisibleCheck.IsEnabled = _selectedLayer is not null;
         VisibleCheck.IsChecked = _selectedLayer?.Visible ?? false;
         var colorable = _selectedLayer is not null && IsColorableLayer(_selectedLayer);
@@ -839,6 +855,133 @@ public partial class MainWindow : Window
         RefreshSelectionText();
     }
 
+    private async void OnImportLogo(object sender, RoutedEventArgs e)
+    {
+        var dialog = new WpfOpenFileDialog
+        {
+            Title = "Import logo",
+            Filter = "Images (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All files (*.*)|*.*",
+        };
+        if (dialog.ShowDialog(this) != true) return;
+
+        try
+        {
+            var logoDir = Path.Combine(_backend.ProjectRoot, "logos");
+            Directory.CreateDirectory(logoDir);
+            var source = dialog.FileName;
+            var extension = Path.GetExtension(source);
+            var stem = SafeFileStem(Path.GetFileNameWithoutExtension(source));
+            var destination = UniquePath(logoDir, stem, extension);
+            File.Copy(source, destination);
+
+            var logo = new CourtLogo
+            {
+                Name = Path.GetFileNameWithoutExtension(source),
+                Path = Path.GetRelativePath(_backend.ProjectRoot, destination),
+                Visible = true,
+            };
+            _logoImages.Add(logo);
+            _selectedLogo = logo;
+            LogosList.SelectedItem = logo;
+            SaveLogosFile();
+            RefreshLogoControls();
+            RefreshSelectionText();
+            await RefreshPreviewAsync();
+            SetStatus("Logo imported.");
+        }
+        catch (Exception ex)
+        {
+            ShowError("Import Logo", ex);
+        }
+    }
+
+    private void OnLogoSelected(object sender, SelectionChangedEventArgs e)
+    {
+        _selectedLogo = LogosList.SelectedItem as CourtLogo;
+        RefreshLogoControls();
+        RefreshSelectionText();
+    }
+
+    private async void OnRemoveLogo(object sender, RoutedEventArgs e)
+    {
+        if (_selectedLogo is null)
+        {
+            SetStatus("Select a logo to remove.");
+            return;
+        }
+
+        var logo = _selectedLogo;
+        _logoImages.Remove(logo);
+        _selectedLogo = _logoImages.FirstOrDefault();
+        LogosList.SelectedItem = _selectedLogo;
+        DeleteLocalLogoFile(logo);
+        SaveLogosFile();
+        RefreshLogoControls();
+        RefreshSelectionText();
+        await RefreshPreviewAsync();
+        SetStatus("Logo removed.");
+    }
+
+    private async void OnLogoControlChanged(object sender, RoutedEventArgs e)
+    {
+        if (_syncing) return;
+        await ApplyLogoControlsAsync();
+    }
+
+    private async void OnLogoControlLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_syncing) return;
+        await ApplyLogoControlsAsync();
+    }
+
+    private async void OnLogoTextKeyDown(object sender, WpfKeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        await ApplyLogoControlsAsync();
+        e.Handled = true;
+    }
+
+    private async Task ApplyLogoControlsAsync()
+    {
+        if (_selectedLogo is null) return;
+        var changed = false;
+
+        changed |= SetLogoValue(_selectedLogo.Visible, LogoVisibleCheck.IsChecked == true, value => _selectedLogo.Visible = value);
+        changed |= SetLogoNumber(LogoXBox.Text, _selectedLogo.X, value => _selectedLogo.X = value);
+        changed |= SetLogoNumber(LogoYBox.Text, _selectedLogo.Y, value => _selectedLogo.Y = value);
+        changed |= SetLogoNumber(LogoWidthBox.Text, _selectedLogo.Width, value => _selectedLogo.Width = Math.Max(1, value));
+        changed |= SetLogoNumber(LogoRotationBox.Text, _selectedLogo.Rotation, value => _selectedLogo.Rotation = value);
+        changed |= SetLogoNumber(LogoOpacityBox.Text, _selectedLogo.Opacity, value => _selectedLogo.Opacity = Math.Clamp(value, 0, 100));
+
+        if (!changed) return;
+        SaveLogosFile();
+        RefreshLogoControls();
+        RefreshSelectionText();
+        await RefreshPreviewAsync();
+    }
+
+    private void RefreshLogoControls()
+    {
+        if (!IsLoaded) return;
+        _syncing = true;
+        var hasLogo = _selectedLogo is not null;
+        LogoVisibleCheck.IsEnabled = hasLogo;
+        RemoveLogoButton.IsEnabled = hasLogo;
+        LogoXBox.IsEnabled = hasLogo;
+        LogoYBox.IsEnabled = hasLogo;
+        LogoWidthBox.IsEnabled = hasLogo;
+        LogoRotationBox.IsEnabled = hasLogo;
+        LogoOpacityBox.IsEnabled = hasLogo;
+
+        LogoVisibleCheck.IsChecked = _selectedLogo?.Visible ?? false;
+        LogoXBox.Text = hasLogo ? LogoNumber(_selectedLogo!.X) : string.Empty;
+        LogoYBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Y) : string.Empty;
+        LogoWidthBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Width) : string.Empty;
+        LogoRotationBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Rotation) : string.Empty;
+        LogoOpacityBox.Text = hasLogo ? LogoNumber(_selectedLogo!.Opacity) : string.Empty;
+        _syncing = false;
+    }
+
     private void OnOpenPsd(object sender, RoutedEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(_templatePath) || !File.Exists(_templatePath))
@@ -978,6 +1121,18 @@ public partial class MainWindow : Window
             _nameOverrides[item.Key] = item.Value;
         }
 
+        if (preset.Logos.Count > 0)
+        {
+            _logoImages.Clear();
+            foreach (var logo in preset.Logos)
+            {
+                _logoImages.Add(CloneLogo(logo));
+            }
+            _selectedLogo = _logoImages.FirstOrDefault();
+            LogosList.SelectedItem = _selectedLogo;
+            SaveLogosFile();
+        }
+
         foreach (var layer in _layersById.Values)
         {
             layer.DisplayName = FriendlyLayerName(layer);
@@ -1053,6 +1208,7 @@ public partial class MainWindow : Window
             ColorOverrides = _colorOverrides.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()),
             NameOverrides = new Dictionary<string, string>(_nameOverrides),
             SelectedLayerId = _selectedLayer?.Id,
+            Logos = _logoImages.Select(CloneLogo).ToList(),
         };
     }
 
@@ -1082,6 +1238,17 @@ public partial class MainWindow : Window
                     path = image.Path,
                     bbox = image.Bbox,
                     visible = _visibility.GetValueOrDefault(image.Id, false),
+                }).ToList(),
+                logoImages = _logoImages.Select(logo => new
+                {
+                    name = logo.Name,
+                    path = logo.Path,
+                    visible = logo.Visible,
+                    x = logo.X,
+                    y = logo.Y,
+                    width = logo.Width,
+                    rotation = logo.Rotation,
+                    opacity = logo.Opacity,
                 }).ToList(),
             };
             using var response = await _backend.RenderAsync(request);
@@ -1223,6 +1390,105 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(query)) return true;
         var haystack = $"{palette.Team} {palette.League} {color.Name} {color.Hex}".ToLowerInvariant();
         return haystack.Contains(query.ToLowerInvariant());
+    }
+
+    private void LoadLogosFile()
+    {
+        if (string.IsNullOrWhiteSpace(_logosPath) || !File.Exists(_logosPath)) return;
+
+        try
+        {
+            var file = JsonSerializer.Deserialize<LogoFile>(File.ReadAllText(_logosPath));
+            if (file is null) return;
+            foreach (var logo in file.Logos.Where(logo => !string.IsNullOrWhiteSpace(logo.Path)))
+            {
+                _logoImages.Add(logo);
+            }
+            _selectedLogo = _logoImages.FirstOrDefault();
+            if (IsLoaded)
+            {
+                LogosList.SelectedItem = _selectedLogo;
+                RefreshLogoControls();
+            }
+        }
+        catch
+        {
+            SetStatus("Saved logos could not be loaded.");
+        }
+    }
+
+    private void SaveLogosFile()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_logosPath)!);
+        var payload = new LogoFile { Logos = _logoImages.Select(CloneLogo).ToList() };
+        File.WriteAllText(_logosPath, JsonSerializer.Serialize(payload, _jsonOptions));
+    }
+
+    private void DeleteLocalLogoFile(CourtLogo logo)
+    {
+        var localPath = Path.IsPathRooted(logo.Path) ? logo.Path : Path.Combine(_backend.ProjectRoot, logo.Path);
+        var logoRoot = Path.GetFullPath(Path.Combine(_backend.ProjectRoot, "logos"));
+        var resolved = Path.GetFullPath(localPath);
+        if (!resolved.StartsWith(logoRoot, StringComparison.OrdinalIgnoreCase)) return;
+
+        try
+        {
+            if (File.Exists(resolved)) File.Delete(resolved);
+        }
+        catch
+        {
+            SetStatus("Removed the logo from the list; the image file could not be deleted.");
+        }
+    }
+
+    private static CourtLogo CloneLogo(CourtLogo logo)
+        => new()
+        {
+            Name = logo.Name,
+            Path = logo.Path,
+            Visible = logo.Visible,
+            X = logo.X,
+            Y = logo.Y,
+            Width = logo.Width,
+            Rotation = logo.Rotation,
+            Opacity = logo.Opacity,
+        };
+
+    private static bool SetLogoValue<T>(T current, T next, Action<T> setValue)
+    {
+        if (EqualityComparer<T>.Default.Equals(current, next)) return false;
+        setValue(next);
+        return true;
+    }
+
+    private static bool SetLogoNumber(string text, double current, Action<double> setValue)
+    {
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var next)) return false;
+        if (Math.Abs(current - next) < 0.001) return false;
+        setValue(next);
+        return true;
+    }
+
+    private static string LogoNumber(double value)
+        => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string SafeFileStem(string value)
+    {
+        var safe = Regex.Replace(value.Trim(), @"[^A-Za-z0-9_-]+", "-").Trim('-');
+        return string.IsNullOrWhiteSpace(safe) ? "logo" : safe;
+    }
+
+    private static string UniquePath(string directory, string stem, string extension)
+    {
+        extension = string.IsNullOrWhiteSpace(extension) ? ".png" : extension;
+        var candidate = Path.Combine(directory, $"{stem}{extension}");
+        var index = 2;
+        while (File.Exists(candidate))
+        {
+            candidate = Path.Combine(directory, $"{stem}-{index}{extension}");
+            index++;
+        }
+        return candidate;
     }
 
     private void RemoveCustomFloorMetadata(string layerId)
@@ -1468,5 +1734,11 @@ public partial class MainWindow : Window
     {
         [JsonPropertyName("presets")]
         public List<CourtPreset?> Presets { get; set; } = [];
+    }
+
+    private sealed class LogoFile
+    {
+        [JsonPropertyName("logos")]
+        public List<CourtLogo> Logos { get; set; } = [];
     }
 }
