@@ -26,6 +26,7 @@ namespace NBA2KCourtCreator;
 
 public partial class MainWindow : Window
 {
+    private const string DefaultPaintHex = "#19583F";
     private readonly BackendClient _backend = new();
     private readonly CourtLogoWebSessionService _logoEditor;
     private readonly ObservableCollection<CourtLayerNode> _layerRoots = [];
@@ -864,6 +865,7 @@ public partial class MainWindow : Window
                 _visibility[layer.Id] = layer.Visible;
             }
         }
+        ApplyDefaultPaintColors();
 
         RefreshFriendlyLayerNames();
         ClearLogos(deleteFiles: true);
@@ -1369,9 +1371,11 @@ public partial class MainWindow : Window
         var preset = NbaPreset();
         if (preset is null) return false;
 
-        await ApplyPresetAsync(preset);
+        ApplyPresetLayout(preset, includeLogos: true);
+        ApplyDefaultPaintColors();
         SelectCurrentCourtFloor();
         RefreshSelectionText();
+        await RefreshPreviewAsync();
         return true;
     }
 
@@ -1868,6 +1872,19 @@ public partial class MainWindow : Window
         if (NormalizeName(layer.Name) == "outside color") return true;
         return Ancestors(layer).Any(parent => NormalizeName(parent.Name) is "paint colors" or "lines");
     }
+
+    private void ApplyDefaultPaintColors()
+    {
+        var rgb = HexToRgb(DefaultPaintHex);
+        foreach (var layer in _layersById.Values.Where(IsDefaultPaintColorLayer))
+        {
+            _colorOverrides[layer.Id] = rgb.ToArray();
+            SetLayerHex(layer, DefaultPaintHex, rememberAsTemplate: false);
+        }
+    }
+
+    private static bool IsDefaultPaintColorLayer(CourtLayerNode layer)
+        => NormalizeName(layer.Name) is "outside color" or "paint" or "secondary paint color";
 
     private void RefreshInlineColorControls()
     {
