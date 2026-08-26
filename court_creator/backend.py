@@ -81,6 +81,131 @@ MODE_FLOOR_KEYS = {
     "scrimmage",
     "summerleaguegeneric",
 }
+NBA_ARENA_IDS = {
+    "000",
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "006",
+    "008",
+    "009",
+    "010",
+    "011",
+    "012",
+    "013",
+    "014",
+    "015",
+    "016",
+    "017",
+    "018",
+    "019",
+    "020",
+    "021",
+    "022",
+    "023",
+    "024",
+    "025",
+    "026",
+    "027",
+    "028",
+    "029",
+    "031",
+}
+WNBA_ARENA_IDS = {
+    "300",
+    "301",
+    "302",
+    "303",
+    "304",
+    "305",
+    "306",
+    "307",
+    "308",
+    "309",
+    "310",
+    "311",
+    "315",
+    "316",
+    "317",
+}
+HISTORIC_ARENA_IDS = {
+    "551",
+    "552",
+    "553",
+    "554",
+    "555",
+    "556",
+    "557",
+    "558",
+    "559",
+    "560",
+    "562",
+    "564",
+    "570",
+    "571",
+    "572",
+    "574",
+    "576",
+    "583",
+    "586",
+    "588",
+    "589",
+    "590",
+    "591",
+    "592",
+    "593",
+    "594",
+    "595",
+    "620",
+    "621",
+    "622",
+    "623",
+    "624",
+    "625",
+    "626",
+    "627",
+    "628",
+    "629",
+    "630",
+    "631",
+    "632",
+    "633",
+    "634",
+    "635",
+    "636",
+    "637",
+    "638",
+    "639",
+    "641",
+    "642",
+    "644",
+    "645",
+    "646",
+    "647",
+    "648",
+    "649",
+    "924",
+}
+EVENT_ARENA_IDS = {
+    "700",
+    "701",
+    "728",
+    "729",
+    "800",
+    "852",
+    "853",
+    "854",
+    "855",
+    "856",
+    "857",
+    "858",
+    "859",
+    "860",
+    "861",
+    "906",
+}
 PROJECT_COURT_TEMPLATE_PSD = (
     LOCAL_ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
 )
@@ -338,7 +463,7 @@ def load_floor_template_layers(
             path = resolve_asset_path(str(item.get("path", "")))
             if not path.exists():
                 continue
-            category = str(item.get("category") or category_for_floor_template(item))
+            category = category_for_floor_template(item)
             default_visible = template_index == 0
             if category not in category_groups:
                 group = CourtLayer(
@@ -400,6 +525,13 @@ def category_for_floor_template(item: dict) -> str:
         return "Classic Edition"
     if "wnba" in token:
         return "WNBA"
+    floor_id = floor_id_for_template(item)
+    if floor_id in WNBA_ARENA_IDS:
+        return "WNBA"
+    if floor_id in HISTORIC_ARENA_IDS:
+        return "Historic NBA"
+    if floor_id in EVENT_ARENA_IDS:
+        return "All-Star & Events"
     if "allstar" in token or "_event_" in token or " event " in token:
         return "All-Star & Events"
     if any(name in token for name in COLLEGE_FLOOR_KEYS):
@@ -410,14 +542,35 @@ def category_for_floor_template(item: dict) -> str:
         return "International"
     if any(name in token for name in MODE_FLOOR_KEYS):
         return "Modes & Generic"
-    if re.search(r"floor[_ -]\d+[_ -]court[_ -]wood", token):
-        return "Numbered Courts"
+    if floor_id in NBA_ARENA_IDS or re.search(r"floor[_ -]\d+[_ -]court[_ -]wood", token):
+        return "NBA"
+    fallback = str(item.get("category") or "").strip()
+    if fallback and fallback != "Numbered Courts":
+        return fallback
+    if fallback == "Numbered Courts":
+        return "NBA"
     return "Special"
+
+
+def floor_id_for_template(item: dict) -> str | None:
+    token = " ".join(
+        str(value or "")
+        for value in (item.get("id"), item.get("name"), item.get("sourceMip0"))
+    ).casefold()
+    for pattern in (
+        r"floor[_ -](\d{3})(?:\D|$)",
+        r"\((\d{3})\)",
+        r"\b(\d{3})\s+court\s+wood",
+    ):
+        match = re.search(pattern, token)
+        if match:
+            return match.group(1)
+    return None
 
 
 def category_rank(category: str) -> int:
     order = {
-        "Numbered Courts": 0,
+        "NBA": 0,
         "City Edition": 10,
         "Statement Edition": 20,
         "Classic Edition": 30,

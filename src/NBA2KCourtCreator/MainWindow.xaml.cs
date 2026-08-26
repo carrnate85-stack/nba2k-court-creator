@@ -212,8 +212,8 @@ public partial class MainWindow : Window
         foreach (var layer in _layersById.Values)
         {
             layer.Visible = _visibility.GetValueOrDefault(layer.Id, layer.OriginalVisible);
-            layer.DisplayName = FriendlyLayerName(layer);
         }
+        RefreshFriendlyLayerNames();
     }
 
     private CourtLayerNode ReadLayer(JsonElement layerJson, bool isCustomFloor)
@@ -788,13 +788,13 @@ public partial class MainWindow : Window
             _nameOverrides.Clear();
             foreach (var layer in _layersById.Values)
             {
-                layer.DisplayName = FriendlyLayerName(layer);
                 layer.ActiveHex = _templateColors.GetValueOrDefault(layer.Id, string.Empty);
                 layer.Visible = layer.IsCustomFloor ? false : layer.OriginalVisible;
                 _visibility[layer.Id] = layer.Visible;
             }
         }
 
+        RefreshFriendlyLayerNames();
         ClearLogos(deleteFiles: true);
         SelectCurrentCourtFloor();
         RefreshSection();
@@ -928,6 +928,26 @@ public partial class MainWindow : Window
         RefreshSelectionText();
     }
 
+    private void OnLogoDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (FindParent<ListBoxItem>((DependencyObject)e.OriginalSource) is not { DataContext: CourtLogo logo })
+        {
+            return;
+        }
+
+        LogosList.SelectedItem = logo;
+        _selectedLogo = logo;
+        var renamed = Prompt("Rename logo", "Logo name", logo.Name);
+        if (string.IsNullOrWhiteSpace(renamed)) return;
+
+        logo.Name = renamed.Trim();
+        SaveLogosFile();
+        RefreshLogoControls();
+        RefreshSelectionText();
+        SetStatus("Logo renamed.");
+        e.Handled = true;
+    }
+
     private async void OnRemoveLogo(object sender, RoutedEventArgs e)
     {
         if (_selectedLogo is null)
@@ -1024,6 +1044,14 @@ public partial class MainWindow : Window
 
         try
         {
+            if (_logoEditor.IsRunning && !string.IsNullOrWhiteSpace(_logoEditor.Url))
+            {
+                Process.Start(new ProcessStartInfo(_logoEditor.Url) { UseShellExecute = true });
+                StartLogoEditorPolling();
+                SetStatus("Logo editor is already open.");
+                return;
+            }
+
             SetStatus("Opening web logo editor...");
             var backgroundPath = Path.Combine(Path.GetTempPath(), $"nba2k-court-logo-background-{Guid.NewGuid():N}.png");
             using var response = await _backend.RenderAsync(RenderRequest(includeLogos: false, outputPath: backgroundPath));
@@ -1251,12 +1279,12 @@ public partial class MainWindow : Window
 
         foreach (var layer in _layersById.Values)
         {
-            layer.DisplayName = FriendlyLayerName(layer);
             if (!_colorOverrides.ContainsKey(layer.Id))
             {
                 layer.ActiveHex = _templateColors.GetValueOrDefault(layer.Id, string.Empty);
             }
         }
+        RefreshFriendlyLayerNames();
 
         if (!string.IsNullOrWhiteSpace(preset.SelectedLayerId) && _layersById.TryGetValue(preset.SelectedLayerId, out var selected))
         {
@@ -1808,16 +1836,56 @@ public partial class MainWindow : Window
         }
     }
 
+    private void RefreshFriendlyLayerNames()
+    {
+        foreach (var layer in _layersById.Values)
+        {
+            layer.DisplayName = FriendlyLayerName(layer);
+        }
+
+        var floorLayers = _layersById.Values
+            .Where(layer => !layer.IsGroup && IsInsideCourtFloor(layer) && !_nameOverrides.ContainsKey(layer.Id))
+            .GroupBy(layer => layer.DisplayName, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in floorLayers.Where(group => group.Count() > 1))
+        {
+            var index = 1;
+            foreach (var layer in group.OrderBy(layer => layer.PsdIndex))
+            {
+                var variant = FloorWoodVariant(layer.Name) ?? index.ToString(CultureInfo.InvariantCulture);
+                layer.DisplayName = $"{layer.DisplayName} {variant}";
+                index++;
+            }
+        }
+    }
+
     private string FriendlyLayerName(CourtLayerNode layer)
     {
         if (_nameOverrides.TryGetValue(layer.Id, out var renamed)) return renamed;
-        return NormalizeName(layer.Name) switch
+        var specialName = NormalizeName(layer.Name) switch
         {
             "3 point lines" => "NBA Three",
             "college three" => "College Three",
             "high school three" => "High School Three",
-            _ => layer.Name,
+            _ => null,
         };
+        if (specialName is not null) return specialName;
+        return IsInsideCourtFloor(layer) ? FriendlyFloorLayerName(layer.Name) : layer.Name;
+    }
+
+    private static string FriendlyFloorLayerName(string name)
+    {
+        var clean = Regex.Replace(name, @"\s*\(\d{3}\)", string.Empty);
+        clean = Regex.Replace(clean, @"\s+Court\s+Wood\d+\b", string.Empty, RegexOptions.IgnoreCase);
+        clean = Regex.Replace(clean, @"\s+Wood\d+\b", string.Empty, RegexOptions.IgnoreCase);
+        clean = Regex.Replace(clean, @"\s{2,}", " ").Trim();
+        return string.IsNullOrWhiteSpace(clean) ? name : clean;
+    }
+
+    private static string? FloorWoodVariant(string name)
+    {
+        var match = Regex.Match(name, @"\bWood\s*(\d+)\b", RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     private void SetLayerHex(CourtLayerNode layer, string hex, bool rememberAsTemplate)

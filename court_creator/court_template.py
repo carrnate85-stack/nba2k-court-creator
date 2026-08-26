@@ -594,7 +594,7 @@ def _composite_logo(
     scale: float,
 ) -> None:
     try:
-        from PIL import Image
+        from PIL import Image, ImageOps
     except ImportError as exc:
         raise RuntimeError("Court preview export requires Pillow.") from exc
 

@@ -14,6 +14,7 @@ public sealed class CourtLogoWebSessionService : IDisposable
 
     public string? Url { get; private set; }
     public string? StatePath { get; private set; }
+    public bool IsRunning => _process is not null && !_process.HasExited && !string.IsNullOrWhiteSpace(Url);
 
     public async Task<string> StartAsync(
         string courtPreviewPath,

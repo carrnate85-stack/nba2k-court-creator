@@ -475,6 +475,12 @@ def category_for_name(name: str) -> str:
         return "WNBA"
     if re.search(r"\((30[0-9]|31[01567])\)", spaced):
         return "WNBA"
+    historic_match = re.search(r"\((\d{3})\)", spaced)
+    if historic_match and historic_match.group(1) in HISTORIC_ARENA_NAMES:
+        return "Historic NBA"
+    event_match = re.search(r"\((\d{3})\)", spaced)
+    if event_match and event_match.group(1) in EVENT_ARENA_NAMES:
+        return "All-Star & Events"
     if "allstar" in token or "event" in token:
         return "All-Star & Events"
     if any(key in token for key in COLLEGE_FLOOR_KEYS):
@@ -488,7 +494,9 @@ def category_for_name(name: str) -> str:
     if re.search(r"\(\d{3}\)", spaced) and all(
         variant not in token for variant in ("city", "statement", "classic", "event")
     ):
-        return "Numbered Courts"
+        return "NBA"
+    if re.match(r"\d{3}courtwood", token):
+        return "NBA"
     return "Special"
 
 
