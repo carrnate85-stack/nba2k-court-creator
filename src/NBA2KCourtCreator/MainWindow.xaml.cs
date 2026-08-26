@@ -119,7 +119,16 @@ public partial class MainWindow : Window
                     Name = imageJson.GetProperty("name").GetString() ?? string.Empty,
                     Path = imageJson.GetProperty("path").GetString() ?? string.Empty,
                     Bbox = imageJson.TryGetProperty("bbox", out var bbox) ? bbox.EnumerateArray().Select(x => x.GetInt32()).ToArray() : [0, 0, 0, 0],
+                    IsTemplate = imageJson.TryGetProperty("isTemplate", out var isTemplate) && isTemplate.GetBoolean(),
                 });
+            }
+        }
+
+        foreach (var floor in _customFloorImages.Where(image => image.IsTemplate))
+        {
+            if (_layersById.TryGetValue(floor.Id, out var layer))
+            {
+                layer.IsTemplateFloor = true;
             }
         }
 
@@ -525,6 +534,7 @@ public partial class MainWindow : Window
                 Name = imageJson.GetProperty("name").GetString() ?? string.Empty,
                 Path = imageJson.GetProperty("path").GetString() ?? string.Empty,
                 Bbox = imageJson.GetProperty("bbox").EnumerateArray().Select(x => x.GetInt32()).ToArray(),
+                IsTemplate = false,
             });
             layer.DisplayName = FriendlyLayerName(layer);
             layer.Visible = false;
@@ -543,6 +553,11 @@ public partial class MainWindow : Window
         if (_selectedLayer is null || !_selectedLayer.IsCustomFloor)
         {
             SetStatus("Select a custom floor to remove.");
+            return;
+        }
+        if (_selectedLayer.IsTemplateFloor)
+        {
+            SetStatus("Template floors stay in the library.");
             return;
         }
 
@@ -902,7 +917,7 @@ public partial class MainWindow : Window
         if (image is null) return;
         _customFloorImages.Remove(image);
         var metaPath = Path.Combine(_backend.ProjectRoot, "custom_floors", "custom_floors.json");
-        var payload = new { floors = _customFloorImages.Select(item => new { id = item.Id, name = item.Name, path = item.Path, bbox = item.Bbox }).ToList() };
+        var payload = new { floors = _customFloorImages.Where(item => !item.IsTemplate).Select(item => new { id = item.Id, name = item.Name, path = item.Path, bbox = item.Bbox }).ToList() };
         File.WriteAllText(metaPath, JsonSerializer.Serialize(payload, _jsonOptions));
         var localPath = Path.IsPathRooted(image.Path) ? image.Path : Path.Combine(_backend.ProjectRoot, image.Path);
         try

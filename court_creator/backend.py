@@ -26,6 +26,7 @@ LOCAL_ASSET_ROOT = PROJECT_ROOT
 ONEDRIVE_ASSET_ROOT = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
 CUSTOM_FLOORS_DIR = LOCAL_ASSET_ROOT / "custom_floors"
 CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
+FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k26_floor_templates.json"
 PROJECT_COURT_TEMPLATE_PSD = (
     LOCAL_ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
 )
@@ -73,6 +74,9 @@ def load_state(template_path: Path | None = None) -> dict:
     document = parse_court_psd_layers(template_path)
     ensure_preview(template_path)
     custom_floor_layers, custom_floor_images = load_custom_floor_layers(document)
+    template_floor_layers, template_floor_images = load_floor_template_layers(
+        document, start_index=len(custom_floor_layers)
+    )
     return {
         "ok": True,
         "projectRoot": str(PROJECT_ROOT),
@@ -85,8 +89,10 @@ def load_state(template_path: Path | None = None) -> dict:
             "layers": [asdict(layer) for layer in document.layers],
         },
         "visibility": {layer.id: layer.visible for layer in document.layers},
-        "customFloorLayers": [asdict(layer) for layer in custom_floor_layers],
-        "customFloorImages": custom_floor_images,
+        "customFloorLayers": [
+            asdict(layer) for layer in [*custom_floor_layers, *template_floor_layers]
+        ],
+        "customFloorImages": [*custom_floor_images, *template_floor_images],
         "teamPalettes": load_team_palettes(),
         "presets": load_presets(),
     }
@@ -237,6 +243,56 @@ def load_custom_floor_layers(document) -> tuple[list[CourtLayer], list[dict]]:
                 "bbox": layer.bbox,
             }
         )
+    return layers, images
+
+
+def load_floor_template_layers(
+    document,
+    *,
+    start_index: int = 0,
+) -> tuple[list[CourtLayer], list[dict]]:
+    layers: list[CourtLayer] = []
+    images: list[dict] = []
+    floor_group = court_floor_group(document.layers)
+    fallback_bbox = court_floor_bbox(document.layers, floor_group)
+    if floor_group is None or fallback_bbox is None:
+        return layers, images
+
+    template_index = 0
+    for meta_path in ONEDRIVE_ASSET_ROOT.glob(FLOOR_TEMPLATE_META_GLOB):
+        data = json.loads(meta_path.read_text(encoding="utf-8"))
+        for item in data.get("templates", []):
+            path = resolve_asset_path(str(item.get("path", "")))
+            if not path.exists():
+                continue
+            layer_id = str(item.get("id") or f"floor_template_{template_index}")
+            layer = CourtLayer(
+                id=layer_id,
+                name=str(item.get("name") or path.stem),
+                kind="layer",
+                parent_id=floor_group.id,
+                psd_index=11000 + start_index + template_index,
+                depth=1,
+                visible=False,
+                opacity=255,
+                blend_mode="norm",
+                bbox=fallback_bbox,
+            )
+            layers.append(layer)
+            images.append(
+                {
+                    "id": layer.id,
+                    "name": layer.name,
+                    "path": str(path.relative_to(ONEDRIVE_ASSET_ROOT))
+                    if path.is_relative_to(ONEDRIVE_ASSET_ROOT)
+                    else str(path),
+                    "bbox": layer.bbox,
+                    "isTemplate": True,
+                    "sourceMip0": item.get("sourceMip0"),
+                    "sourceTld": item.get("sourceTld"),
+                }
+            )
+            template_index += 1
     return layers, images
 
 

@@ -23,6 +23,7 @@ public sealed class CourtLayerNode : INotifyPropertyChanged
     public string BlendMode { get; init; } = string.Empty;
     public int[] Bbox { get; init; } = [0, 0, 0, 0];
     public bool IsCustomFloor { get; init; }
+    public bool IsTemplateFloor { get; set; }
     public ObservableCollection<CourtLayerNode> Children { get; } = [];
 
     public string DisplayName
@@ -62,7 +63,7 @@ public sealed class CourtLayerNode : INotifyPropertyChanged
 
     public bool IsGroup => Kind.Equals("group", StringComparison.OrdinalIgnoreCase);
     public string VisibilityText => Visible ? "On" : "Off";
-    public string TypeLabel => IsCustomFloor ? "Floor" : IsGroup ? "Group" : "Layer";
+    public string TypeLabel => IsTemplateFloor ? "Template" : IsCustomFloor ? "Floor" : IsGroup ? "Group" : "Layer";
     public string OpacityLabel => IsCustomFloor || IsGroup ? string.Empty : $"{Math.Round(Opacity / 255.0 * 100)}%";
     public System.Windows.Media.Brush SwatchBrush => string.IsNullOrWhiteSpace(ActiveHex)
         ? System.Windows.Media.Brushes.Transparent
@@ -90,6 +91,9 @@ public sealed class CustomFloorImage
 
     [JsonPropertyName("visible")]
     public bool Visible { get; set; }
+
+    [JsonPropertyName("isTemplate")]
+    public bool IsTemplate { get; set; }
 }
 
 public sealed class TeamPalette
