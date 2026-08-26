@@ -453,8 +453,16 @@ public partial class MainWindow : Window
 
     private async void OnLayerDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (_selectedLayer is null) return;
-        await SetLayerVisibilityAsync(_selectedLayer, !_selectedLayer.Visible);
+        var layer = _selectedLayer;
+        if (FindParent<TreeViewItem>((DependencyObject)e.OriginalSource) is { DataContext: CourtLayerNode clickedLayer })
+        {
+            layer = clickedLayer;
+            _selectedLayer = clickedLayer;
+        }
+
+        if (layer is null) return;
+        await SetLayerVisibilityAsync(layer, !layer.Visible);
+        e.Handled = true;
     }
 
     private void OnLayerRightClick(object sender, MouseButtonEventArgs e)
@@ -514,8 +522,27 @@ public partial class MainWindow : Window
         }
         if (IsFloorTemplateCategory(selectedRoot))
         {
+            var selectedTemplate = layer.Id == selectedRoot.Id
+                ? selectedRoot.Children.FirstOrDefault(child => child.Visible) ?? selectedRoot.Children.FirstOrDefault()
+                : layer;
+
+            ApplyVisibility(group, true, includeChildren: false);
+            ShowAncestors(group);
+            foreach (var option in group.Children)
+            {
+                ApplyVisibility(option, false, includeChildren: true);
+            }
+
             ApplyVisibility(selectedRoot, true, includeChildren: false);
-            ShowAncestors(selectedRoot);
+            if (selectedTemplate is not null && selectedTemplate.Id != selectedRoot.Id)
+            {
+                ApplyVisibility(selectedTemplate, true, includeChildren: selectedTemplate.IsGroup);
+                ShowAncestors(selectedTemplate);
+            }
+            else
+            {
+                ShowAncestors(selectedRoot);
+            }
             return;
         }
 

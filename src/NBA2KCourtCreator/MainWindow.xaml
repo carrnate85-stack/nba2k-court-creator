@@ -2,23 +2,17 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:NBA2KCourtCreator.Models"
-        Title="NBA 2K Court Creator" Width="1500" Height="920" MinWidth="1080" MinHeight="700"
+        Title="NBA 2K Court Creator" Width="1500" Height="920" MinWidth="1280" MinHeight="720"
         WindowStartupLocation="CenterScreen">
   <Window.Resources>
     <HierarchicalDataTemplate DataType="{x:Type models:CourtLayerNode}" ItemsSource="{Binding Children}">
-      <Grid Height="28" MinWidth="460">
+      <Grid Height="28" MinWidth="420">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="54" />
-          <ColumnDefinition Width="28" />
-          <ColumnDefinition Width="76" />
-          <ColumnDefinition Width="52" />
+          <ColumnDefinition Width="58" />
         </Grid.ColumnDefinitions>
         <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-        <TextBlock Grid.Column="1" Text="{Binding VisibilityText}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}" />
-        <Border Grid.Column="2" Width="18" Height="18" VerticalAlignment="Center" HorizontalAlignment="Center" Background="{Binding SwatchBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
-        <TextBlock Grid.Column="3" Text="{Binding ActiveHex}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}" />
-        <TextBlock Grid.Column="4" Text="{Binding OpacityLabel}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}" />
+        <TextBlock Grid.Column="1" Text="{Binding VisibilityText}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource InkBrush}" />
       </Grid>
     </HierarchicalDataTemplate>
   </Window.Resources>
@@ -136,14 +130,14 @@
 
         <Grid Grid.Row="2">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="420" />
+            <ColumnDefinition Width="520" />
             <ColumnDefinition Width="14" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
           <Grid.RowDefinitions>
-            <RowDefinition Height="270" />
+            <RowDefinition Height="330" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
@@ -222,12 +216,16 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="780" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
 
-          <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+          <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
             <UniformGrid x:Name="PresetHost" Rows="1" Columns="5" />
           </Border>
 
-          <GroupBox x:Name="LayerPanel" Grid.Row="1" Header="Court Floors" Margin="0">
+          <GroupBox x:Name="LayerPanel" Grid.Row="1" Grid.Column="0" Header="Court Floors" Margin="0">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -238,16 +236,10 @@
               <Grid Grid.Row="1" Margin="27,0,11,0">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="54" />
-                  <ColumnDefinition Width="28" />
-                  <ColumnDefinition Width="76" />
-                  <ColumnDefinition Width="52" />
+                  <ColumnDefinition Width="58" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Layer" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" />
-                <TextBlock Grid.Column="1" Text="Visible" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="2" Text="" />
-                <TextBlock Grid.Column="3" Text="Hex" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="4" Text="Opacity" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="1" Text="State" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
               </Grid>
               <TreeView x:Name="LayersTree"
                         Grid.Row="2"
@@ -256,6 +248,11 @@
                         MouseDoubleClick="OnLayerDoubleClick"
                         PreviewMouseRightButtonDown="OnLayerRightClick"
                         VirtualizingStackPanel.IsVirtualizing="True">
+                <TreeView.Resources>
+                  <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#DCEDE9" />
+                  <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#DCEDE9" />
+                  <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#182329" />
+                </TreeView.Resources>
                 <TreeView.ContextMenu>
                   <ContextMenu>
                     <MenuItem Header="Rename" Click="OnRenameLayer" />
