@@ -1,12 +1,14 @@
 @echo off
 setlocal
-cd /d "%~dp0"
+set "APP_ROOT=%~dp0."
+cd /d "%APP_ROOT%"
 title NBA 2K Court Creator Launcher
 
 set "BUNDLED_PY=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
 set "BUNDLED_NODE_BIN=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin"
 set "PNPM_CMD=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\fallback\pnpm.cmd"
-set "ELECTRON_CMD=%~dp0node_modules\.bin\electron.cmd"
+set "ELECTRON_EXE=%APP_ROOT%\node_modules\electron\dist\electron.exe"
+set "ELECTRON_CMD=%APP_ROOT%\node_modules\.bin\electron.cmd"
 set "APP_PROJECT=%~dp0src\NBA2KCourtCreator\NBA2KCourtCreator.csproj"
 set "APP_EXE=%~dp0src\NBA2KCourtCreator\bin\Release\net8.0-windows\NBA2KCourtCreator.exe"
 
@@ -15,19 +17,23 @@ if exist "%BUNDLED_NODE_BIN%\node.exe" (
 )
 
 if exist "%BUNDLED_PY%" (
-    "%BUNDLED_PY%" "%~dp0updater.py" >nul 2>nul
+    "%BUNDLED_PY%" "%APP_ROOT%\updater.py" >nul 2>nul
 ) else (
-    python "%~dp0updater.py" >nul 2>nul
+    python "%APP_ROOT%\updater.py" >nul 2>nul
 )
 
-if exist "%~dp0package.json" (
-    if not exist "%ELECTRON_CMD%" (
+if exist "%APP_ROOT%\package.json" (
+    if not exist "%ELECTRON_EXE%" (
         if exist "%PNPM_CMD%" (
-            call "%PNPM_CMD%" -C "%~dp0" install
+            call "%PNPM_CMD%" -C "%APP_ROOT%" install
         )
     )
+    if exist "%ELECTRON_EXE%" (
+        start "" "%ELECTRON_EXE%" "%APP_ROOT%"
+        exit /b 0
+    )
     if exist "%ELECTRON_CMD%" (
-        start "" "%ELECTRON_CMD%" "%~dp0"
+        start "" "%ComSpec%" /d "%APP_ROOT%" /c ""%ELECTRON_CMD%" "%APP_ROOT%""
         exit /b 0
     )
 )
