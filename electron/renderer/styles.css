@@ -256,6 +256,7 @@ nav {
   grid-column: 3;
   min-width: 0;
   min-height: 0;
+  height: 100%;
 }
 
 #layersPanel {
@@ -356,17 +357,20 @@ nav {
   min-height: 0;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
+  height: 100%;
   overflow: hidden;
   padding: 10px;
 }
 
 .palette-host {
   min-height: 0;
-  overflow: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
   overscroll-behavior: contain;
-  padding-right: 4px;
+  padding-right: 6px;
   margin-top: 8px;
   scrollbar-width: thin;
+  scrollbar-color: var(--accent) #e5eee9;
 }
 
 .league-title {
@@ -413,15 +417,38 @@ nav {
 }
 
 body[data-section="paint"] .layout {
-  grid-template-columns: minmax(500px, 760px) 14px minmax(560px, 1fr);
+  grid-template-columns: minmax(500px, 760px) 14px minmax(720px, 1fr);
 }
 
-body[data-section="paint"] .preview-column {
-  grid-template-rows: minmax(260px, 34vh) auto minmax(300px, 1fr);
+body[data-section="paint"] .work-column {
+  display: grid;
+  grid-template-columns: minmax(430px, 1fr) minmax(300px, 370px);
+  gap: 12px;
 }
 
+body[data-section="paint"] #layersPanel,
 body[data-section="paint"] .palette-panel {
-  min-height: 300px;
+  min-height: 0;
+}
+
+.palette-host::-webkit-scrollbar,
+.layer-list::-webkit-scrollbar,
+.logo-list::-webkit-scrollbar {
+  width: 12px;
+}
+
+.palette-host::-webkit-scrollbar-track,
+.layer-list::-webkit-scrollbar-track,
+.logo-list::-webkit-scrollbar-track {
+  background: #e5eee9;
+}
+
+.palette-host::-webkit-scrollbar-thumb,
+.layer-list::-webkit-scrollbar-thumb,
+.logo-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border: 3px solid #e5eee9;
+  border-radius: 10px;
 }
 
 #logosPanel,
