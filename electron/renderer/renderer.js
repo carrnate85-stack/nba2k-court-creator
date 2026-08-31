@@ -15,6 +15,7 @@ const state = {
   presets: [],
   selectedLayerId: null,
   activeHexLayerId: null,
+  collapsedLayerGroups: new Set(),
   logos: [],
   selectedLogoId: null,
   renderToken: 0,
@@ -365,7 +366,7 @@ function flattenedRows(roots, depth = 0) {
   const rows = [];
   for (const layer of roots) {
     rows.push({ layer, depth });
-    if (isGroup(layer) && layer.children.length) {
+    if (isGroup(layer) && layer.children.length && !state.collapsedLayerGroups.has(layer.id)) {
       rows.push(...flattenedRows([...layer.children].sort((a, b) => courtSortKey(a) - courtSortKey(b) || a.displayName.localeCompare(b.displayName)), depth + 1));
     }
   }
@@ -389,9 +390,11 @@ function renderLayers() {
 
     const name = document.createElement("div");
     name.className = "layer-name";
-    name.textContent = `${isGroup(layer) ? "▸ " : ""}${layer.displayName}`;
+    const collapsed = isGroup(layer) && state.collapsedLayerGroups.has(layer.id);
+    name.textContent = `${isGroup(layer) ? (collapsed ? "▸ " : "▾ ") : ""}${layer.displayName}`;
     name.title = layer.displayName;
     name.style.paddingLeft = state.section === "paint" ? `${depth * 12}px` : "0";
+    if (isGroup(layer)) row.setAttribute("aria-expanded", String(!collapsed));
 
     const visible = document.createElement("div");
     visible.className = "state";
@@ -424,10 +427,16 @@ function renderLayers() {
     row.append(name, visible, colorCell);
     row.addEventListener("click", () => {
       state.selectedLayerId = layer.id;
+      if (isGroup(layer)) {
+        if (state.collapsedLayerGroups.has(layer.id)) state.collapsedLayerGroups.delete(layer.id);
+        else state.collapsedLayerGroups.add(layer.id);
+      }
       refreshSelectionText();
       renderLayers();
     });
-    row.addEventListener("dblclick", () => setLayerVisibility(layer, !layer.visible));
+    row.addEventListener("dblclick", () => {
+      if (!isGroup(layer)) setLayerVisibility(layer, !layer.visible);
+    });
     row.addEventListener("contextmenu", (event) => {
       event.preventDefault();
       const renamed = prompt("Layer name", layer.displayName);
@@ -471,14 +480,34 @@ function positionColorEditor() {
   ui.colorEditor.style.left = `${Math.min(254, Math.max(0, window.innerWidth - width))}px`;
   ui.colorEditor.style.top = `${Math.min(340, Math.max(24, window.innerHeight - 230))}px`;
   ui.colorEditor.dataset.positioned = "true";
+  fitColorEditorToViewport();
+}
+
+function fitColorEditorToViewport() {
+  if (ui.colorEditor.classList.contains("hidden")) return;
+  const margin = 16;
+  const bounds = ui.colorEditor.getBoundingClientRect();
+  const expanded = !ui.paletteSection.classList.contains("hidden");
+  const desiredHeight = expanded ? Math.min(600, window.innerHeight - margin * 2) : Math.min(150, window.innerHeight - margin * 2);
+  const currentLeft = Number.parseFloat(ui.colorEditor.style.left) || bounds.left;
+  const currentTop = Number.parseFloat(ui.colorEditor.style.top) || bounds.top;
+  const left = Math.max(margin, Math.min(window.innerWidth - bounds.width - margin, currentLeft));
+  const top = Math.max(margin, Math.min(window.innerHeight - desiredHeight - margin, currentTop));
+  ui.colorEditor.style.left = `${left}px`;
+  ui.colorEditor.style.top = `${top}px`;
+  ui.colorEditor.style.maxHeight = `${Math.max(140, window.innerHeight - top - margin)}px`;
 }
 
 function setTeamColorsExpanded(expanded) {
   ui.paletteSection.classList.toggle("hidden", !expanded);
   document.getElementById("teamColorsToggle").textContent = expanded ? "Hide Team Colors" : "Team Colors";
+  requestAnimationFrame(fitColorEditorToViewport);
   if (expanded) {
     renderPalette();
-    requestAnimationFrame(() => ui.paletteSearch.focus());
+    requestAnimationFrame(() => {
+      fitColorEditorToViewport();
+      ui.paletteSearch.focus();
+    });
   }
 }
 
@@ -519,6 +548,7 @@ function makeColorEditorDraggable() {
     const top = Math.max(0, Math.min(window.innerHeight - 48, event.clientY - drag.y));
     ui.colorEditor.style.left = `${left}px`;
     ui.colorEditor.style.top = `${top}px`;
+    fitColorEditorToViewport();
   });
   const stopDragging = () => { drag = null; };
   ui.colorEditorHandle.addEventListener("pointerup", stopDragging);
@@ -607,6 +637,13 @@ function renderPalette() {
         swatches.append(button);
       }
       details.append(summary, swatches);
+      details.addEventListener("toggle", () => {
+        if (!details.open || query) return;
+        for (const other of ui.paletteHost.querySelectorAll("details.team-palette[open]")) {
+          if (other !== details) other.open = false;
+        }
+        requestAnimationFrame(() => details.scrollIntoView({ block: "nearest" }));
+      });
       ui.paletteHost.append(details);
     }
   }
@@ -964,6 +1001,7 @@ function wireEvents() {
       if (normalizeHex(ui.colorEditorHex.value)) applyColorEditorHex();
     });
   });
+  window.addEventListener("resize", fitColorEditorToViewport);
   makeColorEditorDraggable();
   document.getElementById("newButton").addEventListener("click", resetToDefault);
   document.getElementById("refreshButton").addEventListener("click", () => refreshPreview());
