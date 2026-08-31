@@ -342,10 +342,8 @@ nav {
 
 .color-controls {
   display: flex;
-  width: 118px;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1px;
+  align-items: center;
+  gap: 5px;
   padding: 4px 0;
 }
 
@@ -367,19 +365,19 @@ nav {
 }
 
 .team-color-link {
-  min-height: 20px;
-  border: 0;
-  background: transparent;
-  padding: 1px 3px;
+  min-height: 29px;
+  border-color: #b8ccc2;
+  background: var(--accent-soft);
+  padding: 3px 8px;
   color: var(--accent-strong);
   font-size: 11px;
-  text-align: left;
-  text-decoration: underline;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .team-color-link:hover {
-  border: 0;
-  background: transparent;
+  border-color: var(--accent);
+  background: #edf5f1;
   color: var(--accent);
 }
 
@@ -450,7 +448,7 @@ nav {
 
 .hex-editor-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 42px minmax(0, 1fr) auto auto;
   gap: 8px;
   align-items: center;
 }
@@ -471,8 +469,8 @@ nav {
 }
 
 .team-colors-toggle {
-  width: 100%;
-  margin-top: 12px;
+  width: auto;
+  margin-top: 0;
   border-color: #b8ccc2;
   background: var(--accent-soft);
   color: var(--accent-strong);
