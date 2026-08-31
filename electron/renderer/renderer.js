@@ -403,6 +403,7 @@ function renderLayers() {
     const colorCell = document.createElement("div");
     if (layer.showInlineColorControls) {
       colorCell.className = "color-controls";
+      colorCell.addEventListener("dblclick", (event) => event.stopPropagation());
       const activeHex = normalizeHex(layer.activeHex) || DEFAULT_PAINT_HEX;
       const colorBox = document.createElement("button");
       colorBox.type = "button";
