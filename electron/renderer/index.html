@@ -55,11 +55,6 @@
               <span>Selected</span>
               <strong id="selectedText">Court: No court selected.</strong>
             </div>
-            <section id="palettePanel" class="panel palette-panel hidden">
-              <div class="panel-title">Team Colors</div>
-              <input id="paletteSearch" type="search" placeholder="Search team, league, color, or hex" />
-              <div id="paletteHost" class="palette-host"></div>
-            </section>
           </section>
 
           <section class="work-column">
@@ -113,6 +108,29 @@
         </div>
       </section>
     </main>
+
+    <section id="colorEditor" class="color-editor hidden" role="dialog" aria-labelledby="colorEditorTitle">
+      <header id="colorEditorHandle" class="color-editor-handle">
+        <div>
+          <span>Editing color</span>
+          <strong id="colorEditorTitle">Selected layer</strong>
+        </div>
+        <button id="colorEditorClose" class="icon-button" type="button" aria-label="Close color window">&times;</button>
+      </header>
+      <div class="color-editor-content">
+        <label class="hex-editor-label" for="colorEditorHex">Hex color</label>
+        <div class="hex-editor-row">
+          <input id="colorEditorNative" class="color-editor-native" type="color" aria-label="Choose color" />
+          <input id="colorEditorHex" type="text" maxlength="7" spellcheck="false" />
+          <button id="colorEditorApply" class="primary" type="button">Apply</button>
+        </div>
+        <button id="teamColorsToggle" class="team-colors-toggle" type="button">Team Colors</button>
+        <section id="paletteSection" class="palette-section hidden">
+          <input id="paletteSearch" type="search" placeholder="Search team, league, color, or hex" />
+          <div id="paletteHost" class="palette-host"></div>
+        </section>
+      </div>
+    </section>
 
     <script src="renderer.js"></script>
   </body>

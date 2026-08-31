@@ -28,7 +28,12 @@ const ui = {
   previewImage: document.getElementById("previewImage"),
   previewEmpty: document.getElementById("previewEmpty"),
   selectedText: document.getElementById("selectedText"),
-  palettePanel: document.getElementById("palettePanel"),
+  colorEditor: document.getElementById("colorEditor"),
+  colorEditorHandle: document.getElementById("colorEditorHandle"),
+  colorEditorTitle: document.getElementById("colorEditorTitle"),
+  colorEditorNative: document.getElementById("colorEditorNative"),
+  colorEditorHex: document.getElementById("colorEditorHex"),
+  paletteSection: document.getElementById("paletteSection"),
   paletteSearch: document.getElementById("paletteSearch"),
   paletteHost: document.getElementById("paletteHost"),
   layersPanel: document.getElementById("layersPanel"),
@@ -395,26 +400,25 @@ function renderLayers() {
     const colorCell = document.createElement("div");
     if (layer.showInlineColorControls) {
       colorCell.className = "color-controls";
-      const color = document.createElement("input");
-      color.type = "color";
-      color.value = normalizeHex(layer.activeHex) || DEFAULT_PAINT_HEX;
-      color.addEventListener("input", () => applyHex(layer, color.value));
-      const hex = document.createElement("input");
-      hex.type = "text";
-      hex.value = normalizeHex(layer.activeHex) || "";
-      hex.addEventListener("focus", () => {
-        state.activeHexLayerId = layer.id;
-        state.selectedLayerId = layer.id;
-        refreshSelectionText();
-        renderLayers();
+      const activeHex = normalizeHex(layer.activeHex) || DEFAULT_PAINT_HEX;
+      const colorBox = document.createElement("button");
+      colorBox.type = "button";
+      colorBox.className = "color-box";
+      colorBox.title = `Edit ${layer.displayName} color`;
+      colorBox.innerHTML = `<span class="color-box-swatch" style="background:${activeHex}"></span><span>${activeHex}</span>`;
+      colorBox.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openColorEditor(layer, false);
       });
-      hex.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") applyHex(layer, hex.value);
+      const teamColors = document.createElement("button");
+      teamColors.type = "button";
+      teamColors.className = "team-color-link";
+      teamColors.textContent = "Team Colors";
+      teamColors.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openColorEditor(layer, true);
       });
-      hex.addEventListener("blur", () => {
-        if (normalizeHex(hex.value) !== normalizeHex(layer.activeHex)) applyHex(layer, hex.value);
-      });
-      colorCell.append(color, hex);
+      colorCell.append(colorBox, teamColors);
     }
 
     row.append(name, visible, colorCell);
@@ -448,8 +452,77 @@ async function applyHex(layer, value) {
   state.colorOverrides[layer.id] = hexToRgb(normalized);
   layer.activeHex = normalized;
   renderLayers();
+  if (state.activeHexLayerId === layer.id) syncColorEditor(layer);
   refreshSelectionText();
   schedulePreview();
+}
+
+function syncColorEditor(layer) {
+  if (!layer) return;
+  const activeHex = normalizeHex(layer.activeHex) || DEFAULT_PAINT_HEX;
+  ui.colorEditorTitle.textContent = layer.displayName;
+  ui.colorEditorNative.value = activeHex;
+  ui.colorEditorHex.value = activeHex;
+}
+
+function positionColorEditor() {
+  if (ui.colorEditor.dataset.positioned === "true") return;
+  const width = 430;
+  ui.colorEditor.style.left = `${Math.min(254, Math.max(0, window.innerWidth - width))}px`;
+  ui.colorEditor.style.top = `${Math.min(340, Math.max(24, window.innerHeight - 230))}px`;
+  ui.colorEditor.dataset.positioned = "true";
+}
+
+function setTeamColorsExpanded(expanded) {
+  ui.paletteSection.classList.toggle("hidden", !expanded);
+  document.getElementById("teamColorsToggle").textContent = expanded ? "Hide Team Colors" : "Team Colors";
+  if (expanded) {
+    renderPalette();
+    requestAnimationFrame(() => ui.paletteSearch.focus());
+  }
+}
+
+function openColorEditor(layer, showTeamColors) {
+  state.activeHexLayerId = layer.id;
+  state.selectedLayerId = layer.id;
+  syncColorEditor(layer);
+  ui.colorEditor.classList.remove("hidden");
+  positionColorEditor();
+  setTeamColorsExpanded(showTeamColors);
+  refreshSelectionText();
+  renderLayers();
+  if (!showTeamColors) requestAnimationFrame(() => ui.colorEditorHex.select());
+}
+
+function closeColorEditor() {
+  ui.colorEditor.classList.add("hidden");
+  setTeamColorsExpanded(false);
+}
+
+function applyColorEditorHex() {
+  const layer = state.layersById.get(state.activeHexLayerId);
+  if (layer) applyHex(layer, ui.colorEditorHex.value);
+}
+
+function makeColorEditorDraggable() {
+  let drag = null;
+  ui.colorEditorHandle.addEventListener("pointerdown", (event) => {
+    if (event.target.closest("button")) return;
+    const bounds = ui.colorEditor.getBoundingClientRect();
+    drag = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+    ui.colorEditorHandle.setPointerCapture(event.pointerId);
+  });
+  ui.colorEditorHandle.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = ui.colorEditor.getBoundingClientRect();
+    const left = Math.max(0, Math.min(window.innerWidth - bounds.width, event.clientX - drag.x));
+    const top = Math.max(0, Math.min(window.innerHeight - 48, event.clientY - drag.y));
+    ui.colorEditor.style.left = `${left}px`;
+    ui.colorEditor.style.top = `${top}px`;
+  });
+  const stopDragging = () => { drag = null; };
+  ui.colorEditorHandle.addEventListener("pointerup", stopDragging);
+  ui.colorEditorHandle.addEventListener("pointercancel", stopDragging);
 }
 
 function paletteLeagueLabel(league) {
@@ -526,7 +599,10 @@ function renderPalette() {
         button.innerHTML = `<span class="swatch" style="background:${color.hex}"></span><span>${color.hex}</span>`;
         button.addEventListener("click", () => {
           const target = state.layersById.get(state.activeHexLayerId) || state.layersById.get(state.selectedLayerId);
-          if (target) applyHex(target, color.hex);
+          if (target) {
+            applyHex(target, color.hex);
+            closeColorEditor();
+          }
         });
         swatches.append(button);
       }
@@ -562,7 +638,7 @@ function renderSection() {
   document.body.dataset.section = state.section;
   ui.sectionTitle.textContent = copy[state.section][0];
   ui.sectionSubtitle.textContent = copy[state.section][1];
-  ui.palettePanel.classList.toggle("hidden", state.section !== "paint");
+  if (state.section !== "paint") closeColorEditor();
   ui.layersPanel.classList.toggle("hidden", !["floors", "paint"].includes(state.section));
   ui.logosPanel.classList.toggle("hidden", state.section !== "logos");
   ui.exportPanel.classList.toggle("hidden", state.section !== "export");
@@ -869,6 +945,26 @@ function wireEvents() {
   });
   ui.floorSearch.addEventListener("input", renderLayers);
   ui.paletteSearch.addEventListener("input", renderPalette);
+  document.getElementById("colorEditorClose").addEventListener("click", closeColorEditor);
+  document.getElementById("colorEditorApply").addEventListener("click", applyColorEditorHex);
+  document.getElementById("teamColorsToggle").addEventListener("click", () => {
+    setTeamColorsExpanded(ui.paletteSection.classList.contains("hidden"));
+  });
+  ui.colorEditorNative.addEventListener("input", () => {
+    ui.colorEditorHex.value = normalizeHex(ui.colorEditorNative.value) || DEFAULT_PAINT_HEX;
+  });
+  ui.colorEditorNative.addEventListener("change", applyColorEditorHex);
+  ui.colorEditorHex.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") applyColorEditorHex();
+    if (event.key === "Escape") closeColorEditor();
+  });
+  ui.colorEditorHex.addEventListener("change", applyColorEditorHex);
+  ui.colorEditorHex.addEventListener("paste", () => {
+    requestAnimationFrame(() => {
+      if (normalizeHex(ui.colorEditorHex.value)) applyColorEditorHex();
+    });
+  });
+  makeColorEditorDraggable();
   document.getElementById("newButton").addEventListener("click", resetToDefault);
   document.getElementById("refreshButton").addEventListener("click", () => refreshPreview());
   document.getElementById("exportButton").addEventListener("click", exportPng);
