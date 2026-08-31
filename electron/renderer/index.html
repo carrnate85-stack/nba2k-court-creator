@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NBA 2K Court Creator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../src/NBA2KCourtCreator/Assets/app-icon.png" alt="" />
+        <div>
+          <strong>NBA 2K</strong>
+          <h1>Court Creator</h1>
+          <span>Companion workspace</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav active" data-section="floors">Court Floors</button>
+        <button class="nav" data-section="paint">Paint & Lines</button>
+        <button class="nav" data-section="logos">Logos</button>
+        <button class="nav" data-section="export">Export</button>
+      </nav>
+      <small>Electron + Python engine</small>
+    </aside>
+
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h2>NBA 2K Court Creator</h2>
+          <p id="status">Starting workspace...</p>
+        </div>
+        <div class="top-actions">
+          <button id="newButton">New</button>
+          <button id="openButton">Open PSD</button>
+          <button id="refreshButton">Refresh Preview</button>
+          <button id="exportButton" class="primary">Export PNG</button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="workspace-heading">
+          <h2 id="sectionTitle">Court Floors</h2>
+          <p id="sectionSubtitle">Choose one court floor at a time, including NBA 2K26 templates.</p>
+        </div>
+
+        <div class="layout">
+          <section class="preview-column">
+            <div class="preview-shell">
+              <img id="previewImage" alt="Court preview" />
+              <div id="previewEmpty">Loading court preview...</div>
+            </div>
+            <div class="selected-card">
+              <span>Selected</span>
+              <strong id="selectedText">Court: No court selected.</strong>
+            </div>
+            <section id="palettePanel" class="panel palette-panel hidden">
+              <div class="panel-title">Team Colors</div>
+              <input id="paletteSearch" type="search" placeholder="Search teams or hex" />
+              <div id="paletteHost" class="palette-host"></div>
+            </section>
+          </section>
+
+          <section class="work-column">
+            <section id="layersPanel" class="panel">
+              <div class="panel-tools">
+                <input id="floorSearch" type="search" placeholder="Search court floors" />
+                <button id="addFloorButton" class="primary">Add Custom Floor</button>
+              </div>
+              <div class="table-head">
+                <span id="layerNameHeader">Court</span>
+                <span>State</span>
+                <span id="layerColorHeader" class="hidden">Color</span>
+              </div>
+              <div id="layersHost" class="layer-list"></div>
+            </section>
+
+            <section id="logosPanel" class="panel hidden">
+              <div class="panel-actions">
+                <button id="importLogoButton" class="primary">Import Logo</button>
+                <button id="duplicateLogoXButton">Copy on X</button>
+                <button id="duplicateLogoYButton">Copy on Y</button>
+                <button id="removeLogoButton">Remove Logo</button>
+              </div>
+              <div class="logo-grid">
+                <div id="logoList" class="logo-list"></div>
+                <div class="inspector">
+                  <label>Name <input id="logoName" type="text" /></label>
+                  <div class="control-grid">
+                    <label>X <input id="logoX" type="number" /></label>
+                    <label>Y <input id="logoY" type="number" /></label>
+                    <label>Width <input id="logoWidth" type="number" min="1" /></label>
+                    <label>Height <input id="logoHeight" type="number" min="1" /></label>
+                    <label>Rotate <input id="logoRotation" type="number" /></label>
+                    <label>Opacity <input id="logoOpacity" type="number" min="0" max="100" /></label>
+                  </div>
+                  <label class="check-row"><input id="logoVisible" type="checkbox" /> Visible</label>
+                  <label class="check-row"><input id="logoScaleLocked" type="checkbox" /> Lock scale</label>
+                </div>
+              </div>
+            </section>
+
+            <section id="exportPanel" class="panel hidden">
+              <div class="export-card">
+                <h3>Export</h3>
+                <p>The current court preview can be exported as a flattened PNG.</p>
+                <button id="exportPanelButton" class="primary">Export PNG</button>
+                <button id="openPsdButton">Open PSD</button>
+              </div>
+            </section>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
