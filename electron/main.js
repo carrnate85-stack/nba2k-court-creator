@@ -5,6 +5,7 @@ const os = require("os");
 const path = require("path");
 
 const projectRoot = path.resolve(__dirname, "..");
+let mainWindow = null;
 
 function bundledPython() {
   return path.join(
@@ -77,6 +78,7 @@ function createWindow() {
     minWidth: 1280,
     minHeight: 760,
     title: "NBA 2K Court Creator",
+    show: false,
     icon: path.join(projectRoot, "src", "NBA2KCourtCreator", "Assets", "app-icon.ico"),
     backgroundColor: "#F6F7F3",
     webPreferences: {
@@ -85,15 +87,38 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  window.loadFile(path.join(__dirname, "renderer", "index.html"));
+  mainWindow = window;
+  window.once("ready-to-show", () => {
+    window.show();
+    window.focus();
+  });
+  window.on("closed", () => {
+    if (mainWindow === window) mainWindow = null;
+  });
+  window.webContents.session.clearCache().finally(() => {
+    window.loadFile(path.join(__dirname, "renderer", "index.html"));
+  });
 }
 
-app.whenReady().then(() => {
-  createWindow();
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
   });
-});
+
+  app.whenReady().then(() => {
+    createWindow();
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+}
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

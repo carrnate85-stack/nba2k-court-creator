@@ -12,6 +12,9 @@ set "ELECTRON_CMD=%APP_ROOT%\node_modules\.bin\electron.cmd"
 set "APP_PROJECT=%~dp0src\NBA2KCourtCreator\NBA2KCourtCreator.csproj"
 set "APP_EXE=%~dp0src\NBA2KCourtCreator\bin\Release\net8.0-windows\NBA2KCourtCreator.exe"
 
+rem Close only an existing Electron instance launched from this exact project folder.
+powershell.exe -NoProfile -WindowStyle Hidden -Command "$appRoot=[IO.Path]::GetFullPath('%APP_ROOT%'); Get-CimInstance Win32_Process -Filter 'Name = ''electron.exe''' | Where-Object { $_.CommandLine -and $_.CommandLine.IndexOf($appRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>nul
+
 if exist "%BUNDLED_NODE_BIN%\node.exe" (
     set "PATH=%BUNDLED_NODE_BIN%;%PATH%"
 )

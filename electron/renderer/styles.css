@@ -12,6 +12,10 @@
   --danger: #8f3c42;
 }
 
+html {
+  height: 100%;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -141,6 +145,9 @@ nav {
   display: grid;
   grid-template-rows: 76px minmax(0, 1fr);
   min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .topbar {
@@ -185,6 +192,8 @@ nav {
 .workspace {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  max-height: 100%;
   min-height: 0;
   overflow: hidden;
   padding: 14px 18px 16px;
@@ -202,6 +211,7 @@ nav {
   display: grid;
   grid-template-columns: minmax(520px, 940px) 14px minmax(430px, 1fr);
   height: 100%;
+  max-height: 100%;
   min-height: 0;
   overflow: hidden;
 }
@@ -210,6 +220,7 @@ nav {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 6px;
@@ -265,6 +276,7 @@ nav {
   min-width: 0;
   min-height: 0;
   height: 100%;
+  max-height: 100%;
   overflow: hidden;
 }
 
@@ -305,8 +317,8 @@ nav {
 }
 
 .layer-list {
-  height: 100%;
   min-height: 0;
+  max-height: 100%;
   overflow: auto;
   overscroll-behavior: contain;
   border: 1px solid var(--border);
