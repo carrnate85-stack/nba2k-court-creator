@@ -466,9 +466,33 @@ function paletteLeagueSortKey(league) {
   return 99;
 }
 
+function paletteSearchTokens(query) {
+  return String(query || "")
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.replace(/^#/, ""))
+    .filter(Boolean);
+}
+
+function paletteSearchText(palette, color) {
+  const text = [
+    palette.team,
+    palette.league,
+    paletteLeagueLabel(palette.league),
+    color.name,
+    color.hex,
+    String(color.hex || "").replace(/^#/, ""),
+  ]
+    .join(" ")
+    .toLowerCase();
+  return `${text} ${text.replace(/[^a-z0-9]/g, "")}`;
+}
+
 function paletteMatches(palette, color, query) {
   if (!query) return true;
-  return `${palette.team} ${palette.league} ${color.name} ${color.hex}`.toLowerCase().includes(query.toLowerCase());
+  const haystack = paletteSearchText(palette, color);
+  return paletteSearchTokens(query).every((word) => haystack.includes(word) || haystack.includes(word.replace(/[^a-z0-9]/g, "")));
 }
 
 function renderPalette() {
@@ -510,6 +534,12 @@ function renderPalette() {
       ui.paletteHost.append(details);
     }
   }
+  if (!ui.paletteHost.children.length) {
+    const empty = document.createElement("div");
+    empty.className = "palette-empty";
+    empty.textContent = "No team colors found.";
+    ui.paletteHost.append(empty);
+  }
 }
 
 function refreshSelectionText() {
@@ -529,6 +559,7 @@ function renderSection() {
     logos: ["Logos", "Import logo images, then place them on the court preview."],
     export: ["Export", "Refresh, save, and export the current court preview."],
   };
+  document.body.dataset.section = state.section;
   ui.sectionTitle.textContent = copy[state.section][0];
   ui.sectionSubtitle.textContent = copy[state.section][1];
   ui.palettePanel.classList.toggle("hidden", state.section !== "paint");

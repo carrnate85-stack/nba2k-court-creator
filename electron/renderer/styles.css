@@ -200,6 +200,7 @@ nav {
 .layout {
   display: grid;
   grid-template-columns: minmax(520px, 940px) 14px minmax(430px, 1fr);
+  height: 100%;
   min-height: 0;
 }
 
@@ -355,13 +356,17 @@ nav {
   min-height: 0;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
   padding: 10px;
 }
 
 .palette-host {
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
   margin-top: 8px;
+  scrollbar-width: thin;
 }
 
 .league-title {
@@ -400,6 +405,23 @@ nav {
   width: 18px;
   height: 18px;
   border: 1px solid var(--border);
+}
+
+.palette-empty {
+  color: var(--muted);
+  padding: 12px 2px;
+}
+
+body[data-section="paint"] .layout {
+  grid-template-columns: minmax(500px, 760px) 14px minmax(560px, 1fr);
+}
+
+body[data-section="paint"] .preview-column {
+  grid-template-rows: minmax(260px, 34vh) auto minmax(300px, 1fr);
+}
+
+body[data-section="paint"] .palette-panel {
+  min-height: 300px;
 }
 
 #logosPanel,
