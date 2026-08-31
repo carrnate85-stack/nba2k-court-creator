@@ -28,6 +28,9 @@ ONEDRIVE_ASSET_ROOT = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
 CUSTOM_FLOORS_DIR = LOCAL_ASSET_ROOT / "custom_floors"
 CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
 FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k26_floor_templates.json"
+BROKEN_FLOOR_TEMPLATE_IDS = {
+    "nba2k26-floor-300-court-wood1-basecolor",
+}
 COLLEGE_FLOOR_KEYS = {
     "arizonawildcats",
     "baylorbears",
@@ -460,6 +463,8 @@ def load_floor_template_layers(
     for meta_path in ONEDRIVE_ASSET_ROOT.glob(FLOOR_TEMPLATE_META_GLOB):
         data = json.loads(meta_path.read_text(encoding="utf-8"))
         for item in data.get("templates", []):
+            if str(item.get("id") or "") in BROKEN_FLOOR_TEMPLATE_IDS:
+                continue
             path = resolve_asset_path(str(item.get("path", "")))
             if not path.exists():
                 continue

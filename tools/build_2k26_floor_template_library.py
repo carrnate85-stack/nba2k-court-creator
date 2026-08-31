@@ -21,6 +21,9 @@ WOOD_FLOOR = re.compile(
     r"^floor_(?P<floor>[a-z0-9]+)_court_wood(?P<wood>\d*)_basecolor\.[0-9a-f]+\.mip0$",
     re.IGNORECASE,
 )
+BROKEN_SOURCE_TEXTURES = {
+    "floor_300_court_wood1_basecolor",
+}
 COLLEGE_FLOOR_KEYS = {
     "arizonawildcats",
     "baylorbears",
@@ -318,6 +321,8 @@ def main() -> None:
 
     templates = []
     for index, mip0_path in enumerate(candidates, start=1):
+        if mip0_path.name.rsplit(".", 2)[0].lower() in BROKEN_SOURCE_TEXTURES:
+            continue
         tld_path = mip0_path.with_suffix(".tld")
         width, height, chain_bytes = read_tld_metadata(tld_path)
         fourcc, raw_size = choose_format(width, height, chain_bytes, "auto")
