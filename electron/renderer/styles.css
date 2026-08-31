@@ -573,10 +573,6 @@ nav {
   padding: 12px 2px;
 }
 
-body[data-section="paint"] .layout {
-  grid-template-columns: minmax(520px, 760px) 14px minmax(560px, 1fr);
-}
-
 body[data-section="paint"] #layersPanel {
   min-height: 0;
 }
