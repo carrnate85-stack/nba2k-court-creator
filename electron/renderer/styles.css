@@ -180,6 +180,7 @@ nav {
 .top-actions,
 .panel-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
   align-items: center;
 }
@@ -288,6 +289,27 @@ nav {
   min-height: 0;
   overflow: hidden;
   padding: 10px 12px 12px;
+}
+
+#layersPanel .panel-tools { grid-row: 1; }
+#layersPanel .table-head { grid-row: 2; }
+#layersPanel .layer-list { grid-row: 3; }
+.work-column { container-type: inline-size; }
+.logo-row span { min-width: 0; overflow-wrap: anywhere; }
+.inspector input { min-width: 0; }
+.color-controls { flex-wrap: wrap; min-width: 0; }
+.table-head, .layer-row { grid-template-columns: minmax(110px, 1fr) 48px minmax(0, 210px); }
+body[data-section="floors"] .table-head,
+body[data-section="floors"] .layer-row { grid-template-columns: minmax(0, 1fr) 48px 0; }
+
+@container (max-width: 560px) {
+  .logo-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(150px, 1fr) auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .logo-list { min-height: 150px; }
 }
 
 .panel-tools {
@@ -719,4 +741,12 @@ body[data-section="paint"] #layersPanel {
   .logo-list {
     min-height: 150px;
   }
+}
+
+.table-head, .layer-row { grid-template-columns: minmax(110px, 1fr) 48px minmax(0, 210px); }
+body[data-section="floors"] .table-head,
+body[data-section="floors"] .layer-row { grid-template-columns: minmax(0, 1fr) 48px 0; }
+@container (max-width: 560px) {
+  .logo-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(150px, 1fr) auto; overflow-y: auto; }
+  .logo-list { min-height: 150px; }
 }

@@ -20,44 +20,54 @@ function bundledPython() {
 }
 
 function pythonCommand() {
+  const venv = path.join(projectRoot, "runtime", "python", "Scripts", "python.exe");
+  if (fs.existsSync(venv)) return { exe: venv, prefix: [] };
+  const own = path.join(projectRoot, "runtime", "python", "python.exe");
+  if (fs.existsSync(own)) return { exe: own, prefix: [] };
   const bundled = bundledPython();
   if (fs.existsSync(bundled)) return { exe: bundled, prefix: [] };
   return { exe: "py", prefix: ["-3"] };
 }
 
+let worker = null;
+let sequence = 0;
+const requests = new Map();
 function runPython(args) {
   return new Promise((resolve, reject) => {
-    const command = pythonCommand();
-    const child = spawn(command.exe, [...command.prefix, "-m", "court_creator.backend", ...args], {
+    if (!worker) {
+      const command = pythonCommand();
+      const child = spawn(command.exe, [...command.prefix, "-u", "-m", "court_creator.service"], {
       cwd: projectRoot,
       windowsHide: true,
     });
-    let stdout = "";
-    let stderr = "";
+      worker = child;
+      let stdout = "";
+      const fail = (error) => {
+        if (worker === child) worker = null;
+        for (const pending of requests.values()) pending.reject(error);
+        requests.clear();
+      };
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
-    });
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      let parsed = null;
-      try {
-        parsed = JSON.parse(stdout);
-      } catch {
-        parsed = null;
+      let end;
+      while ((end = stdout.indexOf("\n")) >= 0) {
+        const line = stdout.slice(0, end);
+        stdout = stdout.slice(end + 1);
+        try {
+          const message = JSON.parse(line);
+          const pending = requests.get(message.id);
+          requests.delete(message.id);
+          if (pending) message.error ? pending.reject(new Error(message.error)) : pending.resolve(message.result);
+        } catch (error) { fail(error); }
       }
-      if (code !== 0) {
-        reject(new Error(parsed?.error || stderr.trim() || "The Python engine failed."));
-        return;
-      }
-      if (!parsed) {
-        reject(new Error("The Python engine returned an unreadable response."));
-        return;
-      }
-      resolve(parsed);
     });
+      child.stderr.on("data", () => {});
+      child.on("error", fail);
+      child.on("close", () => fail(new Error("Rendering engine stopped; try again.")));
+    }
+    const id = ++sequence;
+    requests.set(id, { resolve, reject });
+    worker.stdin.write(JSON.stringify({ id, args }) + "\n");
   });
 }
 
@@ -95,9 +105,7 @@ function createWindow() {
   window.on("closed", () => {
     if (mainWindow === window) mainWindow = null;
   });
-  window.webContents.session.clearCache().finally(() => {
-    window.loadFile(path.join(__dirname, "renderer", "index.html"));
-  });
+  window.loadFile(path.join(__dirname, "renderer", "index.html"));
 }
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
@@ -114,6 +122,9 @@ if (!hasSingleInstanceLock) {
 
   app.whenReady().then(() => {
     createWindow();
+    const python = pythonCommand();
+    const updater = spawn(python.exe, [...python.prefix, path.join(projectRoot, "updater.py")], { cwd: projectRoot, windowsHide: true, stdio: "ignore" });
+    updater.on("error", error => console.error("Update check failed", error));
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
@@ -121,7 +132,41 @@ if (!hasSingleInstanceLock) {
 }
 
 app.on("window-all-closed", () => {
+  if (worker) worker.kill();
   if (process.platform !== "darwin") app.quit();
+});
+
+const recoveryPath = () => path.join(app.getPath("userData"), "recovery.json");
+function atomicJson(target, data) {
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  const temporary = target + ".tmp";
+  fs.writeFileSync(temporary, JSON.stringify(data, null, 2));
+  fs.renameSync(temporary, target);
+}
+  ipcMain.on("project:recover-write", (_event, data) => {
+  try { atomicJson(recoveryPath(), data); } catch (error) { console.error(error); }
+});
+ipcMain.handle("project:recovery", () => {
+  try { return JSON.parse(fs.readFileSync(recoveryPath(), "utf8")); } catch { return null; }
+});
+ipcMain.handle("project:confirm-replace", async () => {
+  const result = await dialog.showMessageBox(mainWindow, { type: "question", buttons: ["Keep Editing", "Continue"], defaultId: 0, cancelId: 0, message: "Replace the current court?", detail: "Save Project first to keep an editable copy. The current court will also be backed up for recovery." });
+  if (result.response !== 1) return false;
+  if (fs.existsSync(recoveryPath())) fs.copyFileSync(recoveryPath(), path.join(app.getPath("userData"), `recovery-${Date.now()}.json`));
+  return true;
+});
+ipcMain.handle("project:save", async (_event, data) => {
+  const result = await dialog.showSaveDialog(mainWindow, { defaultPath: "My Court.court.json", filters: [{ name: "Court project", extensions: ["json"] }] });
+  if (result.canceled) return null;
+  atomicJson(result.filePath, data);
+  return result.filePath;
+});
+ipcMain.handle("project:open", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, { properties: ["openFile"], filters: [{ name: "Court project", extensions: ["json"] }] });
+  if (result.canceled) return null;
+  const data = JSON.parse(fs.readFileSync(result.filePaths[0], "utf8"));
+  if (data.version !== 1 || !data.templatePath || !Array.isArray(data.logoImages)) throw new Error("Not a Court Creator project.");
+  return data;
 });
 
 ipcMain.handle("backend:load", async (_event, templatePath) => {

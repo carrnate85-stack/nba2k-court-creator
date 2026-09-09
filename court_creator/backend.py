@@ -288,7 +288,7 @@ def load_state(template_path: Path | None = None) -> dict:
 
 
 def render_preview(request_path: Path) -> dict:
-    request = json.loads(request_path.read_text(encoding="utf-8"))
+    request = request_path if isinstance(request_path, dict) else json.loads(request_path.read_text(encoding="utf-8"))
     template_path = Path(request.get("templatePath") or default_template_path())
     document = parse_court_psd_layers(template_path)
     output_path = Path(request.get("outputPath") or PREVIEW_CACHE)
@@ -318,6 +318,7 @@ def render_preview(request_path: Path) -> dict:
         color_overrides=color_overrides,
         custom_floor_images=custom_floor_images,
         logo_images=logo_images,
+        max_size=None if request.get("exportFullResolution") else (2048, 1024),
     )
     return {"ok": True, "previewPath": str(output_path)}
 

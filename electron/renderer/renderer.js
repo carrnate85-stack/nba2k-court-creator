@@ -443,6 +443,7 @@ function renderLayers() {
       const renamed = prompt("Layer name", layer.displayName);
       if (!renamed?.trim()) return;
       layer.displayName = renamed.trim();
+      persistRecovery();
       renderLayers();
       refreshSelectionText();
     });
@@ -709,8 +710,12 @@ function renderRequest(outputPath = null) {
   };
 }
 
+let previewBusy = false;
+let previewPending = false;
 async function refreshPreview(outputPath = null) {
   if (!state.templatePath) return;
+  if (previewBusy) { previewPending = true; return; }
+  previewBusy = true;
   const token = ++state.renderToken;
   setStatus("Refreshing preview...");
   try {
@@ -722,10 +727,15 @@ async function refreshPreview(outputPath = null) {
     setStatus(outputPath ? "PNG exported." : "Preview refreshed.");
   } catch (error) {
     setStatus(`Preview failed: ${error.message}`);
+  } finally {
+    previewBusy = false;
+    if (previewPending) { previewPending = false; refreshPreview(); }
   }
 }
 
 function schedulePreview() {
+  ++state.renderToken;
+  persistRecovery();
   clearTimeout(state.renderTimer);
   state.renderTimer = setTimeout(() => refreshPreview(), 160);
 }
@@ -822,16 +832,23 @@ async function importLogos() {
   const paths = await window.courtCreator.chooseLogoImages();
   if (!paths.length) return;
   for (const logoPath of paths) {
+    const image = new Image();
+    image.src = fileUrl(logoPath);
+    try { await image.decode(); } catch { setStatus(`Unable to read logo: ${logoPath}`); continue; }
+    const size = Math.min(state.document.width * 0.16 / image.naturalWidth, state.document.height * 0.2 / image.naturalHeight);
+    const width = Math.max(1, Math.round(image.naturalWidth * size));
+    const height = Math.max(1, Math.round(image.naturalHeight * size));
+    const offset = (state.logos.length % 8) * 24;
     const name = logoPath.split(/[\\/]/).pop().replace(/\.[^.]+$/, "");
     state.logos.push({
       id: crypto.randomUUID(),
       name,
       path: logoPath,
       visible: true,
-      x: 840,
-      y: 430,
-      width: 320,
-      height: 160,
+      x: Math.max(0, Math.min(state.document.width - width, (state.document.width - width) / 2 + offset)),
+      y: Math.max(0, Math.min(state.document.height - height, (state.document.height - height) / 2 + offset)),
+      width,
+      height,
       rotation: 0,
       opacity: 100,
       flipX: false,
@@ -839,7 +856,7 @@ async function importLogos() {
       scaleLocked: true,
     });
   }
-  state.selectedLogoId = state.logos[state.logos.length - 1].id;
+  state.selectedLogoId = state.logos.at(-1)?.id || null;
   renderLogos();
   refreshSelectionText();
   schedulePreview();
@@ -938,7 +955,7 @@ function selectCurrentCourtFloor() {
   state.selectedLayerId = selected?.id || null;
 }
 
-async function loadWorkspace(templatePath = null) {
+async function loadWorkspace(templatePath = null, project = null) {
   try {
     setStatus("Loading court template...");
     const data = await window.courtCreator.load(templatePath);
@@ -958,6 +975,17 @@ async function loadWorkspace(templatePath = null) {
     const preset = nbaPreset();
     if (preset) applyPresetLayout(preset, true);
     applyDefaultPaintColors();
+    if (project) {
+      state.visibility = { ...state.visibility, ...project.visibility };
+      state.colorOverrides = project.colorOverrides || {};
+      state.logos = project.logoImages || [];
+      state.customFloorImages = project.customFloorImages || state.customFloorImages;
+      for (const layer of state.layers) {
+        layer.visible = Boolean(state.visibility[layer.id]);
+        if (state.colorOverrides[layer.id]) layer.activeHex = rgbToHex(state.colorOverrides[layer.id]);
+        if (project.layerNames?.[layer.id]) layer.displayName = project.layerNames[layer.id];
+      }
+    }
     selectCurrentCourtFloor();
     renderSection();
     await refreshPreview();
@@ -970,11 +998,44 @@ async function loadWorkspace(templatePath = null) {
 async function exportPng() {
   const target = await window.courtCreator.chooseExportPng();
   if (!target) return;
-  await refreshPreview(target);
-  await window.courtCreator.showItem(target);
+  try {
+    setStatus("Exporting full-resolution PNG...");
+    await window.courtCreator.render({ ...renderRequest(target), exportFullResolution: true });
+    setStatus("Full-resolution PNG exported.");
+    await window.courtCreator.showItem(target);
+  } catch (error) { setStatus(`Export failed: ${error.message}`); }
+}
+
+function projectSnapshot() {
+  return { ...renderRequest(), version: 1, layerNames: Object.fromEntries(state.layers.map(layer => [layer.id, layer.displayName])) };
+}
+function persistRecovery() {
+  if (state.templatePath) window.courtCreator.autosave(projectSnapshot());
+}
+async function saveProject() {
+  try {
+    const saved = await window.courtCreator.saveProject(projectSnapshot());
+    if (saved) setStatus("Project saved.");
+  } catch (error) { setStatus(`Save failed: ${error.message}`); }
+}
+async function restoreStartup() {
+  const project = await window.courtCreator.recovery();
+  await loadWorkspace(project?.templatePath || null, project);
 }
 
 function wireEvents() {
+  document.getElementById("saveProjectButton").addEventListener("click", saveProject);
+  document.getElementById("openProjectButton").addEventListener("click", async () => {
+    try {
+      persistRecovery();
+      const project = await window.courtCreator.openProject();
+      if (project && await window.courtCreator.confirmReplace()) await loadWorkspace(project.templatePath, project);
+    } catch (error) { setStatus(`Open failed: ${error.message}`); }
+  });
+  window.addEventListener("beforeunload", persistRecovery);
+  window.addEventListener("keydown", event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); saveProject(); }
+  });
   document.querySelectorAll(".nav").forEach((button) => {
     button.addEventListener("click", () => {
       state.section = button.dataset.section;
@@ -1004,7 +1065,10 @@ function wireEvents() {
   });
   window.addEventListener("resize", fitColorEditorToViewport);
   makeColorEditorDraggable();
-  document.getElementById("newButton").addEventListener("click", resetToDefault);
+  document.getElementById("newButton").addEventListener("click", async () => {
+    persistRecovery();
+    if (await window.courtCreator.confirmReplace()) resetToDefault();
+  });
   document.getElementById("refreshButton").addEventListener("click", () => refreshPreview());
   document.getElementById("exportButton").addEventListener("click", exportPng);
   document.getElementById("exportPanelButton").addEventListener("click", exportPng);
@@ -1012,7 +1076,7 @@ function wireEvents() {
   document.getElementById("addFloorButton").addEventListener("click", addCustomFloor);
   document.getElementById("openButton").addEventListener("click", async () => {
     const selected = await window.courtCreator.choosePsd();
-    if (selected) loadWorkspace(selected);
+    if (selected && await window.courtCreator.confirmReplace()) loadWorkspace(selected);
   });
   document.getElementById("importLogoButton").addEventListener("click", importLogos);
   document.getElementById("removeLogoButton").addEventListener("click", () => {
@@ -1033,4 +1097,4 @@ function wireEvents() {
 }
 
 wireEvents();
-loadWorkspace();
+restoreStartup();

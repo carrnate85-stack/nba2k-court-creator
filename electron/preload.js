@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("courtCreator", {
+  saveProject: (data) => ipcRenderer.invoke("project:save", data),
+  openProject: () => ipcRenderer.invoke("project:open"),
+  recovery: () => ipcRenderer.invoke("project:recovery"),
+  confirmReplace: () => ipcRenderer.invoke("project:confirm-replace"),
+  autosave: (data) => ipcRenderer.send("project:recover-write", data),
   load: (templatePath) => ipcRenderer.invoke("backend:load", templatePath || null),
   render: (request) => ipcRenderer.invoke("backend:render", request),
   sampleColor: (layerId) => ipcRenderer.invoke("backend:sample-color", layerId),

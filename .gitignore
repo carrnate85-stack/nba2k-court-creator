@@ -1,6 +1,9 @@
 __pycache__/
 *.pyc
 node_modules/
+runtime/
+updates/
+projects/
 .electron-cache/
 bin/
 obj/
