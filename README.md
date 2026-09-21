@@ -1,11 +1,12 @@
 # NBA 2K Court Creator
 
-## Electron 1.2
+## Electron 1.2.1
 
 The active application is Electron with a persistent Python renderer. See
 [Move to Another PC](MOVE-TO-ANOTHER-PC.md) for current setup and transfer instructions.
 
-Version 1.2 uses the extracted NBA 2K27 court library automatically, while retaining
+Version 1.2.1 restores reliable double-click court activation. Version 1.2 uses the
+extracted NBA 2K27 court library automatically, while retaining
 the NBA 2K26 library as a fallback. Version 1.1 added editable project Save/Open,
 automatic recovery, preserved logo proportions with staggered imports, panel-width
 responsive layouts, serialized previews, native-resolution PNG exports, and staged

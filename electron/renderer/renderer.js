@@ -432,9 +432,12 @@ function renderLayers() {
       if (isGroup(layer)) {
         if (state.collapsedLayerGroups.has(layer.id)) state.collapsedLayerGroups.delete(layer.id);
         else state.collapsedLayerGroups.add(layer.id);
+        renderLayers();
+      } else {
+        ui.layersHost.querySelectorAll(".layer-row.selected").forEach((item) => item.classList.remove("selected"));
+        row.classList.add("selected");
       }
       refreshSelectionText();
-      renderLayers();
     });
     row.addEventListener("dblclick", () => {
       if (!isGroup(layer)) setLayerVisibility(layer, !layer.visible);
