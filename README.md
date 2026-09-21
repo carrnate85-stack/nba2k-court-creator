@@ -1,10 +1,12 @@
 # NBA 2K Court Creator
 
-## Electron 1.2.2
+## Electron 1.3
 
 The active application is Electron with a persistent Python renderer. See
 [Move to Another PC](MOVE-TO-ANOTHER-PC.md) for current setup and transfer instructions.
 
+Version 1.3 expands the NBA 2K27 manifest scan to include verified alternate naming
+patterns for WNBA, historic, international, event, mode, and expansion floors.
 Version 1.2.2 keeps the active game-floor catalog separate from saved recovery data
 and activates court floors with one click. Version 1.2 uses the extracted NBA 2K27
 court library automatically, while retaining

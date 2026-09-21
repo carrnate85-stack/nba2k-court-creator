@@ -51,7 +51,9 @@ HISTORIC_NBA_FLOOR_KEYS = {
     "clippers2015",
     "clippers2022",
     "grizzlies2016",
+    "hornets2002",
     "jazz2016",
+    "jazz1986",
     "kings2016",
     "knicks2016",
     "nets2012",
@@ -77,10 +79,12 @@ INTERNATIONAL_FLOOR_KEYS = {
     "multileague",
     "paris",
     "strasbourg",
+    "usabasketball",
 }
 MODE_FLOOR_KEYS = {
     "aau",
     "aaugym",
+    "brickley",
     "clutchtime",
     "gleagueignite",
     "hsgym",
@@ -89,6 +93,7 @@ MODE_FLOOR_KEYS = {
     "scrimmage",
     "statechampionship",
     "summerleaguegeneric",
+    "top10rep",
 }
 ARENA_TEAM_NAMES = {
     "000": "Philadelphia 76ers",
@@ -293,6 +298,42 @@ SPECIAL_FLOOR_NAMES = {
     "wnbaallstar2025": "WNBA All-Star 2025",
 }
 
+ADDITIONAL_FLOOR_SURFACES = {
+    "floor_301_court_basecolor": "Atlanta Dream (301) Court Wood1",
+    "floor_307_court_basecolor": "Chicago Sky (307) Court Wood1",
+    "floor_308_court_basecolor": "Los Angeles Sparks / Lakers Arena (308) Court Wood1",
+    "floor_309_court_basecolor": "Seattle Storm (309) Court Wood1",
+    "floor_310_court_basecolor": "Connecticut Sun (310) Court Wood1",
+    "floor_311_court_basecolor": "Dallas Wings (311) Court Wood1",
+    "floor_316_court_wood1_basecolor_blue": "Toronto Tempo (316) Court Wood1",
+    "floor_412_court_wood_angled_basecolor": "Unknown Arena (412) Angled Court Wood1",
+    "floor_622_court_basecolor": "2000-01 Los Angeles Lakers (622) Court Wood1",
+    "floor_626_court_basecolor": "2004-05 Phoenix Suns (626) Court Wood1",
+    "floor_628_court_basecolor": "2006-07 Cleveland Cavaliers (628) Court Wood2",
+    "floor_630_court_light_basecolor": "2007-08 Houston Rockets (630) Court Wood1",
+    "floor_630_court_dark_basecolor": "2007-08 Houston Rockets (630) Court Wood2",
+    "floor_648_court_basecolor": "2013-14 Los Angeles Clippers (648) Court Wood1",
+    "floor_800_court_basecolor": "Historic Decades Arena (800) Court Wood1",
+    "floor_854_court_basecolor": "Expansion Arena 854 (854) Court Wood1",
+    "floor_855_court_basecolor": "Expansion Arena 855 (855) Court Wood1",
+    "floor_855_court_lightwood_basecolor": "Expansion Arena 855 (855) Court Wood2",
+    "floor_856_court_basecolor": "Expansion Arena 856 (856) Court Wood1",
+    "floor_856_court_lightewood_basecolor": "Expansion Arena 856 (856) Court Wood2",
+    "floor_857_court_basecolor": "Expansion Arena 857 (857) Court Wood1",
+    "floor_860_court_basecolor": "Expansion Arena 860 (860) Court Wood1",
+    "floor_924_court_basecolor": "2018-19 Toronto Raptors (924) Court Wood1",
+    "floor_allstar2023_court_basecolor": "NBA All-Star 2023 Court Wood1",
+    "floor_brickleyfacility_court_basecolor": "Brickley Facility Court Wood1",
+    "floor_decades_court_basecolor": "Decades All-Star Arena Court Wood1",
+    "floor_fiba_court_basecolor": "FIBA / International Arena Court Wood1",
+    "floor_hornets2002_court_basecolor": "Charlotte Hornets 2002 Court Wood1",
+    "floor_jazz1986_court_basecolor": "Utah Jazz 1986 Court Wood1",
+    "floor_myteam250ktournament_court_basecolor": "MyTEAM 250K Tournament Court Wood1",
+    "floor_top10rep_court_wood1": "Top 10 Rep Court Wood1",
+    "floor_top10rep_court_wood2": "Top 10 Rep Court Wood2",
+    "floor_usab2016_court_basecolor": "USA Basketball Court Wood1",
+}
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -304,6 +345,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--save-dds", action="store_true")
     parser.add_argument("--no-clean-speckles", action="store_true")
+    parser.add_argument("--reuse-existing", action="store_true")
     parser.add_argument("--game-version", choices=["2k26", "2k27"])
     args = parser.parse_args()
 
@@ -331,26 +373,28 @@ def main() -> None:
         tld_path = mip0_path.with_suffix(".tld")
         width, height, chain_bytes = read_tld_metadata(tld_path)
         fourcc, raw_size = choose_format(width, height, chain_bytes, "auto")
-        raw_texture = oodle_decompress(game_root, mip0_path.read_bytes(), raw_size)
-
-        display_height = height // 2 if "court_wood" in mip0_path.name.lower() else height
-        display_size = top_mip_bytes(width, display_height, 8 if fourcc == "DXT1" else 16)
-        display_texture = raw_texture[:display_size]
-        dds_data = make_dds(width, display_height, fourcc, display_texture)
-
         template_id = template_id_for(mip0_path, game_version)
         name = friendly_name(mip0_path)
         category = category_for_name(name)
         png_path = image_root / f"{template_id}.png"
-        with Image.open(BytesIO(dds_data)) as image:
-            display_image = image.convert("RGBA")
-        if not args.no_clean_speckles:
-            display_image = clean_decode_speckles(display_image)
-        display_image.putalpha(255)
-        display_image.save(png_path)
+        display_height = height // 2
+        if not (args.reuse_existing and png_path.exists()):
+            raw_texture = oodle_decompress(game_root, mip0_path.read_bytes(), raw_size)
+            display_size = top_mip_bytes(width, display_height, 8 if fourcc == "DXT1" else 16)
+            display_texture = raw_texture[:display_size]
+            dds_data = make_dds(width, display_height, fourcc, display_texture)
+            with Image.open(BytesIO(dds_data)) as image:
+                display_image = image.convert("RGBA")
+            if not args.no_clean_speckles:
+                display_image = clean_decode_speckles(display_image)
+            display_image.putalpha(255)
+            display_image.save(png_path)
 
         dds_path = None
         if args.save_dds:
+            raw_texture = oodle_decompress(game_root, mip0_path.read_bytes(), raw_size)
+            display_size = top_mip_bytes(width, display_height, 8 if fourcc == "DXT1" else 16)
+            dds_data = make_dds(width, display_height, fourcc, raw_texture[:display_size])
             dds_path = dds_root / f"{template_id}.dds"
             dds_path.write_bytes(dds_data)
 
@@ -391,7 +435,8 @@ def find_candidates(extracted_root: Path) -> list[Path]:
     candidates = [
         path
         for path in shared_root.rglob("*.mip0")
-        if WOOD_FLOOR.match(path.name) and path.with_suffix(".tld").exists()
+        if (WOOD_FLOOR.match(path.name) or surface_key(path) in ADDITIONAL_FLOOR_SURFACES)
+        and path.with_suffix(".tld").exists()
     ]
     unique: dict[str, Path] = {}
     for path in sorted(candidates, key=candidate_sort_key):
@@ -402,7 +447,12 @@ def find_candidates(extracted_root: Path) -> list[Path]:
 def candidate_sort_key(path: Path) -> tuple[int, int, str]:
     match = WOOD_FLOOR.match(path.name)
     if not match:
-        return (9999, 99, path.name)
+        key = surface_key(path)
+        token_match = re.match(r"floor_([a-z0-9]+)_court_", key)
+        token = token_match.group(1) if token_match else ""
+        number = int(token) if token.isdigit() else 9000
+        wood_match = re.search(r"wood(\d+)", ADDITIONAL_FLOOR_SURFACES.get(key, ""), re.IGNORECASE)
+        return (number, int(wood_match.group(1)) if wood_match else 1, path.name)
     floor = match.group("floor")
     wood = match.group("wood") or "1"
     number = int(floor) if floor.isdigit() else 9000
@@ -415,7 +465,14 @@ def template_id_for(path: Path, game_version: str = "2k26") -> str:
     return f"nba{game_version}-{safe}"
 
 
+def surface_key(path: Path) -> str:
+    return path.name.rsplit(".", 2)[0].casefold()
+
+
 def friendly_name(path: Path) -> str:
+    additional_name = ADDITIONAL_FLOOR_SURFACES.get(surface_key(path))
+    if additional_name:
+        return additional_name
     match = WOOD_FLOOR.match(path.name)
     if not match:
         return path.stem
