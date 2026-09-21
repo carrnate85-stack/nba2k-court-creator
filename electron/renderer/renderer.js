@@ -13,6 +13,7 @@ const state = {
   customFloorImages: [],
   teamPalettes: [],
   presets: [],
+  floorLibraryName: "NBA 2K27 Courts",
   selectedLayerId: null,
   activeHexLayerId: null,
   collapsedLayerGroups: new Set(),
@@ -669,7 +670,7 @@ function refreshSelectionText() {
 
 function renderSection() {
   const copy = {
-    floors: ["Court Floors", "Choose one court floor at a time, including NBA 2K26 templates."],
+    floors: ["Court Floors", `Choose one court floor at a time from ${state.floorLibraryName}.`],
     paint: ["Paint & Lines", "Choose paint and line layers, then apply exact colors or team palette swatches."],
     logos: ["Logos", "Import logo images, then place them on the court preview."],
     export: ["Export", "Refresh, save, and export the current court preview."],
@@ -966,6 +967,7 @@ async function loadWorkspace(templatePath = null, project = null) {
     state.customFloorImages = data.customFloorImages || [];
     state.teamPalettes = data.teamPalettes || [];
     state.presets = data.presets || [];
+    state.floorLibraryName = data.floorLibraryName || "NBA 2K courts";
     state.colorOverrides = {};
     state.templateColors = {};
     state.logos = [];

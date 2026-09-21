@@ -27,7 +27,7 @@ LOCAL_ASSET_ROOT = PROJECT_ROOT
 ONEDRIVE_ASSET_ROOT = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
 CUSTOM_FLOORS_DIR = LOCAL_ASSET_ROOT / "custom_floors"
 CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
-FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k26_floor_templates.json"
+FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k*_floor_templates.json"
 BROKEN_FLOOR_TEMPLATE_IDS = {
     "nba2k26-floor-300-court-wood1-basecolor",
 }
@@ -260,7 +260,7 @@ def load_state(template_path: Path | None = None) -> dict:
     ]
     ensure_preview(template_path)
     custom_floor_layers, custom_floor_images = load_custom_floor_layers(document)
-    template_floor_layers, template_floor_images = load_floor_template_layers(
+    template_floor_layers, template_floor_images, floor_library_name = load_floor_template_layers(
         document, start_index=len(custom_floor_layers)
     )
     return {
@@ -284,6 +284,7 @@ def load_state(template_path: Path | None = None) -> dict:
         "customFloorImages": [*custom_floor_images, *template_floor_images],
         "teamPalettes": load_team_palettes(),
         "presets": load_presets(),
+        "floorLibraryName": floor_library_name,
     }
 
 
@@ -451,18 +452,28 @@ def load_floor_template_layers(
     document,
     *,
     start_index: int = 0,
-) -> tuple[list[CourtLayer], list[dict]]:
+) -> tuple[list[CourtLayer], list[dict], str]:
     layers: list[CourtLayer] = []
     images: list[dict] = []
     floor_group = court_floor_group(document.layers)
     fallback_bbox = court_floor_bbox(document.layers, floor_group)
     if floor_group is None or fallback_bbox is None:
-        return layers, images
+        return layers, images, "No game court library"
 
     template_index = 0
     category_groups: dict[str, CourtLayer] = {}
-    for meta_path in ONEDRIVE_ASSET_ROOT.glob(FLOOR_TEMPLATE_META_GLOB):
+    meta_paths = list(ONEDRIVE_ASSET_ROOT.glob(FLOOR_TEMPLATE_META_GLOB))
+
+    def library_version(path: Path) -> int:
+        match = re.search(r"nba2k(\d+)_floor_templates", path.name.casefold())
+        return int(match.group(1)) if match else 0
+
+    newest_version = max((library_version(path) for path in meta_paths), default=0)
+    meta_paths = [path for path in meta_paths if library_version(path) == newest_version]
+    library_name = f"NBA 2K{newest_version} Courts" if newest_version else "No game court library"
+    for meta_path in meta_paths:
         data = json.loads(meta_path.read_text(encoding="utf-8"))
+        library_name = str(data.get("name") or library_name).replace(" Floor Templates", " Courts")
         for item in data.get("templates", []):
             if str(item.get("id") or "") in BROKEN_FLOOR_TEMPLATE_IDS:
                 continue
@@ -515,7 +526,7 @@ def load_floor_template_layers(
                 }
             )
             template_index += 1
-    return layers, images
+    return layers, images, library_name
 
 
 def category_for_floor_template(item: dict) -> str:

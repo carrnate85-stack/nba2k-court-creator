@@ -296,7 +296,7 @@ SPECIAL_FLOOR_NAMES = {
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Build a small local NBA 2K26 court floor template library."
+        description="Build a local NBA 2K court floor template library."
     )
     parser.add_argument("--game-root", required=True)
     parser.add_argument("--extracted-root", required=True)
@@ -304,9 +304,14 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--save-dds", action="store_true")
     parser.add_argument("--no-clean-speckles", action="store_true")
+    parser.add_argument("--game-version", choices=["2k26", "2k27"])
     args = parser.parse_args()
 
     game_root = Path(args.game_root)
+    game_version = args.game_version or next(
+        (value for value in ("2k27", "2k26") if value in game_root.name.casefold()),
+        "2k27",
+    )
     extracted_root = Path(args.extracted_root)
     output_root = Path(args.output)
     image_root = output_root / "images"
@@ -333,7 +338,7 @@ def main() -> None:
         display_texture = raw_texture[:display_size]
         dds_data = make_dds(width, display_height, fourcc, display_texture)
 
-        template_id = template_id_for(mip0_path)
+        template_id = template_id_for(mip0_path, game_version)
         name = friendly_name(mip0_path)
         category = category_for_name(name)
         png_path = image_root / f"{template_id}.png"
@@ -366,11 +371,12 @@ def main() -> None:
         )
         print(f"{index}/{len(candidates)} {name}")
 
-    index_path = output_root / "nba2k26_floor_templates.json"
+    index_path = output_root / f"nba{game_version}_floor_templates.json"
     index_path.write_text(
         json.dumps(
             {
-                "name": "NBA 2K26 Floor Templates",
+                "name": f"NBA {game_version.upper()} Floor Templates",
+                "gameVersion": game_version,
                 "templates": templates,
             },
             indent=2,
@@ -403,10 +409,10 @@ def candidate_sort_key(path: Path) -> tuple[int, int, str]:
     return (number, int(wood), path.name)
 
 
-def template_id_for(path: Path) -> str:
+def template_id_for(path: Path, game_version: str = "2k26") -> str:
     name = path.name.rsplit(".", 2)[0]
     safe = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    return f"nba2k26-{safe}"
+    return f"nba{game_version}-{safe}"
 
 
 def friendly_name(path: Path) -> str:

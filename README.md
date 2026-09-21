@@ -1,13 +1,15 @@
 # NBA 2K Court Creator
 
-## Electron 1.1
+## Electron 1.2
 
 The active application is Electron with a persistent Python renderer. See
 [Move to Another PC](MOVE-TO-ANOTHER-PC.md) for current setup and transfer instructions.
 
-Version 1.1 adds editable project Save/Open, automatic recovery, preserved logo
-proportions with staggered imports, panel-width responsive layouts, serialized
-previews, native-resolution PNG exports, and staged release updates with rollback.
+Version 1.2 uses the extracted NBA 2K27 court library automatically, while retaining
+the NBA 2K26 library as a fallback. Version 1.1 added editable project Save/Open,
+automatic recovery, preserved logo proportions with staggered imports, panel-width
+responsive layouts, serialized previews, native-resolution PNG exports, and staged
+release updates with rollback.
 Run `Setup Court Creator.bat` once on a new PC, then use the launcher. Development
 checkouts update through Git; standalone installs check GitHub releases after opening.
 
