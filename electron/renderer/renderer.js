@@ -95,6 +95,10 @@ function fileUrl(filePath) {
   return `file:///${encoded}`;
 }
 
+function isGameFloorImage(image) {
+  return Boolean(image?.isTemplate) || /^nba2k\d+-/i.test(String(image?.id || ""));
+}
+
 function layerParent(layer) {
   return layer?.parent_id ? state.layersById.get(layer.parent_id) || null : null;
 }
@@ -433,6 +437,8 @@ function renderLayers() {
         if (state.collapsedLayerGroups.has(layer.id)) state.collapsedLayerGroups.delete(layer.id);
         else state.collapsedLayerGroups.add(layer.id);
         renderLayers();
+      } else if (state.section === "floors" && !layer.visible) {
+        setLayerVisibility(layer, true);
       } else {
         ui.layersHost.querySelectorAll(".layer-row.selected").forEach((item) => item.classList.remove("selected"));
         row.classList.add("selected");
@@ -440,7 +446,7 @@ function renderLayers() {
       refreshSelectionText();
     });
     row.addEventListener("dblclick", () => {
-      if (!isGroup(layer)) setLayerVisibility(layer, !layer.visible);
+      if (!isGroup(layer) && state.section !== "floors") setLayerVisibility(layer, !layer.visible);
     });
     row.addEventListener("contextmenu", (event) => {
       event.preventDefault();
@@ -984,7 +990,6 @@ async function loadWorkspace(templatePath = null, project = null) {
       state.visibility = { ...state.visibility, ...project.visibility };
       state.colorOverrides = project.colorOverrides || {};
       state.logos = project.logoImages || [];
-      state.customFloorImages = project.customFloorImages || state.customFloorImages;
       for (const layer of state.layers) {
         layer.visible = Boolean(state.visibility[layer.id]);
         if (state.colorOverrides[layer.id]) layer.activeHex = rgbToHex(state.colorOverrides[layer.id]);
@@ -1012,7 +1017,9 @@ async function exportPng() {
 }
 
 function projectSnapshot() {
-  return { ...renderRequest(), version: 1, layerNames: Object.fromEntries(state.layers.map(layer => [layer.id, layer.displayName])) };
+  const snapshot = renderRequest();
+  snapshot.customFloorImages = snapshot.customFloorImages.filter((image) => !isGameFloorImage(image));
+  return { ...snapshot, version: 1, layerNames: Object.fromEntries(state.layers.map(layer => [layer.id, layer.displayName])) };
 }
 function persistRecovery() {
   if (state.templatePath) window.courtCreator.autosave(projectSnapshot());
