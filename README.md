@@ -1,12 +1,13 @@
 # NBA 2K Court Creator
 
-## Electron 1.5
+## Electron 1.5.1
 
 The active application is Electron with a persistent Python renderer. See
 [Move to Another PC](MOVE-TO-ANOTHER-PC.md) for current setup and transfer instructions.
 
-Version 1.5 introduces a brighter companion-app workspace, a thumbnail court
-browser with categories, favorites, recent courts, sorting and grid/list views,
+Version 1.5.1 keeps the court-category filters inside the selector at compact
+window sizes. Version 1.5 introduces a brighter companion-app workspace, a
+thumbnail court browser with categories, favorites, recent courts, sorting and grid/list views,
 larger responsive previews, and a streamlined Paint & Lines inspector with a
 searchable team-color library. Version 1.4 adds cached floor and logo composition,
 atomic preview/export writes, engine timeout recovery, safer project restoration,

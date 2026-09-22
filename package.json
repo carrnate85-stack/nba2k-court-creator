@@ -1,6 +1,6 @@
 {
   "name": "nba2k-court-creator",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Electron companion app for NBA 2K court creation with a Python rendering backend.",
   "main": "electron/main.js",
   "private": true,

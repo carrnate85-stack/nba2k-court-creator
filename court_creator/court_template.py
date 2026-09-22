@@ -664,7 +664,8 @@ def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool):
 
     path = Path(path)
     stat = path.stat()
-    key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size, size, fit)
+    signature = _sample_file_signature(path, stat.st_size)
+    key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size, signature, size, fit)
     cacheable = size[0] * size[1] <= _EXTERNAL_IMAGE_CACHE_MAX_PIXELS
     if cacheable:
         with _PREVIEW_CACHE_LOCK:
@@ -687,6 +688,18 @@ def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool):
             while len(_EXTERNAL_IMAGE_CACHE) > _EXTERNAL_IMAGE_CACHE_LIMIT:
                 _EXTERNAL_IMAGE_CACHE.popitem(last=False)
     return image
+
+
+def _sample_file_signature(path: Path, file_size: int) -> bytes:
+    """Catch rapid same-size replacements on filesystems with coarse timestamps."""
+    digest = hashlib.blake2b(digest_size=8)
+    chunk_size = 4096
+    offsets = {0, max(0, file_size // 2 - chunk_size // 2), max(0, file_size - chunk_size)}
+    with path.open("rb") as handle:
+        for offset in sorted(offsets):
+            handle.seek(offset)
+            digest.update(handle.read(chunk_size))
+    return digest.digest()
 
 
 def _save_png_atomic(image, output_path: Path, *, fast: bool) -> None:
