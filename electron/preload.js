@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("courtCreator", {
+  appInfo: () => ipcRenderer.invoke("app:info"),
   saveProject: (data) => ipcRenderer.invoke("project:save", data),
   openProject: () => ipcRenderer.invoke("project:open"),
   recovery: () => ipcRenderer.invoke("project:recovery"),

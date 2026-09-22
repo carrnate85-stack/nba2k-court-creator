@@ -22,22 +22,26 @@
         <button class="nav" data-section="logos">Logos</button>
         <button class="nav" data-section="export">Export</button>
       </nav>
-      <small>Electron + Python engine</small>
+      <small id="versionLabel">Loading court library...</small>
     </aside>
 
     <main class="app">
       <header class="topbar">
         <div>
-          <h2>NBA 2K Court Creator</h2>
-          <p id="status">Starting workspace...</p>
+          <h2 id="projectTitle">Untitled court</h2>
+          <p id="status" aria-live="polite">Starting workspace...</p>
         </div>
         <div class="top-actions">
-          <button id="newButton">New</button>
-          <button id="openProjectButton">Open Project</button>
-          <button id="saveProjectButton">Save Project</button>
-          <button id="openButton">Open PSD</button>
-          <button id="refreshButton">Refresh Preview</button>
-          <button id="exportButton" class="primary">Export PNG</button>
+          <div class="action-group" role="group" aria-label="Project actions">
+            <button id="newButton" type="button">New</button>
+            <button id="openProjectButton" type="button">Open</button>
+            <button id="saveProjectButton" type="button">Save</button>
+          </div>
+          <div class="action-group" role="group" aria-label="Court actions">
+            <button id="openButton" type="button">Open PSD</button>
+            <button id="refreshButton" type="button">Refresh</button>
+          </div>
+          <button id="exportButton" class="primary" type="button">Export PNG</button>
         </div>
       </header>
 
@@ -49,7 +53,7 @@
 
         <div class="layout">
           <section class="preview-column">
-            <div class="preview-shell">
+            <div id="previewShell" class="preview-shell" aria-busy="false">
               <img id="previewImage" alt="Court preview" />
               <div id="previewEmpty">Loading court preview...</div>
             </div>

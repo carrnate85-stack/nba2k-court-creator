@@ -30,6 +30,7 @@ CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
 FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k*_floor_templates.json"
 BROKEN_FLOOR_TEMPLATE_IDS = {
     "nba2k26-floor-300-court-wood1-basecolor",
+    "nba2k27-floor-300-court-wood1-basecolor",
 }
 COLLEGE_FLOOR_KEYS = {
     "arizonawildcats",
@@ -252,7 +253,12 @@ def main() -> None:
 
 
 def load_state(template_path: Path | None = None) -> dict:
-    template_path = template_path or default_template_path()
+    requested_template = Path(template_path) if template_path else None
+    template_path = (
+        requested_template
+        if requested_template is not None and requested_template.is_file()
+        else default_template_path()
+    )
     document = parse_court_psd_layers(template_path)
     hidden_builtin_floor_ids = built_in_court_floor_layer_ids(document.layers)
     visible_layers = [
@@ -285,6 +291,8 @@ def load_state(template_path: Path | None = None) -> dict:
         "teamPalettes": load_team_palettes(),
         "presets": load_presets(),
         "floorLibraryName": floor_library_name,
+        "floorLibraryCount": len(template_floor_images),
+        "templateFallback": requested_template is not None and requested_template != template_path,
     }
 
 
@@ -393,16 +401,14 @@ def ensure_preview(template_path: Path) -> None:
 
 
 def load_team_palettes() -> list:
-    if not TEAM_PALETTES_PATH.exists():
-        return []
-    data = json.loads(TEAM_PALETTES_PATH.read_text(encoding="utf-8"))
-    return data.get("palettes", data if isinstance(data, list) else [])
+    data = read_json(TEAM_PALETTES_PATH, {})
+    if isinstance(data, list):
+        return data
+    return data.get("palettes", []) if isinstance(data, dict) else []
 
 
 def load_presets() -> list:
-    if not PRESETS_PATH.exists():
-        return [None, None, None, None, None]
-    data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
+    data = read_json(PRESETS_PATH, {})
     presets = data.get("presets", []) if isinstance(data, dict) else []
     while len(presets) < 5:
         presets.append(None)
@@ -416,7 +422,9 @@ def load_custom_floor_layers(document) -> tuple[list[CourtLayer], list[dict]]:
     fallback_bbox = court_floor_bbox(document.layers, floor_group)
     if floor_group is None or fallback_bbox is None or not CUSTOM_FLOORS_META.exists():
         return layers, images
-    data = json.loads(CUSTOM_FLOORS_META.read_text(encoding="utf-8"))
+    data = read_json(CUSTOM_FLOORS_META, {})
+    if not isinstance(data, dict):
+        return layers, images
     for index, item in enumerate(data.get("floors", [])):
         path = resolve_asset_path(str(item.get("path", "")))
         if not path.exists():
@@ -468,11 +476,22 @@ def load_floor_template_layers(
         match = re.search(r"nba2k(\d+)_floor_templates", path.name.casefold())
         return int(match.group(1)) if match else 0
 
-    newest_version = max((library_version(path) for path in meta_paths), default=0)
-    meta_paths = [path for path in meta_paths if library_version(path) == newest_version]
+    library_data: list[dict] = []
+    newest_version = 0
+    for version in sorted({library_version(path) for path in meta_paths}, reverse=True):
+        candidates = []
+        for meta_path in meta_paths:
+            if library_version(meta_path) != version:
+                continue
+            data = read_json(meta_path, {})
+            if isinstance(data, dict) and isinstance(data.get("templates"), list) and data["templates"]:
+                candidates.append(data)
+        if candidates:
+            newest_version = version
+            library_data = candidates
+            break
     library_name = f"NBA 2K{newest_version} Courts" if newest_version else "No game court library"
-    for meta_path in meta_paths:
-        data = json.loads(meta_path.read_text(encoding="utf-8"))
+    for data in library_data:
         library_name = str(data.get("name") or library_name).replace(" Floor Templates", " Courts")
         for item in data.get("templates", []):
             if str(item.get("id") or "") in BROKEN_FLOOR_TEMPLATE_IDS:
@@ -527,6 +546,13 @@ def load_floor_template_layers(
             )
             template_index += 1
     return layers, images, library_name
+
+
+def read_json(path: Path, fallback):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return fallback
 
 
 def category_for_floor_template(item: dict) -> str:

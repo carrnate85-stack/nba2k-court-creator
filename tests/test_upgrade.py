@@ -3,7 +3,10 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+from PIL import Image
 from court_creator import backend
+from court_creator import court_template
+from court_creator.court_template import CourtLayer
 import updater
 
 class UpgradeTests(unittest.TestCase):
@@ -34,6 +37,52 @@ class UpgradeTests(unittest.TestCase):
                 self.assertEqual((root / "electron/main.js").read_text(), "old" if fail else "new")
                 self.assertEqual((root / "updates/rollback/electron/main.js").read_text(), "old")
                 self.assertFalse((root / "personal.json").exists())
+
+    def test_preview_png_is_written_atomically(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "preview.png"
+            court_template._save_png_atomic(
+                Image.new("RGBA", (8, 4), (12, 34, 56, 255)),
+                output,
+                fast=True,
+            )
+            with Image.open(output) as rendered:
+                self.assertEqual(rendered.getpixel((0, 0)), (12, 34, 56, 255))
+            self.assertFalse(list(output.parent.glob("*.tmp")))
+
+    def test_external_image_cache_refreshes_changed_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "floor.png"
+            Image.new("RGB", (16, 8), (10, 20, 30)).save(source)
+            first = court_template._cached_external_image(source, (8, 4), fit=True)
+            Image.new("RGB", (16, 8), (90, 80, 70)).save(source)
+            source.touch()
+            second = court_template._cached_external_image(source, (8, 4), fit=True)
+            self.assertEqual(first.getpixel((0, 0))[:3], (10, 20, 30))
+            self.assertEqual(second.getpixel((0, 0))[:3], (90, 80, 70))
+
+    def test_floor_library_falls_back_when_newest_index_is_invalid(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            old = root / "court_floor_templates" / "nba2k26"
+            new = root / "court_floor_templates" / "nba2k27"
+            old.mkdir(parents=True)
+            new.mkdir(parents=True)
+            image = root / "floor.png"
+            Image.new("RGB", (8, 4), (1, 2, 3)).save(image)
+            (new / "nba2k27_floor_templates.json").write_text("not json")
+            (old / "nba2k26_floor_templates.json").write_text(
+                '{"name":"NBA 2K26 Floor Templates","templates":['
+                f'{{"id":"nba2k26-test","name":"Test Court","path":"{image.as_posix()}","category":"NBA"}}]}}'
+            )
+            group = CourtLayer("floors", "Court Floors", "group", None, 1, 0, True, 255, "pass", (0, 0, 8, 4))
+            base = CourtLayer("base", "Full Floor", "layer", "floors", 2, 1, True, 255, "norm", (0, 0, 8, 4))
+            document = SimpleNamespace(layers=(group, base))
+            with patch.object(backend, "ONEDRIVE_ASSET_ROOT", root):
+                layers, images, name = backend.load_floor_template_layers(document)
+            self.assertEqual(name, "NBA 2K26 Courts")
+            self.assertEqual(len(images), 1)
+            self.assertTrue(any(layer.id == "nba2k26-test" for layer in layers))
 
 if __name__ == "__main__":
     unittest.main()

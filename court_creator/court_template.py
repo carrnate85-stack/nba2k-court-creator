@@ -4,6 +4,7 @@ from collections import OrderedDict
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 import struct
 import threading
@@ -37,6 +38,9 @@ class CourtLayerDocument:
 
 _PREVIEW_LAYER_CACHE: OrderedDict[tuple, tuple[object, tuple[int, int]]] = OrderedDict()
 _PREVIEW_LAYER_CACHE_LIMIT = 64
+_EXTERNAL_IMAGE_CACHE: OrderedDict[tuple, object] = OrderedDict()
+_EXTERNAL_IMAGE_CACHE_LIMIT = 8
+_EXTERNAL_IMAGE_CACHE_MAX_PIXELS = 2_500_000
 _CHANNEL_OFFSET_CACHE: dict[
     tuple[str, int, int], tuple[list[dict], int, int, int, int]
 ] = {}
@@ -112,8 +116,7 @@ def create_court_preview_png(
         preview = image.convert("RGBA")
         if max_size is not None:
             preview.thumbnail(max_size)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        preview.save(output_path)
+        _save_png_atomic(preview, output_path, fast=max_size is not None)
 
 
 def create_visible_court_preview_png(
@@ -189,8 +192,7 @@ def create_visible_court_preview_png(
 
     background = Image.new("RGBA", canvas.size, (32, 36, 43, 255))
     image = Image.alpha_composite(background, canvas)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    image.save(output_path)
+    _save_png_atomic(image, output_path, fast=max_size is not None)
 
 
 def warm_visible_preview_layers(
@@ -579,11 +581,10 @@ def _composite_custom_floor(
     if width <= 0 or height <= 0:
         return
 
-    with Image.open(path) as opened:
-        image = opened.convert("RGBA")
-    image = _fit_image_to_box(
-        image,
+    image = _cached_external_image(
+        path,
         (max(1, round(width * scale)), max(1, round(height * scale))),
+        fit=True,
     )
     canvas.alpha_composite(image, (round(left * scale), round(top * scale)))
 
@@ -612,18 +613,14 @@ def _composite_logo(
     except (TypeError, ValueError):
         return
 
-    with Image.open(path) as opened:
-        image = opened.convert("RGBA")
+    target_width = max(1, round(width * scale))
+    target_height = max(1, round(height * scale))
+    image = _cached_external_image(path, (target_width, target_height), fit=False)
 
-    if image.width <= 0:
-        return
     if bool(logo.get("flipX", False)):
         image = ImageOps.mirror(image)
     if bool(logo.get("flipY", False)):
         image = ImageOps.flip(image)
-    target_width = max(1, round(width * scale))
-    target_height = max(1, round(height * scale))
-    image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
     if abs(rotation) > 0.001:
         image = image.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
@@ -657,6 +654,56 @@ def _fit_image_to_box(image, size: tuple[int, int]):
         method=Image.Resampling.LANCZOS,
         centering=(0.5, 0.5),
     )
+
+
+def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool):
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise RuntimeError("Court preview export requires Pillow.") from exc
+
+    path = Path(path)
+    stat = path.stat()
+    key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size, size, fit)
+    cacheable = size[0] * size[1] <= _EXTERNAL_IMAGE_CACHE_MAX_PIXELS
+    if cacheable:
+        with _PREVIEW_CACHE_LOCK:
+            cached = _EXTERNAL_IMAGE_CACHE.get(key)
+            if cached is not None:
+                _EXTERNAL_IMAGE_CACHE.move_to_end(key)
+                return cached.copy()
+
+    with Image.open(path) as opened:
+        image = opened.convert("RGBA")
+    if fit:
+        image = _fit_image_to_box(image, size)
+    elif image.size != size:
+        image = image.resize(size, Image.Resampling.LANCZOS)
+
+    if cacheable:
+        with _PREVIEW_CACHE_LOCK:
+            _EXTERNAL_IMAGE_CACHE[key] = image.copy()
+            _EXTERNAL_IMAGE_CACHE.move_to_end(key)
+            while len(_EXTERNAL_IMAGE_CACHE) > _EXTERNAL_IMAGE_CACHE_LIMIT:
+                _EXTERNAL_IMAGE_CACHE.popitem(last=False)
+    return image
+
+
+def _save_png_atomic(image, output_path: Path, *, fast: bool) -> None:
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output_path.with_name(
+        f".{output_path.name}.{os.getpid()}.tmp"
+    )
+    try:
+        image.save(
+            temporary,
+            format="PNG",
+            compress_level=1 if fast else 6,
+        )
+        os.replace(temporary, output_path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _average_visible_color(image) -> tuple[int, int, int] | None:

@@ -14,6 +14,9 @@ const state = {
   teamPalettes: [],
   presets: [],
   floorLibraryName: "NBA 2K27 Courts",
+  floorLibraryCount: 0,
+  appVersion: "",
+  projectPath: null,
   selectedLayerId: null,
   activeHexLayerId: null,
   collapsedLayerGroups: new Set(),
@@ -28,6 +31,7 @@ const ui = {
   sectionTitle: document.getElementById("sectionTitle"),
   sectionSubtitle: document.getElementById("sectionSubtitle"),
   previewImage: document.getElementById("previewImage"),
+  previewShell: document.getElementById("previewShell"),
   previewEmpty: document.getElementById("previewEmpty"),
   selectedText: document.getElementById("selectedText"),
   colorEditor: document.getElementById("colorEditor"),
@@ -57,10 +61,26 @@ const ui = {
   logoOpacity: document.getElementById("logoOpacity"),
   logoVisible: document.getElementById("logoVisible"),
   logoScaleLocked: document.getElementById("logoScaleLocked"),
+  projectTitle: document.getElementById("projectTitle"),
+  versionLabel: document.getElementById("versionLabel"),
+  removeLogoButton: document.getElementById("removeLogoButton"),
+  duplicateLogoXButton: document.getElementById("duplicateLogoXButton"),
+  duplicateLogoYButton: document.getElementById("duplicateLogoYButton"),
 };
 
 function setStatus(message) {
   ui.status.textContent = message;
+}
+
+function updateAppChrome() {
+  const fileName = String(state.projectPath || "").replace(/\\/g, "/").split("/").pop();
+  ui.projectTitle.textContent = fileName
+    ? fileName.replace(/\.court\.json$/i, "").replace(/\.json$/i, "")
+    : "Untitled court";
+  const library = String(state.floorLibraryName || "NBA 2K courts").replace(/\s+Courts?$/i, "");
+  ui.versionLabel.textContent = state.appVersion
+    ? `Version ${state.appVersion} | ${library}`
+    : `Loading ${library}...`;
 }
 
 function normalizeName(value) {
@@ -333,8 +353,8 @@ function setLayerVisibility(layer, visible) {
     if (visible) showAncestors(layer);
   }
   state.selectedLayerId = layer.id;
-  refreshInlineColorControls();
-  renderLayers();
+  if (state.section === "floors") syncLayerRowStates();
+  else renderLayers();
   refreshSelectionText();
   schedulePreview();
 }
@@ -384,7 +404,8 @@ function refreshInlineColorControls() {
   }
 }
 
-function renderLayers() {
+function renderLayers(preserveScroll = true) {
+  const previousScroll = preserveScroll ? ui.layersHost.scrollTop : 0;
   refreshInlineColorControls();
   ui.layersHost.innerHTML = "";
   const rows = flattenedRows(sectionRoots());
@@ -396,13 +417,17 @@ function renderLayers() {
     const name = document.createElement("div");
     name.className = "layer-name";
     const collapsed = isGroup(layer) && state.collapsedLayerGroups.has(layer.id);
-    name.textContent = `${isGroup(layer) ? (collapsed ? "▸ " : "▾ ") : ""}${layer.displayName}`;
+    const childCount = isFloorTemplateCategory(layer)
+      ? descendants(layer).filter((child) => !isGroup(child)).length
+      : 0;
+    const countLabel = childCount ? ` (${childCount})` : "";
+    name.textContent = `${isGroup(layer) ? (collapsed ? "▸ " : "▾ ") : ""}${layer.displayName}${countLabel}`;
     name.title = layer.displayName;
     name.style.paddingLeft = state.section === "paint" ? `${depth * 12}px` : "0";
     if (isGroup(layer)) row.setAttribute("aria-expanded", String(!collapsed));
 
     const visible = document.createElement("div");
-    visible.className = "state";
+    visible.className = `state ${layer.visible ? "on" : "off"}`;
     visible.textContent = layer.visible ? "On" : "Off";
 
     const colorCell = document.createElement("div");
@@ -431,7 +456,10 @@ function renderLayers() {
     }
 
     row.append(name, visible, colorCell);
-    row.addEventListener("click", () => {
+    row.tabIndex = 0;
+    row.setAttribute("role", "treeitem");
+    row.setAttribute("aria-selected", String(state.selectedLayerId === layer.id));
+    const activateRow = () => {
       state.selectedLayerId = layer.id;
       if (isGroup(layer)) {
         if (state.collapsedLayerGroups.has(layer.id)) state.collapsedLayerGroups.delete(layer.id);
@@ -444,6 +472,17 @@ function renderLayers() {
         row.classList.add("selected");
       }
       refreshSelectionText();
+    };
+    row.addEventListener("click", activateRow);
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        activateRow();
+      } else if (event.key === " ") {
+        event.preventDefault();
+        if (isGroup(layer)) activateRow();
+        else setLayerVisibility(layer, state.section === "floors" ? true : !layer.visible);
+      }
     });
     row.addEventListener("dblclick", () => {
       if (!isGroup(layer) && state.section !== "floors") setLayerVisibility(layer, !layer.visible);
@@ -458,6 +497,22 @@ function renderLayers() {
       refreshSelectionText();
     });
     ui.layersHost.append(row);
+  }
+  ui.layersHost.scrollTop = Math.min(previousScroll, ui.layersHost.scrollHeight);
+}
+
+function syncLayerRowStates() {
+  for (const row of ui.layersHost.querySelectorAll(".layer-row")) {
+    const layer = state.layersById.get(row.dataset.id);
+    if (!layer) continue;
+    const selected = layer.id === state.selectedLayerId;
+    row.classList.toggle("selected", selected);
+    row.setAttribute("aria-selected", String(selected));
+    const stateCell = row.querySelector(".state");
+    if (!stateCell) continue;
+    stateCell.classList.toggle("on", layer.visible);
+    stateCell.classList.toggle("off", !layer.visible);
+    stateCell.textContent = layer.visible ? "On" : "Off";
   }
 }
 
@@ -679,7 +734,7 @@ function refreshSelectionText() {
 
 function renderSection() {
   const copy = {
-    floors: ["Court Floors", `Choose one court floor at a time from ${state.floorLibraryName}.`],
+    floors: ["Court Floors", `Choose one court floor at a time from ${state.floorLibraryName} (${state.floorLibraryCount} available).`],
     paint: ["Paint & Lines", "Choose paint and line layers, then apply exact colors or team palette swatches."],
     logos: ["Logos", "Import logo images, then place them on the court preview."],
     export: ["Export", "Refresh, save, and export the current court preview."],
@@ -722,10 +777,32 @@ function renderRequest(outputPath = null) {
 
 let previewBusy = false;
 let previewPending = false;
+
+function waitForPreviewImage(image, timeoutMs = 2000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      image.removeEventListener("load", finish);
+      image.removeEventListener("error", finish);
+      resolve();
+    };
+    image.addEventListener("load", finish, { once: true });
+    image.addEventListener("error", finish, { once: true });
+    timer = setTimeout(finish, timeoutMs);
+    image.decode().then(finish, finish);
+  });
+}
+
 async function refreshPreview(outputPath = null) {
   if (!state.templatePath) return;
   if (previewBusy) { previewPending = true; return; }
   previewBusy = true;
+  ui.previewShell.classList.add("rendering");
+  ui.previewShell.setAttribute("aria-busy", "true");
   const token = ++state.renderToken;
   setStatus("Refreshing preview...");
   try {
@@ -733,13 +810,21 @@ async function refreshPreview(outputPath = null) {
     if (token !== state.renderToken) return;
     state.previewPath = response.previewPath || state.previewPath;
     ui.previewImage.src = `${fileUrl(state.previewPath)}?v=${Date.now()}`;
+    await waitForPreviewImage(ui.previewImage);
+    if (token !== state.renderToken) return;
     ui.previewEmpty.classList.add("hidden");
     setStatus(outputPath ? "PNG exported." : "Preview refreshed.");
   } catch (error) {
     setStatus(`Preview failed: ${error.message}`);
   } finally {
     previewBusy = false;
-    if (previewPending) { previewPending = false; refreshPreview(); }
+    if (previewPending) {
+      previewPending = false;
+      refreshPreview();
+    } else {
+      ui.previewShell.classList.remove("rendering");
+      ui.previewShell.setAttribute("aria-busy", "false");
+    }
   }
 }
 
@@ -784,6 +869,9 @@ function renderLogos() {
   }
   const logo = selectedLogo();
   const disabled = !logo;
+  ui.removeLogoButton.disabled = disabled;
+  ui.duplicateLogoXButton.disabled = disabled;
+  ui.duplicateLogoYButton.disabled = disabled;
   for (const input of [ui.logoName, ui.logoX, ui.logoY, ui.logoWidth, ui.logoHeight, ui.logoRotation, ui.logoOpacity, ui.logoVisible, ui.logoScaleLocked]) {
     input.disabled = disabled;
   }
@@ -933,6 +1021,8 @@ function nbaPreset() {
 }
 
 function resetToDefault() {
+  state.projectPath = null;
+  updateAppChrome();
   const preset = nbaPreset();
   if (preset) {
     applyPresetLayout(preset, false);
@@ -966,6 +1056,7 @@ function selectCurrentCourtFloor() {
 }
 
 async function loadWorkspace(templatePath = null, project = null) {
+  document.body.classList.add("workspace-loading");
   try {
     setStatus("Loading court template...");
     const data = await window.courtCreator.load(templatePath);
@@ -977,6 +1068,9 @@ async function loadWorkspace(templatePath = null, project = null) {
     state.teamPalettes = data.teamPalettes || [];
     state.presets = data.presets || [];
     state.floorLibraryName = data.floorLibraryName || "NBA 2K courts";
+    state.floorLibraryCount = Number(data.floorLibraryCount) || 0;
+    state.projectPath = project?._projectPath || null;
+    updateAppChrome();
     state.colorOverrides = {};
     state.templateColors = {};
     state.logos = [];
@@ -999,9 +1093,13 @@ async function loadWorkspace(templatePath = null, project = null) {
     selectCurrentCourtFloor();
     renderSection();
     await refreshPreview();
-    setStatus(preset ? "NBA preset loaded." : "Court workspace ready.");
+    if (data.templateFallback) setStatus("Project restored with the local court template.");
+    else if (project) setStatus("Project restored.");
+    else setStatus(preset ? "NBA preset loaded." : "Court workspace ready.");
   } catch (error) {
     setStatus(`Startup failed: ${error.message}`);
+  } finally {
+    document.body.classList.remove("workspace-loading");
   }
 }
 
@@ -1009,17 +1107,29 @@ async function exportPng() {
   const target = await window.courtCreator.chooseExportPng();
   if (!target) return;
   try {
+    document.getElementById("exportButton").disabled = true;
+    document.getElementById("exportPanelButton").disabled = true;
     setStatus("Exporting full-resolution PNG...");
     await window.courtCreator.render({ ...renderRequest(target), exportFullResolution: true });
     setStatus("Full-resolution PNG exported.");
     await window.courtCreator.showItem(target);
-  } catch (error) { setStatus(`Export failed: ${error.message}`); }
+  } catch (error) {
+    setStatus(`Export failed: ${error.message}`);
+  } finally {
+    document.getElementById("exportButton").disabled = false;
+    document.getElementById("exportPanelButton").disabled = false;
+  }
 }
 
 function projectSnapshot() {
   const snapshot = renderRequest();
   snapshot.customFloorImages = snapshot.customFloorImages.filter((image) => !isGameFloorImage(image));
-  return { ...snapshot, version: 1, layerNames: Object.fromEntries(state.layers.map(layer => [layer.id, layer.displayName])) };
+  return {
+    ...snapshot,
+    version: 1,
+    _projectPath: state.projectPath,
+    layerNames: Object.fromEntries(state.layers.map(layer => [layer.id, layer.displayName])),
+  };
 }
 function persistRecovery() {
   if (state.templatePath) window.courtCreator.autosave(projectSnapshot());
@@ -1027,11 +1137,20 @@ function persistRecovery() {
 async function saveProject() {
   try {
     const saved = await window.courtCreator.saveProject(projectSnapshot());
-    if (saved) setStatus("Project saved.");
+    if (saved) {
+      state.projectPath = saved;
+      updateAppChrome();
+      setStatus("Project saved.");
+    }
   } catch (error) { setStatus(`Save failed: ${error.message}`); }
 }
 async function restoreStartup() {
-  const project = await window.courtCreator.recovery();
+  const [project, info] = await Promise.all([
+    window.courtCreator.recovery(),
+    window.courtCreator.appInfo(),
+  ]);
+  state.appVersion = info.version || "";
+  updateAppChrome();
   await loadWorkspace(project?.templatePath || null, project);
 }
 
@@ -1047,6 +1166,9 @@ function wireEvents() {
   window.addEventListener("beforeunload", persistRecovery);
   window.addEventListener("keydown", event => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); saveProject(); }
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "r") { event.preventDefault(); refreshPreview(); }
+    if (event.key === "F5") { event.preventDefault(); refreshPreview(); }
+    if (event.key === "Escape") closeColorEditor();
   });
   document.querySelectorAll(".nav").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1054,7 +1176,7 @@ function wireEvents() {
       renderSection();
     });
   });
-  ui.floorSearch.addEventListener("input", renderLayers);
+  ui.floorSearch.addEventListener("input", () => renderLayers(false));
   ui.paletteSearch.addEventListener("input", renderPalette);
   document.getElementById("colorEditorClose").addEventListener("click", closeColorEditor);
   document.getElementById("colorEditorApply").addEventListener("click", applyColorEditorHex);
@@ -1091,7 +1213,7 @@ function wireEvents() {
     if (selected && await window.courtCreator.confirmReplace()) loadWorkspace(selected);
   });
   document.getElementById("importLogoButton").addEventListener("click", importLogos);
-  document.getElementById("removeLogoButton").addEventListener("click", () => {
+  ui.removeLogoButton.addEventListener("click", () => {
     const logo = selectedLogo();
     if (!logo) return;
     state.logos = state.logos.filter((item) => item.id !== logo.id);
@@ -1100,11 +1222,10 @@ function wireEvents() {
     refreshSelectionText();
     schedulePreview();
   });
-  document.getElementById("duplicateLogoXButton").addEventListener("click", () => duplicateLogo("x"));
-  document.getElementById("duplicateLogoYButton").addEventListener("click", () => duplicateLogo("y"));
+  ui.duplicateLogoXButton.addEventListener("click", () => duplicateLogo("x"));
+  ui.duplicateLogoYButton.addEventListener("click", () => duplicateLogo("y"));
   for (const input of [ui.logoName, ui.logoX, ui.logoY, ui.logoWidth, ui.logoHeight, ui.logoRotation, ui.logoOpacity, ui.logoVisible, ui.logoScaleLocked]) {
     input.addEventListener("input", updateSelectedLogo);
-    input.addEventListener("change", updateSelectedLogo);
   }
 }
 
