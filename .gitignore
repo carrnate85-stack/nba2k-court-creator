@@ -11,6 +11,8 @@ src/**/bin/
 src/**/obj/
 
 outputs/
+assets/
+migration_archive/
 custom_floors/
 logos/
 

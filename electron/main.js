@@ -5,8 +5,42 @@ const os = require("os");
 const path = require("path");
 
 const projectRoot = path.resolve(__dirname, "..");
+const assetRoot = path.join(projectRoot, "assets");
+const legacyProjectRoot = path.join(os.homedir(), "NBA 2K Court Creator");
+const legacyAssetRoot = path.join(os.homedir(), "OneDrive", "Documents", "2kcourtmodder");
+const legacyOneDriveProjectRoot = path.join(os.homedir(), "OneDrive", "Documents", "NBA 2K Court Creator");
 const engineTimeoutMs = 120000;
 let mainWindow = null;
+
+function remapStoredPath(value) {
+  if (typeof value !== "string") return value;
+  for (const [oldRoot, newRoot] of [
+    [legacyAssetRoot, fs.existsSync(assetRoot) ? assetRoot : legacyAssetRoot],
+    [legacyProjectRoot, projectRoot],
+    [legacyOneDriveProjectRoot, projectRoot],
+  ]) {
+    if (value.toLowerCase() === oldRoot.toLowerCase()) return newRoot;
+    if (value.toLowerCase().startsWith((oldRoot + path.sep).toLowerCase())) {
+      return path.join(newRoot, value.slice(oldRoot.length + 1));
+    }
+  }
+  return value;
+}
+
+function remapProjectPaths(project) {
+  if (!project || typeof project !== "object") return project;
+  return {
+    ...project,
+    templatePath: remapStoredPath(project.templatePath),
+    _projectPath: remapStoredPath(project._projectPath),
+    logoImages: Array.isArray(project.logoImages)
+      ? project.logoImages.map(item => ({ ...item, path: remapStoredPath(item.path) }))
+      : project.logoImages,
+    customFloorImages: Array.isArray(project.customFloorImages)
+      ? project.customFloorImages.map(item => ({ ...item, path: remapStoredPath(item.path) }))
+      : project.customFloorImages,
+  };
+}
 
 function bundledPython() {
   return path.join(
@@ -225,7 +259,7 @@ ipcMain.on("project:recover-write", (_event, data) => {
 });
 app.on("before-quit", flushRecovery);
 ipcMain.handle("project:recovery", () => {
-  try { return JSON.parse(fs.readFileSync(recoveryPath(), "utf8")); } catch { return null; }
+  try { return remapProjectPaths(JSON.parse(fs.readFileSync(recoveryPath(), "utf8"))); } catch { return null; }
 });
 ipcMain.handle("project:confirm-replace", async () => {
   const result = await dialog.showMessageBox(mainWindow, { type: "question", buttons: ["Keep Editing", "Continue"], defaultId: 0, cancelId: 0, message: "Replace the current court?", detail: "Save Project first to keep an editable copy. The current court will also be backed up for recovery." });
@@ -244,7 +278,7 @@ ipcMain.handle("project:save", async (_event, data) => {
 ipcMain.handle("project:open", async () => {
   const result = await dialog.showOpenDialog(mainWindow, { properties: ["openFile"], filters: [{ name: "Court project", extensions: ["json"] }] });
   if (result.canceled) return null;
-  const data = JSON.parse(fs.readFileSync(result.filePaths[0], "utf8"));
+  const data = remapProjectPaths(JSON.parse(fs.readFileSync(result.filePaths[0], "utf8")));
   if (data.version !== 1 || !data.templatePath) throw new Error("Not a Court Creator project.");
   if (!Array.isArray(data.logoImages)) data.logoImages = [];
   if (!data.visibility || typeof data.visibility !== "object") data.visibility = {};

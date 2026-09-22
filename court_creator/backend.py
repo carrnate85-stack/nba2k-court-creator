@@ -24,7 +24,10 @@ PREVIEW_CACHE = OUTPUT_DIR / "court_template_preview.png"
 TEAM_PALETTES_PATH = PROJECT_ROOT / "data" / "team_palettes.json"
 PRESETS_PATH = PROJECT_ROOT / "data" / "court_presets.json"
 LOCAL_ASSET_ROOT = PROJECT_ROOT
-ONEDRIVE_ASSET_ROOT = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
+ASSET_ROOT = PROJECT_ROOT / "assets"
+LEGACY_ASSET_ROOT = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
+LEGACY_PROJECT_ROOT = Path.home() / "NBA 2K Court Creator"
+LEGACY_ONEDRIVE_PROJECT_ROOT = Path.home() / "OneDrive" / "Documents" / "NBA 2K Court Creator"
 CUSTOM_FLOORS_DIR = LOCAL_ASSET_ROOT / "custom_floors"
 CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
 FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k*_floor_templates.json"
@@ -213,8 +216,11 @@ EVENT_ARENA_IDS = {
 PROJECT_COURT_TEMPLATE_PSD = (
     LOCAL_ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
 )
-ONEDRIVE_COURT_TEMPLATE_PSD = (
-    ONEDRIVE_ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
+ASSET_COURT_TEMPLATE_PSD = (
+    ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
+)
+LEGACY_COURT_TEMPLATE_PSD = (
+    LEGACY_ASSET_ROOT / "templates" / "NBA 2K25 Court Template By RedLite2K.psd"
 )
 DOWNLOAD_COURT_TEMPLATE_PSD = (
     Path.home()
@@ -253,7 +259,7 @@ def main() -> None:
 
 
 def load_state(template_path: Path | None = None) -> dict:
-    requested_template = Path(template_path) if template_path else None
+    requested_template = resolve_asset_path(str(template_path)) if template_path else None
     template_path = (
         requested_template
         if requested_template is not None and requested_template.is_file()
@@ -298,7 +304,7 @@ def load_state(template_path: Path | None = None) -> dict:
 
 def render_preview(request_path: Path) -> dict:
     request = request_path if isinstance(request_path, dict) else json.loads(request_path.read_text(encoding="utf-8"))
-    template_path = Path(request.get("templatePath") or default_template_path())
+    template_path = resolve_asset_path(str(request.get("templatePath") or default_template_path()))
     document = parse_court_psd_layers(template_path)
     output_path = Path(request.get("outputPath") or PREVIEW_CACHE)
     visibility = {str(key): bool(value) for key, value in request.get("visibility", {}).items()}
@@ -385,11 +391,11 @@ def add_custom_floor(source: Path) -> dict:
 
 
 def default_template_path() -> Path:
-    for path in (
-        PROJECT_COURT_TEMPLATE_PSD,
-        ONEDRIVE_COURT_TEMPLATE_PSD,
-        DOWNLOAD_COURT_TEMPLATE_PSD,
-    ):
+    candidates = [PROJECT_COURT_TEMPLATE_PSD, ASSET_COURT_TEMPLATE_PSD]
+    if not ASSET_ROOT.exists():
+        candidates.append(LEGACY_COURT_TEMPLATE_PSD)
+    candidates.append(DOWNLOAD_COURT_TEMPLATE_PSD)
+    for path in candidates:
         if path.exists():
             return path
     raise RuntimeError("Could not find the court PSD template.")
@@ -472,7 +478,8 @@ def load_floor_template_layers(
 
     template_index = 0
     category_groups: dict[str, CourtLayer] = {}
-    meta_paths = list(ONEDRIVE_ASSET_ROOT.glob(FLOOR_TEMPLATE_META_GLOB))
+    library_root = ASSET_ROOT if ASSET_ROOT.exists() else LEGACY_ASSET_ROOT
+    meta_paths = list(library_root.glob(FLOOR_TEMPLATE_META_GLOB))
 
     def library_version(path: Path) -> int:
         match = re.search(r"nba2k(\d+)_floor_templates", path.name.casefold())
@@ -538,8 +545,8 @@ def load_floor_template_layers(
                 {
                     "id": layer.id,
                     "name": layer.name,
-                    "path": str(path.relative_to(ONEDRIVE_ASSET_ROOT))
-                    if path.is_relative_to(ONEDRIVE_ASSET_ROOT)
+                    "path": str(path.relative_to(library_root))
+                    if path.is_relative_to(library_root)
                     else str(path),
                     "previewPath": str(preview_path),
                     "bbox": layer.bbox,
@@ -690,14 +697,18 @@ def normalize_color_overrides(color_overrides: object) -> dict[str, tuple[int, i
 def resolve_asset_path(value: str) -> Path:
     path = Path(value)
     if path.is_absolute():
+        for old_root, new_root in (
+            (LEGACY_ASSET_ROOT, ASSET_ROOT if ASSET_ROOT.exists() else LEGACY_ASSET_ROOT),
+            (LEGACY_PROJECT_ROOT, PROJECT_ROOT),
+            (LEGACY_ONEDRIVE_PROJECT_ROOT, PROJECT_ROOT),
+        ):
+            if path.is_relative_to(old_root):
+                return new_root / path.relative_to(old_root)
         return path
     local_path = PROJECT_ROOT / path
     if local_path.exists():
         return local_path
-    onedrive_path = ONEDRIVE_ASSET_ROOT / path
-    if onedrive_path.exists():
-        return onedrive_path
-    return local_path
+    return (ASSET_ROOT if ASSET_ROOT.exists() else LEGACY_ASSET_ROOT) / path
 
 
 def safe_stem(value: str) -> str:

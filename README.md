@@ -5,7 +5,8 @@
 The active application is Electron with a persistent Python renderer. See
 [Move to Another PC](MOVE-TO-ANOTHER-PC.md) for current setup and transfer instructions.
 
-Version 1.5.1 keeps the court-category filters inside the selector at compact
+Version 1.5.2 stores the extracted court library inside the local project
+folder and updates saved paths after relocation. Version 1.5.1 keeps the court-category filters inside the selector at compact
 window sizes. Version 1.5 introduces a brighter companion-app workspace, a
 thumbnail court browser with categories, favorites, recent courts, sorting and grid/list views,
 larger responsive previews, and a streamlined Paint & Lines inspector with a
@@ -62,10 +63,10 @@ On launch, it quietly checks GitHub for a newer app version before opening the c
 
 ## Template Path
 
-Default project PSD path:
+Default project PSD path (inside the new local project folder):
 
 ```text
-C:\Users\carrn\OneDrive\Documents\NBA 2K Court Creator\templates\NBA 2K25 Court Template By RedLite2K.psd
+C:\Users\carrn\Projects\NBA 2k Court Creator\templates\NBA 2K25 Court Template By RedLite2K.psd
 ```
 
 If that file is missing, the app falls back to the original Downloads path. Use **Load PSD** if you move the template.

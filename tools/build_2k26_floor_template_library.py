@@ -660,7 +660,7 @@ def clean_decode_speckles_slow(image: Image.Image) -> Image.Image:
 def relative_to_asset_root(path: Path | None) -> str | None:
     if path is None:
         return None
-    asset_root = Path.home() / "OneDrive" / "Documents" / "2kcourtmodder"
+    asset_root = Path(__file__).resolve().parent.parent / "assets"
     try:
         return str(path.relative_to(asset_root))
     except ValueError:

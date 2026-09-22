@@ -3,7 +3,7 @@
 1. Clone https://github.com/carrnate85-stack/nba2k-court-creator using GitHub Desktop.
 2. Install Python 3.12 and Node.js, then run `Setup Court Creator.bat`.
 3. Transfer the local `templates` folder into the cloned repository. The PSD is intentionally not in Git.
-4. Transfer `OneDrive\Documents\2kcourtmodder` to that same location under the new Windows user. This contains the extracted NBA 2K27 court library. The app automatically chooses the newest library found there.
+4. Transfer the local `assets` folder into the cloned repository. This contains the extracted NBA 2K27 court library. The app automatically chooses the newest library found there.
 5. Transfer `custom_floors`, `logos`, and personal `data\court_presets.json` if needed.
 6. Run `Launch NBA 2K Court Creator.bat`.
 
