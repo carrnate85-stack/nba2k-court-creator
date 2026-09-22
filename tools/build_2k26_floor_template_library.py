@@ -357,8 +357,10 @@ def main() -> None:
     extracted_root = Path(args.extracted_root)
     output_root = Path(args.output)
     image_root = output_root / "images"
+    thumbnail_root = output_root / "thumbnails"
     dds_root = output_root / "dds"
     image_root.mkdir(parents=True, exist_ok=True)
+    thumbnail_root.mkdir(parents=True, exist_ok=True)
     if args.save_dds:
         dds_root.mkdir(parents=True, exist_ok=True)
 
@@ -377,6 +379,7 @@ def main() -> None:
         name = friendly_name(mip0_path)
         category = category_for_name(name)
         png_path = image_root / f"{template_id}.png"
+        thumbnail_path = thumbnail_root / f"{template_id}.jpg"
         display_height = height // 2
         if not (args.reuse_existing and png_path.exists()):
             raw_texture = oodle_decompress(game_root, mip0_path.read_bytes(), raw_size)
@@ -389,6 +392,11 @@ def main() -> None:
                 display_image = clean_decode_speckles(display_image)
             display_image.putalpha(255)
             display_image.save(png_path)
+        if not (args.reuse_existing and thumbnail_path.exists()):
+            with Image.open(png_path) as image:
+                thumbnail = image.convert("RGB")
+                thumbnail.thumbnail((360, 180), Image.Resampling.LANCZOS)
+                thumbnail.save(thumbnail_path, "JPEG", quality=82, optimize=True)
 
         dds_path = None
         if args.save_dds:
@@ -403,6 +411,7 @@ def main() -> None:
                 "id": template_id,
                 "name": name,
                 "path": relative_to_asset_root(png_path),
+                "thumbnailPath": relative_to_asset_root(thumbnail_path),
                 "texturePath": relative_to_asset_root(dds_path) if dds_path else None,
                 "sourceMip0": str(mip0_path),
                 "sourceTld": str(tld_path),

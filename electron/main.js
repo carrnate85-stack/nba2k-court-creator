@@ -134,6 +134,13 @@ function createWindow() {
     minWidth: 1280,
     minHeight: 760,
     title: "NBA 2K Court Creator",
+    titleBarStyle: "hidden",
+    titleBarOverlay: {
+      color: "#F8FAFB",
+      symbolColor: "#102134",
+      height: 58,
+    },
+    autoHideMenuBar: true,
     show: false,
     icon: path.join(projectRoot, "src", "NBA2KCourtCreator", "Assets", "app-icon.ico"),
     backgroundColor: "#F6F7F3",

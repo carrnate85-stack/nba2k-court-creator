@@ -7,95 +7,115 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <header class="app-titlebar">
+      <div class="titlebar-brand">
+        <img src="../../src/NBA2KCourtCreator/Assets/app-icon.png" alt="" />
+        <div><strong>NBA 2K Court Creator</strong><span>Create. Customize. Play.</span></div>
+      </div>
+    </header>
+
     <aside class="sidebar">
       <div class="brand">
         <img src="../../src/NBA2KCourtCreator/Assets/app-icon.png" alt="" />
-        <div>
-          <strong>NBA 2K</strong>
-          <h1>Court Creator</h1>
-          <span>Companion workspace</span>
-        </div>
+        <div><strong>NBA 2K</strong><h1>Court Creator</h1><span>Companion workspace</span></div>
       </div>
       <nav>
-        <button class="nav active" data-section="floors">Court Floors</button>
-        <button class="nav" data-section="paint">Paint & Lines</button>
-        <button class="nav" data-section="logos">Logos</button>
-        <button class="nav" data-section="export">Export</button>
+        <button class="nav active" data-section="floors"><span data-icon="court"></span><span>Court Floors</span></button>
+        <button class="nav" data-section="paint"><span data-icon="pen-line"></span><span>Paint &amp; Lines</span></button>
+        <button class="nav" data-section="logos"><span data-icon="image"></span><span>Logos</span></button>
+        <button class="nav" data-section="export"><span data-icon="upload"></span><span>Export</span></button>
       </nav>
       <small id="versionLabel">Loading court library...</small>
     </aside>
 
     <main class="app">
       <header class="topbar">
-        <div>
-          <h2 id="projectTitle">Untitled court</h2>
-          <p id="status" aria-live="polite">Starting workspace...</p>
-        </div>
+        <div class="project-heading"><h2 id="projectTitle">Untitled court</h2><p id="status" aria-live="polite">Starting workspace...</p></div>
         <div class="top-actions">
-          <div class="action-group" role="group" aria-label="Project actions">
-            <button id="newButton" type="button">New</button>
-            <button id="openProjectButton" type="button">Open</button>
-            <button id="saveProjectButton" type="button">Save</button>
-          </div>
-          <div class="action-group" role="group" aria-label="Court actions">
-            <button id="openButton" type="button">Open PSD</button>
-            <button id="refreshButton" type="button">Refresh</button>
-          </div>
-          <button id="exportButton" class="primary" type="button">Export PNG</button>
+          <button id="newButton" type="button"><span data-icon="file-plus"></span><span>New</span></button>
+          <button id="openProjectButton" type="button"><span data-icon="folder-open"></span><span>Open</span></button>
+          <button id="saveProjectButton" type="button"><span data-icon="save"></span><span>Save</span></button>
+          <span class="action-divider" aria-hidden="true"></span>
+          <button id="openButton" type="button"><span data-icon="upload"></span><span>Import PSD</span></button>
+          <button id="refreshButton" type="button"><span data-icon="refresh-cw"></span><span>Refresh</span></button>
+          <button id="exportButton" class="primary" type="button"><span data-icon="upload"></span><span>Export PNG</span></button>
         </div>
       </header>
 
       <section class="workspace">
         <div class="workspace-heading">
-          <h2 id="sectionTitle">Court Floors</h2>
-          <p id="sectionSubtitle">Choose one court floor at a time from NBA 2K27 Courts.</p>
+          <div><span class="eyebrow">COURT DESIGN</span><h2 id="sectionTitle">Court Floors</h2><p id="sectionSubtitle">Choose one court floor at a time from NBA 2K27 Courts.</p></div>
+          <button id="currentCourtButton" class="current-court-button hidden" type="button"><span>Court: <strong id="currentCourtName">No court selected</strong></span><span data-icon="chevron-down" data-icon-size="16"></span></button>
         </div>
 
         <div class="layout">
           <section class="preview-column">
-            <div id="previewShell" class="preview-shell" aria-busy="false">
-              <img id="previewImage" alt="Court preview" />
-              <div id="previewEmpty">Loading court preview...</div>
-            </div>
+            <section id="previewCard" class="preview-card">
+              <div class="preview-toolbar">
+                <div class="segmented-control" role="group" aria-label="Court preview area">
+                  <button class="preview-view active" data-preview-view="full" type="button">Full Court</button>
+                  <button class="preview-view" data-preview-view="left" type="button">Left Half</button>
+                  <button class="preview-view" data-preview-view="right" type="button">Right Half</button>
+                </div>
+                <div class="preview-tools">
+                  <div class="zoom-control" role="group" aria-label="Preview zoom">
+                    <button id="zoomOutButton" class="icon-button" type="button" aria-label="Zoom out"><span data-icon="zoom-out"></span></button>
+                    <span id="previewZoomLabel">100%</span>
+                    <button id="zoomInButton" class="icon-button" type="button" aria-label="Zoom in"><span data-icon="zoom-in"></span></button>
+                  </div>
+                  <button id="fullscreenPreviewButton" class="icon-button" type="button" aria-label="Fullscreen preview"><span data-icon="maximize"></span></button>
+                </div>
+              </div>
+              <div id="previewStage" class="preview-stage">
+                <div id="previewShell" class="preview-shell" aria-busy="false"><img id="previewImage" alt="Court preview" /><div id="previewEmpty">Loading court preview...</div></div>
+              </div>
+            </section>
+
             <div class="selected-card">
-              <span>Selected</span>
-              <strong id="selectedText">Court: No court selected.</strong>
+              <div class="selected-thumbnail" aria-hidden="true"><img id="selectedFloorImage" alt="" /><span id="selectedFloorFallback" data-icon="court"></span></div>
+              <div class="selected-summary"><span id="selectedLabel">Selected Court</span><strong id="selectedText">No court selected.</strong><small id="selectedCategory">NBA 2K27</small></div>
+              <span class="selected-chevron" data-icon="chevron-right"></span>
+              <div class="selected-detail"><span>Court Size</span><strong>NBA (94' x 50')</strong></div>
+              <div class="selected-detail surface-detail"><span>Surface</span><strong><i></i>Hardwood</strong></div>
             </div>
           </section>
 
           <section class="work-column">
             <section id="layersPanel" class="panel">
-              <div class="panel-tools">
-                <input id="floorSearch" type="search" placeholder="Search court floors" />
-                <button id="addFloorButton" class="primary">Add Custom Floor</button>
+              <div id="floorBrowser" class="floor-browser">
+                <div class="panel-heading"><h3>Courts</h3><button id="addFloorButton" class="primary" type="button"><span data-icon="plus"></span><span>Add Custom Floor</span></button></div>
+                <label class="search-box" for="floorSearch"><span data-icon="search"></span><input id="floorSearch" type="search" placeholder="Search courts..." /></label>
+                <div id="floorFilters" class="floor-filters" role="tablist" aria-label="Court categories"></div>
+                <div class="floor-browser-tools">
+                  <label class="sort-control"><span>Sort by</span><select id="floorSort"><option value="name">A - Z</option><option value="number">Court number</option><option value="category">Category</option><option value="recent">Recently used</option></select></label>
+                  <div class="view-switch" role="group" aria-label="Court browser view"><button id="floorGridButton" class="icon-button active" type="button" aria-label="Grid view"><span data-icon="grid"></span></button><button id="floorListButton" class="icon-button" type="button" aria-label="List view"><span data-icon="list"></span></button></div>
+                </div>
+                <div id="floorGallery" class="floor-gallery" role="listbox" aria-label="Court floors"></div>
               </div>
-              <div class="table-head">
-                <span id="layerNameHeader">Court</span>
-                <span>State</span>
-                <span id="layerColorHeader" class="hidden">Color</span>
+
+              <div id="paintBrowser" class="paint-browser hidden">
+                <div class="inspector-tabs" role="tablist" aria-label="Paint editor views"><button class="inspector-tab active" data-paint-tab="layers" type="button"><span data-icon="layers"></span><span>Layers</span></button><button class="inspector-tab" data-paint-tab="colors" type="button"><span data-icon="palette"></span><span>Colors</span></button></div>
+                <div id="paintLayersView" class="paint-view">
+                  <label class="search-box compact-search" for="layerSearch"><span data-icon="search"></span><input id="layerSearch" type="search" placeholder="Search layers..." /></label>
+                  <div class="table-head"><span id="layerNameHeader">Layer / section</span><span>State</span><span id="layerColorHeader">Color</span></div>
+                  <div id="layersHost" class="layer-list" role="tree"></div>
+                </div>
+                <div id="paintColorsView" class="paint-view panel-colors hidden">
+                  <div class="palette-target"><span>Apply colors to</span><strong id="paintPaletteTarget">Select a visible paint or line layer</strong></div>
+                  <label class="search-box" for="paintPaletteSearch"><span data-icon="search"></span><input id="paintPaletteSearch" type="search" placeholder="Search team, league, color, or hex" /></label>
+                  <div id="paintPaletteHost" class="palette-host panel-palette-host"></div>
+                </div>
               </div>
-              <div id="layersHost" class="layer-list"></div>
             </section>
 
             <section id="logosPanel" class="panel hidden">
-              <div class="panel-actions">
-                <button id="importLogoButton" class="primary">Import Logo</button>
-                <button id="duplicateLogoXButton">Copy on X</button>
-                <button id="duplicateLogoYButton">Copy on Y</button>
-                <button id="removeLogoButton">Remove Logo</button>
-              </div>
+              <div class="panel-heading"><h3>Logo Layers</h3><button id="importLogoButton" class="primary" type="button"><span data-icon="plus"></span><span>Import Logo</span></button></div>
+              <div class="panel-actions"><button id="duplicateLogoXButton">Copy on X</button><button id="duplicateLogoYButton">Copy on Y</button><button id="removeLogoButton">Remove Logo</button></div>
               <div class="logo-grid">
                 <div id="logoList" class="logo-list"></div>
                 <div class="inspector">
                   <label>Name <input id="logoName" type="text" /></label>
-                  <div class="control-grid">
-                    <label>X <input id="logoX" type="number" /></label>
-                    <label>Y <input id="logoY" type="number" /></label>
-                    <label>Width <input id="logoWidth" type="number" min="1" /></label>
-                    <label>Height <input id="logoHeight" type="number" min="1" /></label>
-                    <label>Rotate <input id="logoRotation" type="number" /></label>
-                    <label>Opacity <input id="logoOpacity" type="number" min="0" max="100" /></label>
-                  </div>
+                  <div class="control-grid"><label>X <input id="logoX" type="number" /></label><label>Y <input id="logoY" type="number" /></label><label>Width <input id="logoWidth" type="number" min="1" /></label><label>Height <input id="logoHeight" type="number" min="1" /></label><label>Rotate <input id="logoRotation" type="number" /></label><label>Opacity <input id="logoOpacity" type="number" min="0" max="100" /></label></div>
                   <label class="check-row"><input id="logoVisible" type="checkbox" /> Visible</label>
                   <label class="check-row"><input id="logoScaleLocked" type="checkbox" /> Lock scale</label>
                 </div>
@@ -103,12 +123,7 @@
             </section>
 
             <section id="exportPanel" class="panel hidden">
-              <div class="export-card">
-                <h3>Export</h3>
-                <p>The current court preview can be exported as a flattened PNG.</p>
-                <button id="exportPanelButton" class="primary">Export PNG</button>
-                <button id="openPsdButton">Open PSD</button>
-              </div>
+              <div class="export-card"><span class="export-icon" data-icon="upload" data-icon-size="28"></span><h3>Export Court</h3><p>Build a full-resolution flattened PNG from the current court design.</p><button id="exportPanelButton" class="primary"><span data-icon="upload"></span><span>Export PNG</span></button><button id="openPsdButton"><span data-icon="folder-open"></span><span>Open Source PSD</span></button></div>
             </section>
           </section>
         </div>
@@ -116,28 +131,15 @@
     </main>
 
     <section id="colorEditor" class="color-editor hidden" role="dialog" aria-labelledby="colorEditorTitle">
-      <header id="colorEditorHandle" class="color-editor-handle">
-        <div>
-          <span>Editing color</span>
-          <strong id="colorEditorTitle">Selected layer</strong>
-        </div>
-        <button id="colorEditorClose" class="icon-button" type="button" aria-label="Close color window">&times;</button>
-      </header>
+      <header id="colorEditorHandle" class="color-editor-handle"><div><span>Editing color</span><strong id="colorEditorTitle">Selected layer</strong></div><button id="colorEditorClose" class="icon-button" type="button" aria-label="Close color window">&times;</button></header>
       <div class="color-editor-content">
         <label class="hex-editor-label" for="colorEditorHex">Hex color</label>
-        <div class="hex-editor-row">
-          <input id="colorEditorNative" class="color-editor-native" type="color" aria-label="Choose color" />
-          <input id="colorEditorHex" type="text" maxlength="7" spellcheck="false" />
-          <button id="colorEditorApply" class="primary" type="button">Apply</button>
-          <button id="teamColorsToggle" class="team-colors-toggle" type="button">Team Colors</button>
-        </div>
-        <section id="paletteSection" class="palette-section hidden">
-          <input id="paletteSearch" type="search" placeholder="Search team, league, color, or hex" />
-          <div id="paletteHost" class="palette-host"></div>
-        </section>
+        <div class="hex-editor-row"><input id="colorEditorNative" class="color-editor-native" type="color" aria-label="Choose color" /><input id="colorEditorHex" type="text" maxlength="7" spellcheck="false" /><button id="colorEditorApply" class="primary" type="button">Apply</button><button id="teamColorsToggle" class="team-colors-toggle" type="button">Team Colors</button></div>
+        <section id="paletteSection" class="palette-section hidden"><input id="paletteSearch" type="search" placeholder="Search team, league, color, or hex" /><div id="paletteHost" class="palette-host"></div></section>
       </div>
     </section>
 
+    <script src="icons.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>

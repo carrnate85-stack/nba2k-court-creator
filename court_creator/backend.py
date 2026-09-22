@@ -376,6 +376,7 @@ def add_custom_floor(source: Path) -> dict:
         "id": layer.id,
         "name": layer.name,
         "path": str(destination.relative_to(PROJECT_ROOT)),
+        "previewPath": str(destination),
         "bbox": floor_bbox,
     }
     custom_floor_images.append(image)
@@ -450,6 +451,7 @@ def load_custom_floor_layers(document) -> tuple[list[CourtLayer], list[dict]]:
                 "id": layer.id,
                 "name": layer.name,
                 "path": str(path.relative_to(PROJECT_ROOT)) if path.is_relative_to(PROJECT_ROOT) else str(path),
+                "previewPath": str(path),
                 "bbox": layer.bbox,
             }
         )
@@ -530,6 +532,8 @@ def load_floor_template_layers(
                 bbox=fallback_bbox,
             )
             layers.append(layer)
+            thumbnail_path = resolve_asset_path(str(item.get("thumbnailPath", "")))
+            preview_path = thumbnail_path if item.get("thumbnailPath") and thumbnail_path.exists() else path
             images.append(
                 {
                     "id": layer.id,
@@ -537,6 +541,7 @@ def load_floor_template_layers(
                     "path": str(path.relative_to(ONEDRIVE_ASSET_ROOT))
                     if path.is_relative_to(ONEDRIVE_ASSET_ROOT)
                     else str(path),
+                    "previewPath": str(preview_path),
                     "bbox": layer.bbox,
                     "isTemplate": True,
                     "category": category,

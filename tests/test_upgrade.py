@@ -84,5 +84,27 @@ class UpgradeTests(unittest.TestCase):
             self.assertEqual(len(images), 1)
             self.assertTrue(any(layer.id == "nba2k26-test" for layer in layers))
 
+    def test_floor_library_uses_thumbnail_for_browser_preview(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            library = root / "court_floor_templates" / "nba2k27"
+            library.mkdir(parents=True)
+            image = library / "floor.png"
+            thumbnail = library / "thumbnail.jpg"
+            Image.new("RGB", (16, 8), (1, 2, 3)).save(image)
+            Image.new("RGB", (8, 4), (4, 5, 6)).save(thumbnail)
+            (library / "nba2k27_floor_templates.json").write_text(
+                '{"name":"NBA 2K27 Floor Templates","templates":['
+                '{"id":"nba2k27-test","name":"Test Court","path":"court_floor_templates/nba2k27/floor.png",'
+                '"thumbnailPath":"court_floor_templates/nba2k27/thumbnail.jpg","category":"NBA"}]}'
+            )
+            group = CourtLayer("floors", "Court Floors", "group", None, 1, 0, True, 255, "pass", (0, 0, 8, 4))
+            base = CourtLayer("base", "Full Floor", "layer", "floors", 2, 1, True, 255, "norm", (0, 0, 8, 4))
+            document = SimpleNamespace(layers=(group, base))
+            with patch.object(backend, "ONEDRIVE_ASSET_ROOT", root):
+                _, images, _ = backend.load_floor_template_layers(document)
+            self.assertEqual(images[0]["previewPath"], str(thumbnail))
+            self.assertEqual(images[0]["path"], "court_floor_templates\\nba2k27\\floor.png")
+
 if __name__ == "__main__":
     unittest.main()

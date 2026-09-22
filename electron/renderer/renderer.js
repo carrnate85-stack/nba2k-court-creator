@@ -1,5 +1,14 @@
 const DEFAULT_PAINT_HEX = "#19583F";
 
+function storedJson(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 const state = {
   section: "floors",
   templatePath: "",
@@ -7,6 +16,7 @@ const state = {
   document: null,
   layers: [],
   layersById: new Map(),
+  floorImagesById: new Map(),
   visibility: {},
   colorOverrides: {},
   templateColors: {},
@@ -22,6 +32,14 @@ const state = {
   collapsedLayerGroups: new Set(),
   logos: [],
   selectedLogoId: null,
+  floorFilter: localStorage.getItem("courtCreator.floorFilter") || "nba",
+  floorSort: localStorage.getItem("courtCreator.floorSort") || "name",
+  floorView: localStorage.getItem("courtCreator.floorView") || "grid",
+  favoriteFloorIds: new Set(storedJson("courtCreator.favoriteFloors", [])),
+  recentFloorIds: storedJson("courtCreator.recentFloors", []),
+  paintTab: "layers",
+  previewView: "full",
+  previewZoom: 100,
   renderToken: 0,
   renderTimer: 0,
 };
@@ -31,9 +49,18 @@ const ui = {
   sectionTitle: document.getElementById("sectionTitle"),
   sectionSubtitle: document.getElementById("sectionSubtitle"),
   previewImage: document.getElementById("previewImage"),
+  previewCard: document.getElementById("previewCard"),
+  previewStage: document.getElementById("previewStage"),
   previewShell: document.getElementById("previewShell"),
   previewEmpty: document.getElementById("previewEmpty"),
   selectedText: document.getElementById("selectedText"),
+  selectedLabel: document.getElementById("selectedLabel"),
+  selectedCategory: document.getElementById("selectedCategory"),
+  selectedFloorImage: document.getElementById("selectedFloorImage"),
+  selectedFloorFallback: document.getElementById("selectedFloorFallback"),
+  currentCourtButton: document.getElementById("currentCourtButton"),
+  currentCourtName: document.getElementById("currentCourtName"),
+  previewZoomLabel: document.getElementById("previewZoomLabel"),
   colorEditor: document.getElementById("colorEditor"),
   colorEditorHandle: document.getElementById("colorEditorHandle"),
   colorEditorTitle: document.getElementById("colorEditorTitle"),
@@ -43,12 +70,24 @@ const ui = {
   paletteSearch: document.getElementById("paletteSearch"),
   paletteHost: document.getElementById("paletteHost"),
   layersPanel: document.getElementById("layersPanel"),
+  floorBrowser: document.getElementById("floorBrowser"),
+  paintBrowser: document.getElementById("paintBrowser"),
   logosPanel: document.getElementById("logosPanel"),
   exportPanel: document.getElementById("exportPanel"),
   layersHost: document.getElementById("layersHost"),
-  panelTools: document.querySelector("#layersPanel .panel-tools"),
   floorSearch: document.getElementById("floorSearch"),
+  layerSearch: document.getElementById("layerSearch"),
   addFloorButton: document.getElementById("addFloorButton"),
+  floorFilters: document.getElementById("floorFilters"),
+  floorSort: document.getElementById("floorSort"),
+  floorGallery: document.getElementById("floorGallery"),
+  floorGridButton: document.getElementById("floorGridButton"),
+  floorListButton: document.getElementById("floorListButton"),
+  paintLayersView: document.getElementById("paintLayersView"),
+  paintColorsView: document.getElementById("paintColorsView"),
+  paintPaletteSearch: document.getElementById("paintPaletteSearch"),
+  paintPaletteHost: document.getElementById("paintPaletteHost"),
+  paintPaletteTarget: document.getElementById("paintPaletteTarget"),
   layerNameHeader: document.getElementById("layerNameHeader"),
   layerColorHeader: document.getElementById("layerColorHeader"),
   logoList: document.getElementById("logoList"),
@@ -213,6 +252,205 @@ function courtSortKey(layer) {
   return layer.psd_index ?? 0;
 }
 
+const FLOOR_FILTERS = [
+  ["all", "All"],
+  ["nba", "NBA"],
+  ["wnba", "WNBA"],
+  ["historic", "Historic"],
+  ["events", "Events"],
+  ["other", "Other"],
+  ["custom", "Custom"],
+  ["favorites", "Favorites"],
+  ["recent", "Recent"],
+];
+
+function selectedFloorLayer() {
+  const floorGroup = state.layers.find(isCourtFloorGroup);
+  if (!floorGroup) return null;
+  return descendants(floorGroup)
+    .filter((layer) => !isGroup(layer) && layer.visible)
+    .sort((a, b) => courtSortKey(a) - courtSortKey(b) || a.displayName.localeCompare(b.displayName))[0] || null;
+}
+
+function floorImageFor(layer) {
+  return layer ? state.floorImagesById.get(layer.id) || null : null;
+}
+
+function floorCategoryFor(layer) {
+  if (!layer) return "NBA 2K27";
+  if (layer.isCustomFloor && !layer.isTemplateFloor) return "Custom";
+  const image = floorImageFor(layer);
+  if (image?.category) return image.category;
+  const parent = layerParent(layer);
+  return isFloorTemplateCategory(parent) ? parent.displayName : "Court Floor";
+}
+
+function floorFilterMatches(layer, filter) {
+  const category = normalizeName(floorCategoryFor(layer));
+  if (filter === "all") return true;
+  if (filter === "custom") return layer.isCustomFloor && !layer.isTemplateFloor;
+  if (filter === "favorites") return state.favoriteFloorIds.has(layer.id);
+  if (filter === "recent") return state.recentFloorIds.includes(layer.id);
+  if (filter === "nba") return ["nba", "city edition", "statement edition"].includes(category);
+  if (filter === "wnba") return category === "wnba";
+  if (filter === "historic") return category.includes("historic");
+  if (filter === "events") return category.includes("event") || category.includes("all star") || category.includes("mode");
+  if (filter === "other") {
+    return !["nba", "city edition", "statement edition", "wnba"].includes(category)
+      && !category.includes("historic")
+      && !category.includes("event")
+      && !category.includes("all star")
+      && !category.includes("mode")
+      && !(layer.isCustomFloor && !layer.isTemplateFloor);
+  }
+  return true;
+}
+
+function floorItemsForBrowser() {
+  const floorGroup = state.layers.find(isCourtFloorGroup);
+  if (!floorGroup) return [];
+  const words = ui.floorSearch.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const recentRank = new Map(state.recentFloorIds.map((id, index) => [id, index]));
+  const items = descendants(floorGroup)
+    .filter((layer) => !isGroup(layer))
+    .filter((layer) => floorFilterMatches(layer, state.floorFilter))
+    .filter((layer) => {
+      const haystack = `${layer.displayName} ${layer.name} ${floorCategoryFor(layer)}`.toLowerCase();
+      return words.every((word) => haystack.includes(word));
+    });
+  items.sort((left, right) => {
+    if (state.floorSort === "number") return floorNumber(left.name) - floorNumber(right.name) || left.displayName.localeCompare(right.displayName);
+    if (state.floorSort === "category") return floorCategoryFor(left).localeCompare(floorCategoryFor(right)) || left.displayName.localeCompare(right.displayName);
+    if (state.floorSort === "recent") return (recentRank.get(left.id) ?? 9999) - (recentRank.get(right.id) ?? 9999) || left.displayName.localeCompare(right.displayName);
+    return left.displayName.localeCompare(right.displayName, undefined, { numeric: true });
+  });
+  return items;
+}
+
+function rememberRecentFloor(layer) {
+  state.recentFloorIds = [layer.id, ...state.recentFloorIds.filter((id) => id !== layer.id)].slice(0, 24);
+  localStorage.setItem("courtCreator.recentFloors", JSON.stringify(state.recentFloorIds));
+}
+
+function selectFloor(layer) {
+  rememberRecentFloor(layer);
+  setLayerVisibility(layer, true);
+  if (state.floorFilter === "recent" || state.floorSort === "recent") renderFloorGallery();
+}
+
+function renderFloorFilters() {
+  ui.floorFilters.innerHTML = "";
+  for (const [id, label] of FLOOR_FILTERS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `floor-filter${state.floorFilter === id ? " active" : ""}`;
+    button.textContent = label;
+    button.setAttribute("role", "tab");
+    button.setAttribute("aria-selected", String(state.floorFilter === id));
+    button.addEventListener("click", () => {
+      state.floorFilter = id;
+      localStorage.setItem("courtCreator.floorFilter", id);
+      renderFloorFilters();
+      renderFloorGallery(false);
+    });
+    ui.floorFilters.append(button);
+  }
+}
+
+function setFloorView(view) {
+  state.floorView = view === "list" ? "list" : "grid";
+  localStorage.setItem("courtCreator.floorView", state.floorView);
+  ui.floorGallery.classList.toggle("list-view", state.floorView === "list");
+  ui.floorGridButton.classList.toggle("active", state.floorView === "grid");
+  ui.floorListButton.classList.toggle("active", state.floorView === "list");
+}
+
+function renderFloorGallery(preserveScroll = true) {
+  const previousScroll = preserveScroll ? ui.floorGallery.scrollTop : 0;
+  ui.floorGallery.innerHTML = "";
+  setFloorView(state.floorView);
+  const items = floorItemsForBrowser();
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "floor-gallery-empty";
+    empty.textContent = state.floorFilter === "favorites" ? "No favorite courts yet." : "No courts match this view.";
+    ui.floorGallery.append(empty);
+    return;
+  }
+  for (const layer of items) {
+    const image = floorImageFor(layer);
+    const card = document.createElement("div");
+    card.className = `floor-card${layer.visible ? " selected" : ""}`;
+    card.dataset.id = layer.id;
+    card.tabIndex = 0;
+    card.setAttribute("role", "option");
+    card.setAttribute("aria-selected", String(layer.visible));
+
+    const thumbnail = document.createElement("img");
+    thumbnail.className = "floor-card-image";
+    thumbnail.alt = "";
+    thumbnail.loading = "lazy";
+    thumbnail.decoding = "async";
+    thumbnail.src = fileUrl(image?.previewPath || image?.path || "");
+
+    const body = document.createElement("div");
+    body.className = "floor-card-body";
+    const name = document.createElement("span");
+    name.className = "floor-card-name";
+    name.textContent = layer.displayName;
+    name.title = layer.displayName;
+    const category = document.createElement("span");
+    category.className = "floor-card-category";
+    category.textContent = floorCategoryFor(layer);
+    const favorite = document.createElement("button");
+    favorite.type = "button";
+    favorite.className = `favorite-button${state.favoriteFloorIds.has(layer.id) ? " active" : ""}`;
+    favorite.title = state.favoriteFloorIds.has(layer.id) ? "Remove from favorites" : "Add to favorites";
+    favorite.setAttribute("aria-label", favorite.title);
+    favorite.innerHTML = window.iconMarkup("star", 17);
+    favorite.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (state.favoriteFloorIds.has(layer.id)) state.favoriteFloorIds.delete(layer.id);
+      else state.favoriteFloorIds.add(layer.id);
+      localStorage.setItem("courtCreator.favoriteFloors", JSON.stringify([...state.favoriteFloorIds]));
+      if (state.floorFilter === "favorites") renderFloorGallery();
+      else {
+        favorite.classList.toggle("active", state.favoriteFloorIds.has(layer.id));
+        favorite.title = state.favoriteFloorIds.has(layer.id) ? "Remove from favorites" : "Add to favorites";
+        favorite.setAttribute("aria-label", favorite.title);
+      }
+    });
+    body.append(name, category, favorite);
+    card.append(thumbnail, body);
+    card.addEventListener("click", () => selectFloor(layer));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectFloor(layer);
+      }
+    });
+    card.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      const renamed = prompt("Court name", layer.displayName);
+      if (!renamed?.trim()) return;
+      layer.displayName = renamed.trim();
+      persistRecovery();
+      renderFloorGallery();
+      refreshSelectionText();
+    });
+    ui.floorGallery.append(card);
+  }
+  ui.floorGallery.scrollTop = Math.min(previousScroll, ui.floorGallery.scrollHeight);
+}
+
+function syncFloorCardStates() {
+  for (const card of ui.floorGallery.querySelectorAll(".floor-card")) {
+    const selected = card.dataset.id === state.selectedLayerId;
+    card.classList.toggle("selected", selected);
+    card.setAttribute("aria-selected", String(selected));
+  }
+}
+
 function friendlyFloorName(name) {
   let clean = String(name || "")
     .replace(/\s*\(\d{3}\)/g, "")
@@ -267,6 +505,7 @@ function rebuildLayerIndex(data) {
     isTemplateFloor: Boolean(layer.isTemplateFloor || String(layer.id || "").startsWith("floor_template_")),
   }));
   state.layersById = new Map(state.layers.map((layer) => [layer.id, layer]));
+  state.floorImagesById = new Map((data.customFloorImages || []).map((image) => [image.id, image]));
   for (const floor of data.customFloorImages || []) {
     if (floor.isTemplate && state.layersById.has(floor.id)) {
       state.layersById.get(floor.id).isTemplateFloor = true;
@@ -353,7 +592,10 @@ function setLayerVisibility(layer, visible) {
     if (visible) showAncestors(layer);
   }
   state.selectedLayerId = layer.id;
-  if (state.section === "floors") syncLayerRowStates();
+  if (state.section === "floors") {
+    syncLayerRowStates();
+    syncFloorCardStates();
+  }
   else renderLayers();
   refreshSelectionText();
   schedulePreview();
@@ -408,7 +650,14 @@ function renderLayers(preserveScroll = true) {
   const previousScroll = preserveScroll ? ui.layersHost.scrollTop : 0;
   refreshInlineColorControls();
   ui.layersHost.innerHTML = "";
-  const rows = flattenedRows(sectionRoots());
+  let rows = flattenedRows(sectionRoots());
+  const query = ui.layerSearch?.value.trim().toLowerCase() || "";
+  if (query) {
+    rows = rows.filter(({ layer }) => {
+      if (`${layer.displayName} ${layer.name}`.toLowerCase().includes(query)) return true;
+      return isGroup(layer) && descendants(layer).some((child) => `${child.displayName} ${child.name}`.toLowerCase().includes(query));
+    });
+  }
   for (const { layer, depth } of rows) {
     const row = document.createElement("div");
     row.className = `layer-row${isGroup(layer) ? " group" : ""}${state.selectedLayerId === layer.id ? " selected" : ""}`;
@@ -417,21 +666,37 @@ function renderLayers(preserveScroll = true) {
     const name = document.createElement("div");
     name.className = "layer-name";
     const collapsed = isGroup(layer) && state.collapsedLayerGroups.has(layer.id);
-    const childCount = isFloorTemplateCategory(layer)
-      ? descendants(layer).filter((child) => !isGroup(child)).length
-      : 0;
-    const countLabel = childCount ? ` (${childCount})` : "";
-    name.textContent = `${isGroup(layer) ? (collapsed ? "▸ " : "▾ ") : ""}${layer.displayName}${countLabel}`;
+    const childCount = isGroup(layer) ? descendants(layer).filter((child) => !isGroup(child)).length : 0;
+    name.textContent = `${isGroup(layer) ? (collapsed ? "▸ " : "▾ ") : ""}${layer.displayName}`;
     name.title = layer.displayName;
     name.style.paddingLeft = state.section === "paint" ? `${depth * 12}px` : "0";
     if (isGroup(layer)) row.setAttribute("aria-expanded", String(!collapsed));
 
     const visible = document.createElement("div");
     visible.className = `state ${layer.visible ? "on" : "off"}`;
-    visible.textContent = layer.visible ? "On" : "Off";
+    if (!isGroup(layer)) {
+      const eye = document.createElement("span");
+      eye.className = "state-eye";
+      eye.innerHTML = window.iconMarkup("eye", 14);
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "visibility-toggle";
+      toggle.title = layer.visible ? `Hide ${layer.displayName}` : `Show ${layer.displayName}`;
+      toggle.setAttribute("aria-label", toggle.title);
+      toggle.setAttribute("aria-pressed", String(layer.visible));
+      toggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setLayerVisibility(layer, !layer.visible);
+      });
+      toggle.addEventListener("dblclick", (event) => event.stopPropagation());
+      visible.append(eye, toggle);
+    }
 
     const colorCell = document.createElement("div");
-    if (layer.showInlineColorControls) {
+    if (isGroup(layer)) {
+      colorCell.className = "group-count";
+      colorCell.textContent = `${childCount} layer${childCount === 1 ? "" : "s"}`;
+    } else if (layer.showInlineColorControls) {
       colorCell.className = "color-controls";
       colorCell.addEventListener("dblclick", (event) => event.stopPropagation());
       const activeHex = normalizeHex(layer.activeHex) || DEFAULT_PAINT_HEX;
@@ -468,8 +733,7 @@ function renderLayers(preserveScroll = true) {
       } else if (state.section === "floors" && !layer.visible) {
         setLayerVisibility(layer, true);
       } else {
-        ui.layersHost.querySelectorAll(".layer-row.selected").forEach((item) => item.classList.remove("selected"));
-        row.classList.add("selected");
+        syncLayerRowStates();
       }
       refreshSelectionText();
     };
@@ -512,7 +776,12 @@ function syncLayerRowStates() {
     if (!stateCell) continue;
     stateCell.classList.toggle("on", layer.visible);
     stateCell.classList.toggle("off", !layer.visible);
-    stateCell.textContent = layer.visible ? "On" : "Off";
+    const toggle = stateCell.querySelector(".visibility-toggle");
+    if (toggle) {
+      toggle.title = layer.visible ? `Hide ${layer.displayName}` : `Show ${layer.displayName}`;
+      toggle.setAttribute("aria-label", toggle.title);
+      toggle.setAttribute("aria-pressed", String(layer.visible));
+    }
   }
 }
 
@@ -570,7 +839,7 @@ function setTeamColorsExpanded(expanded) {
   document.getElementById("teamColorsToggle").textContent = expanded ? "Hide Team Colors" : "Team Colors";
   requestAnimationFrame(fitColorEditorToViewport);
   if (expanded) {
-    renderPalette();
+    renderPopupPalette();
     requestAnimationFrame(() => {
       fitColorEditorToViewport();
       ui.paletteSearch.focus();
@@ -665,9 +934,18 @@ function paletteMatches(palette, color, query) {
   return paletteSearchTokens(query).every((word) => haystack.includes(word) || haystack.includes(word.replace(/[^a-z0-9]/g, "")));
 }
 
-function renderPalette() {
-  ui.paletteHost.innerHTML = "";
-  const query = ui.paletteSearch.value.trim();
+function activeColorLayer() {
+  const active = state.layersById.get(state.activeHexLayerId);
+  if (isColorableLayer(active)) return active;
+  const selected = state.layersById.get(state.selectedLayerId);
+  if (isColorableLayer(selected)) return selected;
+  return state.layers.find((layer) => layer.visible && isColorableLayer(layer))
+    || state.layers.find(isColorableLayer)
+    || null;
+}
+
+function renderPaletteInto(host, query, closeAfterSelection) {
+  host.innerHTML = "";
   const grouped = new Map();
   for (const palette of state.teamPalettes) {
     const colors = (palette.colors || []).filter((color) => paletteMatches(palette, color, query));
@@ -680,7 +958,7 @@ function renderPalette() {
     const title = document.createElement("div");
     title.className = "league-title";
     title.textContent = league;
-    ui.paletteHost.append(title);
+    host.append(title);
     for (const item of items.sort((a, b) => a.palette.team.localeCompare(b.palette.team))) {
       const details = document.createElement("details");
       details.className = "team-palette";
@@ -689,52 +967,96 @@ function renderPalette() {
       summary.textContent = query ? `${item.palette.team}  ${item.colors.length}/${item.palette.colors.length}` : `${item.palette.team}  ${item.palette.colors.length} colors`;
       const swatches = document.createElement("div");
       swatches.className = "swatches";
-      for (const color of item.colors) {
-        const button = document.createElement("button");
-        button.className = "swatch-button";
-        button.title = `${color.name} ${color.hex}`;
-        button.innerHTML = `<span class="swatch" style="background:${color.hex}"></span><span>${color.hex}</span>`;
-        button.addEventListener("click", () => {
-          const target = state.layersById.get(state.activeHexLayerId) || state.layersById.get(state.selectedLayerId);
-          if (target) {
-            applyHex(target, color.hex);
-            closeColorEditor();
-          }
-        });
-        swatches.append(button);
-      }
+      const populateSwatches = () => {
+        if (swatches.dataset.populated === "true") return;
+        swatches.dataset.populated = "true";
+        for (const color of item.colors) {
+          const button = document.createElement("button");
+          button.className = "swatch-button";
+          button.title = `${color.name} ${color.hex}`;
+          button.innerHTML = `<span class="swatch" style="background:${color.hex}"></span><span>${color.hex}</span>`;
+          button.addEventListener("click", () => {
+            const target = activeColorLayer();
+            if (target) {
+              applyHex(target, color.hex);
+              if (closeAfterSelection) closeColorEditor();
+            } else {
+              setStatus("Select a paint or line layer before applying a team color.");
+            }
+          });
+          swatches.append(button);
+        }
+      };
+      if (query) populateSwatches();
       details.append(summary, swatches);
       details.addEventListener("toggle", () => {
-        if (!details.open || query) return;
-        for (const other of ui.paletteHost.querySelectorAll("details.team-palette[open]")) {
+        if (!details.open) return;
+        populateSwatches();
+        if (query) return;
+        for (const other of host.querySelectorAll("details.team-palette[open]")) {
           if (other !== details) other.open = false;
         }
         requestAnimationFrame(() => details.scrollIntoView({ block: "nearest" }));
       });
-      ui.paletteHost.append(details);
+      host.append(details);
     }
   }
-  if (!ui.paletteHost.children.length) {
+  if (!host.children.length) {
     const empty = document.createElement("div");
     empty.className = "palette-empty";
     empty.textContent = "No team colors found.";
-    ui.paletteHost.append(empty);
+    host.append(empty);
   }
 }
 
+function renderPopupPalette() {
+  renderPaletteInto(ui.paletteHost, ui.paletteSearch.value.trim(), true);
+}
+
+function renderPaintPalette() {
+  renderPaletteInto(ui.paintPaletteHost, ui.paintPaletteSearch.value.trim(), false);
+  const target = activeColorLayer();
+  ui.paintPaletteTarget.textContent = target?.displayName || "Select a visible paint or line layer";
+}
+
 function refreshSelectionText() {
+  const floor = selectedFloorLayer();
+  ui.currentCourtName.textContent = floor?.displayName || "No court selected";
   if (state.section === "logos") {
     const logo = selectedLogo();
-    ui.selectedText.textContent = logo ? `Logo: ${logo.name}` : "Logo: No logo selected.";
-    return;
+    ui.selectedLabel.textContent = "Selected Logo";
+    ui.selectedText.textContent = logo?.name || "No logo selected";
+    ui.selectedCategory.textContent = logo ? "Logo layer" : "Import a logo to begin";
+    if (logo?.path) ui.selectedFloorImage.src = fileUrl(logo.path);
+    else ui.selectedFloorImage.removeAttribute("src");
+  } else {
+    ui.selectedLabel.textContent = "Selected Court";
+    ui.selectedText.textContent = floor?.displayName || "No court selected";
+    ui.selectedCategory.textContent = floor ? floorCategoryFor(floor) : state.floorLibraryName;
+    const image = floorImageFor(floor);
+    if (image) ui.selectedFloorImage.src = fileUrl(image.previewPath || image.path);
+    else ui.selectedFloorImage.removeAttribute("src");
   }
-  const layer = state.layersById.get(state.selectedLayerId);
-  ui.selectedText.textContent = layer ? `Court: ${layer.displayName}` : "Court: No court selected.";
+  ui.selectedFloorFallback.classList.toggle("hidden", Boolean(ui.selectedFloorImage.getAttribute("src")));
+  const colorLayer = activeColorLayer();
+  ui.paintPaletteTarget.textContent = colorLayer?.displayName || "Select a visible paint or line layer";
+}
+
+function setPaintTab(tab) {
+  state.paintTab = tab === "colors" ? "colors" : "layers";
+  ui.paintLayersView.classList.toggle("hidden", state.paintTab !== "layers");
+  ui.paintColorsView.classList.toggle("hidden", state.paintTab !== "colors");
+  document.querySelectorAll(".inspector-tab").forEach((button) => {
+    const active = button.dataset.paintTab === state.paintTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  if (state.paintTab === "colors") renderPaintPalette();
 }
 
 function renderSection() {
   const copy = {
-    floors: ["Court Floors", `Choose one court floor at a time from ${state.floorLibraryName} (${state.floorLibraryCount} available).`],
+    floors: ["Court Floors", `Choose a court floor from ${state.floorLibraryName} (${state.floorLibraryCount} available), or add your own custom floor.`],
     paint: ["Paint & Lines", "Choose paint and line layers, then apply exact colors or team palette swatches."],
     logos: ["Logos", "Import logo images, then place them on the court preview."],
     export: ["Export", "Refresh, save, and export the current court preview."],
@@ -746,16 +1068,55 @@ function renderSection() {
   ui.layersPanel.classList.toggle("hidden", !["floors", "paint"].includes(state.section));
   ui.logosPanel.classList.toggle("hidden", state.section !== "logos");
   ui.exportPanel.classList.toggle("hidden", state.section !== "export");
-  ui.panelTools.classList.toggle("hidden", state.section !== "floors");
-  ui.floorSearch.classList.toggle("hidden", state.section !== "floors");
-  ui.addFloorButton.classList.toggle("hidden", state.section !== "floors");
-  ui.layerNameHeader.textContent = state.section === "paint" ? "Layer / section" : "Court";
-  ui.layerColorHeader.classList.toggle("hidden", state.section !== "paint");
+  ui.floorBrowser.classList.toggle("hidden", state.section !== "floors");
+  ui.paintBrowser.classList.toggle("hidden", state.section !== "paint");
+  ui.currentCourtButton.classList.toggle("hidden", state.section === "floors");
   document.querySelectorAll(".nav").forEach((button) => button.classList.toggle("active", button.dataset.section === state.section));
-  renderLayers();
-  renderPalette();
+  if (state.section === "floors") {
+    ui.floorSort.value = state.floorSort;
+    renderFloorFilters();
+    renderFloorGallery();
+  }
+  if (state.section === "paint") {
+    setPaintTab(state.paintTab);
+    renderLayers();
+  }
   renderLogos();
   refreshSelectionText();
+}
+
+function updatePreviewTransform() {
+  const viewScale = state.previewView === "full" ? 1 : 1.55;
+  const scale = viewScale * (state.previewZoom / 100);
+  ui.previewImage.style.transform = `scale(${scale})`;
+  ui.previewImage.style.transformOrigin = state.previewView === "left"
+    ? "left center"
+    : state.previewView === "right"
+      ? "right center"
+      : "center";
+  ui.previewZoomLabel.textContent = `${state.previewZoom}%`;
+  document.querySelectorAll(".preview-view").forEach((button) => {
+    button.classList.toggle("active", button.dataset.previewView === state.previewView);
+  });
+}
+
+function setPreviewView(view) {
+  state.previewView = ["left", "right"].includes(view) ? view : "full";
+  updatePreviewTransform();
+}
+
+function changePreviewZoom(amount) {
+  state.previewZoom = Math.max(70, Math.min(180, state.previewZoom + amount));
+  updatePreviewTransform();
+}
+
+async function togglePreviewFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await ui.previewCard.requestFullscreen();
+  } catch (error) {
+    setStatus(`Fullscreen preview failed: ${error.message}`);
+  }
 }
 
 function renderRequest(outputPath = null) {
@@ -980,6 +1341,7 @@ async function addCustomFloor() {
     state.layersById.set(layer.id, layer);
     state.visibility[layer.id] = false;
     state.customFloorImages.push(response.image);
+    state.floorImagesById.set(layer.id, response.image);
     const parent = layerParent(layer);
     if (parent) {
       parent.children.push(layer);
@@ -1176,8 +1538,34 @@ function wireEvents() {
       renderSection();
     });
   });
-  ui.floorSearch.addEventListener("input", () => renderLayers(false));
-  ui.paletteSearch.addEventListener("input", renderPalette);
+  ui.floorSearch.addEventListener("input", () => renderFloorGallery(false));
+  ui.layerSearch.addEventListener("input", () => renderLayers(false));
+  ui.paletteSearch.addEventListener("input", renderPopupPalette);
+  ui.paintPaletteSearch.addEventListener("input", renderPaintPalette);
+  ui.floorSort.addEventListener("change", () => {
+    state.floorSort = ui.floorSort.value;
+    localStorage.setItem("courtCreator.floorSort", state.floorSort);
+    renderFloorGallery(false);
+  });
+  ui.floorGridButton.addEventListener("click", () => setFloorView("grid"));
+  ui.floorListButton.addEventListener("click", () => setFloorView("list"));
+  document.querySelectorAll(".inspector-tab").forEach((button) => {
+    button.addEventListener("click", () => setPaintTab(button.dataset.paintTab));
+  });
+  document.querySelectorAll(".preview-view").forEach((button) => {
+    button.addEventListener("click", () => setPreviewView(button.dataset.previewView));
+  });
+  document.getElementById("zoomOutButton").addEventListener("click", () => changePreviewZoom(-10));
+  document.getElementById("zoomInButton").addEventListener("click", () => changePreviewZoom(10));
+  document.getElementById("fullscreenPreviewButton").addEventListener("click", togglePreviewFullscreen);
+  ui.currentCourtButton.addEventListener("click", () => {
+    state.section = "floors";
+    renderSection();
+  });
+  ui.selectedFloorImage.addEventListener("error", () => {
+    ui.selectedFloorImage.removeAttribute("src");
+    ui.selectedFloorFallback.classList.remove("hidden");
+  });
   document.getElementById("colorEditorClose").addEventListener("click", closeColorEditor);
   document.getElementById("colorEditorApply").addEventListener("click", applyColorEditorHex);
   document.getElementById("teamColorsToggle").addEventListener("click", () => {
@@ -1229,5 +1617,7 @@ function wireEvents() {
   }
 }
 
+window.applyIcons();
+updatePreviewTransform();
 wireEvents();
 restoreStartup();
