@@ -28,7 +28,7 @@ internal static partial class Program
             focused=null;typeof(StudioWindow).GetMethod("FinishRename",flags)!.Invoke(window,[false]);
             await window.NewProjectAsync();await window.AddLogoAsync(logo,"First");window.SwitchSection("logos");
             var layer=window.Canvas.SelectedLayer!;layer.X=1700;layer.Y=1000;layer.Width=900;layer.Height=700;
-            typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1440,900);
+            typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,1440,900);
             foreach(var name in new[]{"_undo","_redo"})((IList)typeof(StudioWindow).GetField(name,flags)!.GetValue(window)!).Clear();
         }
         TextBox Edit(string kind,string text)

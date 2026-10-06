@@ -60,7 +60,7 @@ internal static partial class Program
         var anchor=layer.Center+TransformGeometry.Rotate(new Vector(-layer.Width/2,-layer.Height/2),layer.Rotation);
         resize=new ArtworkResizeGesture(original,corner,2,true);var result=resize.Update(corner+TransformGeometry.Rotate(new Vector(200,80),layer.Rotation),true,original);var newCenter=new Point(result.X+result.Width/2,result.Y+result.Height/2);var newAnchor=newCenter+TransformGeometry.Rotate(new Vector(-result.Width/2,-result.Height/2),result.Rotation);Assert((newAnchor-anchor).Length<.000001,"Resize did not retain the opposite rotated corner.");
         layer.X=2500.123456789;layer.Y=1111.987654321;window.SwitchSection("paint");window.SwitchSection("logos");Layout(window,1000,680);
-        ((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1000,680);
+        window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,1000,680);
         var xField=Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).First(box=>Equals(box.Tag,"X"));var exact=layer.X;
         xField.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice,0,xField,window){RoutedEvent=Keyboard.LostKeyboardFocusEvent});Assert(layer.X==exact,"Rounded display degraded stored precision.");
         foreach(var size in new[]{(1440,900),(1000,680)}){window.SwitchSection("logos");Snapshot(window,Path.Combine(output,$"compact-logos-one-{size.Item1}.png"),size.Item1,size.Item2);var list=(ListBox)window.FindName("LogoList");Assert(list.ActualHeight==224,"Fixed logo list changed height.");}

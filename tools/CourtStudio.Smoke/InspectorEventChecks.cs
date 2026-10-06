@@ -30,7 +30,7 @@ internal static partial class Program
         {
             await window.NewProjectAsync();await window.AddLogoAsync(file,"First");await window.AddLogoAsync(file,"Second");
             window.Canvas.Layers[0].X=1400;window.Canvas.Layers[0].Y=1000;window.Canvas.Layers[1].X=5200;window.Canvas.Layers[1].Y=2400;
-            window.SwitchSection("logos");((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;
+            window.SelectCanvasTool(ArtworkTool.Transform);
             window.Canvas.SelectedLayer=window.Canvas.Layers[0];Layout(window,1440,900);
             foreach(var name in new[]{"_undo","_redo"})((IList)typeof(StudioWindow).GetField(name,flags)!.GetValue(window)!).Clear();
         }

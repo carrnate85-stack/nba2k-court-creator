@@ -155,7 +155,33 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.6 source verification, 2026-10-06:
+Version 1.6.7, audited 2026-10-06:
+
+- Removed the large sidebar transform section. Selected logos in Transform
+  (Ctrl+T) show one compact X/Y/W/H/degree strip above the court preview; the
+  aspect lock sits between W/H. Other tools, deselection, Paint and New hide it.
+  Sidebar height and action visibility remain unchanged in compact windows.
+- The existing dedicated rotation handle remains; outside-border rotation and
+  Enter/Escape multi-operation sessions are separate shared Canvas tools work.
+- Focused action/layout, live transforms, inspector ownership, save/reopen,
+  edit-boundary, export and close/recovery checks passed with Core/WPF 0.7.0.
+  Live angle updates retain control identity and one-step undo/redo. Real
+  8192 x 4096 PNG/IFF exports include focused transform/color values correctly.
+- Compact/full-size light/dark and 100-200% DPI off-screen renders inspected;
+  artwork, color-picker and shared-control integration gates passed. Runtime
+  readiness reports ready, and subsequent sync skips rebuilding.
+- Temporary package audit passed: 47 files, 7,374,124 expanded bytes, 3,482,002
+  archive bytes; tampering rejected, rollback and seven personal files preserved,
+  original source unchanged and temporary installation removed. Launcher build
+  updated without starting the app; no public binary release uploaded.
+
+Evidence is under `outputs/contextual-transform-final`,
+`outputs/contextual-transform-live`, `outputs/contextual-transform-inspector`,
+`outputs/contextual-transform-save`, `outputs/contextual-transform-boundaries`,
+`outputs/contextual-transform-export` and `outputs/contextual-transform-close`.
+Real native mouse/focus and in-game loading remain manual acceptance checks.
+
+Version 1.6.6 source verification, 2026-10-06 (historical; superseded by 1.6.7):
 
 - Removed Edit from the logo placement action bar and reclaimed its column;
   Flip, Mirror, Copy/Delete icons and Up/Down order buttons remain.
@@ -166,7 +192,7 @@ Version 1.6.6 source verification, 2026-10-06:
   Desktop publication requires Court Creator to be closed; the updater rejects
   replacing the running app, preserving the installed 1.6.5 build.
 
-Version 1.6.5, audited 2026-10-06 (installed baseline):
+Version 1.6.5, audited 2026-10-06 (historical baseline):
 
 - Logo panel has clearer headings, a live image-layer count, outlined rows,
   Copy/Delete icons, direct Edit and guarded Up/Down order buttons. Position,

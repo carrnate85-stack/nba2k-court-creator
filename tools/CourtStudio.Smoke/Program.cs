@@ -39,6 +39,14 @@ internal static partial class Program
                     try { await logoWindow.InitializeAsync();await CheckLogoCanvasStyle(logoWindow,output); }
                     finally { logoWindow.Close(); }
                 }
+                else if (args.Contains("--live-transforms"))
+                {
+                    output ??= "outputs/live-transform-check";
+                    Directory.CreateDirectory(output);
+                    var transformWindow=new StudioWindow(true);
+                    try { await transformWindow.InitializeAsync();await CheckLiveResize(transformWindow,output); }
+                    finally { transformWindow.Close(); }
+                }
                 else if (args.Contains("--shared-controls"))
                 {
                     output ??= "outputs/shared-controls-check";

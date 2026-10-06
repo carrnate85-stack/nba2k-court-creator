@@ -26,20 +26,30 @@ bottom-first list: up toward the back, down toward the front, with disabled end
 buttons and one undo step per reorder.
 
 The panel shows an Image Layers heading and live count, outlined selected rows,
-and an Add Image primary action. Position, Size and Rotation have separate
-compact boxes; the aspect lock lives inside Size. Alignment controls are removed.
-The existing central Canvas theme remains authoritative in light and dark modes.
+and an Add Image primary action. Numeric transforms no longer occupy the sidebar.
+Ctrl+T or the Transform tool reveals a slim options strip above the court preview:
+X/Y position, W/H in texture pixels, an aspect lock between W/H, and rotation in
+degrees. Values update live during move, resize and rotation gestures, without
+rebuilding controls or adding preview history. Move/Hand, deselection, another
+section or New hides the strip. Sidebar height stays unchanged. Alignment controls
+are removed; the central Canvas palette remains authoritative in light/dark modes.
+
+Rotation still uses Court Creator's dedicated top handle or the degree field;
+this layout update does not implement Photoshop's outside-border rotation gesture
+or a multi-operation Enter/Escape transform session. Those behaviors belong in
+the shared Canvas tools, exposed for the court placement canvas to reuse.
 
 Each edit uses one whole-court undo step and the existing live preview. Menus
 respect selection and document-mutation guards. The focused `--logo-actions`
 check covers both axes, source preservation, exact undo/redo, portable save/reopen,
-capacity, order guards, absence of an Edit button, layer counts, reachable transform boxes and light/dark
+capacity, order guards, absence of an Edit button, layer counts, contextual transform visibility and light/dark
 compact layout; gesture and keyboard checks also cover
 vertical flipping, committed poses and cancellation-time guards. These are
 off-screen checks, not native popup mouse/focus automation.
 
 ```powershell
 dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/logo-actions-check --logo-actions
+dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/live-transform-check --live-transforms
 ```
 
 ## Shared Controls and Images

@@ -14,7 +14,7 @@ internal static partial class Program
 {
     private static async Task CheckLiveResize(StudioWindow window,string output)
     {
-        await window.NewProjectAsync();window.SwitchSection("logos");((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1440,900);
+        await window.NewProjectAsync();window.SwitchSection("logos");Layout(window,1440,900);
         foreach(var (layoutWidth,layoutHeight,sidebar) in new[]{(1440,900,400d),(1000,680,400d),(1440,900,400d)})
         {
             Layout(window,layoutWidth,layoutHeight);var column=(ColumnDefinition)window.FindName("InspectorWidth");column.Width=new GridLength(sidebar);((FrameworkElement)window.Content).UpdateLayout();
@@ -35,12 +35,12 @@ internal static partial class Program
         void Flush()=>frame.Invoke(window,[null,EventArgs.Empty]);
         TextBox Input(string tag)=>Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Single(box=>Equals(box.Tag,tag));
         void AssertFields(ArtworkLayer layer)
-        {foreach(var (key,value) in new[]{("X",layer.X),("Y",layer.Y),("Width",layer.Width),("Height",layer.Height)})Assert(Input(key).Text==value.ToString("0.##",CultureInfo.InvariantCulture),$"Live {key} is stale.");}
+        {foreach(var (key,value) in new[]{("X",layer.X),("Y",layer.Y),("Width",layer.Width),("Height",layer.Height),("Rotation (°)",layer.Rotation)})Assert(Input(key).Text==value.ToString("0.##",CultureInfo.InvariantCulture),$"Live {key} is stale.");}
         int frames=0,updates=0,textChanges=0;var frameMs=0d;
         foreach(var (rotation,zoom,locked) in new[]{(0d,1d,true),(37d,2.5,true),(81d,.7,false)})
         {
             var layer=window.Canvas.Layers[0];layer.X=2400.123456789;layer.Y=1400.987654321;layer.Width=1800.123456789;layer.Height=1200.876543219;layer.Rotation=rotation;layer.ScaleLocked=locked;
-            window.Canvas.SelectedLayer=layer;window.SwitchSection("paint");window.SwitchSection("logos");Layout(window,1440,900);window.Canvas.Fit();window.Canvas.ChangeZoom(zoom);window.Canvas.Focus();
+            window.Canvas.SelectedLayer=layer;window.SwitchSection("paint");window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,1440,900);window.Canvas.Fit();window.Canvas.ChangeZoom(zoom);window.Canvas.Focus();
             var focusBefore = Keyboard.FocusedElement;
             if (_allowNativeWindows) Assert(ReferenceEquals(focusBefore, window.Canvas), "Canvas did not acquire native keyboard focus.");
             var oldInputs=new[]{Input("X"),Input("Y"),Input("Width"),Input("Height")};foreach(var input in oldInputs)input.TextChanged+=(_,_)=>textChanges++;
@@ -62,6 +62,17 @@ internal static partial class Program
         // Move uses the same frame-coalesced X/Y refresh, with precise cancel and no extra transaction.
         var selected=window.Canvas.SelectedLayer!;var moveBefore=selected.Capture();var move=window.Canvas.ToScreen(selected.Center);
         window.Canvas.BeginArtworkGesture(move);window.Canvas.ContinueArtworkGesture(move+new Vector(60,-25));Flush();AssertFields(selected);window.Canvas.CancelGesture();AssertFields(selected);Assert(selected.Capture()==moveBefore,"Move cancel failed.");
+        window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,1440,900);
+        var rotationBefore=selected.Capture();var rotationHistory=undo.Count;
+        var rotationOffset=new Vector(0,-selected.Height/2-28/window.Canvas.Scale);
+        var rotationStart=window.Canvas.ToScreen(selected.Center+TransformGeometry.Rotate(rotationOffset,selected.Rotation));
+        Assert(window.Canvas.BeginArtworkGesture(rotationStart),"Rotation handle did not start.");
+        window.Canvas.ContinueArtworkGesture(window.Canvas.ToScreen(selected.Center+TransformGeometry.Rotate(rotationOffset,selected.Rotation+35)));
+        Flush();AssertFields(selected);var rotationAfter=selected.Capture();
+        Assert(rotationAfter.Rotation!=rotationBefore.Rotation && undo.Count==rotationHistory,"Rotation preview failed or added history.");
+        window.Canvas.CommitArtworkGesture();Assert(undo.Count==rotationHistory+1,"Rotation is not one undo step.");
+        await window.UndoAsync();Assert(window.Canvas.SelectedLayer!.Capture()==rotationBefore,"Rotation undo differs.");
+        await window.UndoAsync(true);selected=window.Canvas.SelectedLayer!;Assert(selected.Capture()==rotationAfter,"Rotation redo differs.");AssertFields(selected);
         var width=Input("Width");var height=Input("Height");var precise=selected.Width;
         width.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice,0,width,height){RoutedEvent=Keyboard.LostKeyboardFocusEvent});Assert(selected.Width==precise,"Readout rounded stored precision on blur.");
         selected.ScaleLocked=true;var boundedBefore=selected.Capture();var requestedScale=1000.123456789/boundedBefore.Width;
@@ -82,6 +93,6 @@ internal static partial class Program
         for(var i=0;i<window.Canvas.Layers.Count;i++){var logo=window.Canvas.Layers[i];logo.X=1900+i*1200;logo.Y=1600;logo.Width=900;logo.Height=585;logo.Rotation=i*12;}window.Canvas.SelectedLayer=null;window.Canvas.SelectedLayer=window.Canvas.Layers[0];window.Canvas.Fit();AssertFields(window.Canvas.SelectedLayer);
         window.SwitchSection("logos");Snapshot(window,Path.Combine(output,"live-logo-fields.png"),1440,900);Snapshot(window,Path.Combine(output,"live-logo-fields-compact.png"),1000,680);
         File.WriteAllText(Path.Combine(output,"live-resize-metrics.json"),new JsonObject{["syntheticPointerUpdates"]=updates,["syntheticFrameFlushes"]=frames,["fourReadoutTextChanges"]=textChanges,["frameFlushTotalMs"]=frameMs,["actualMouseOrFrameLatencyMeasured"]=false,["physicalDpiSwitchTested"]=false}.ToJsonString());
-        await window.NewProjectAsync();Console.WriteLine("PASS live fields: coalesced X/Y/W/H; inspector identity/focus; precise typed values; locked/unlocked/rotated/zoomed/Shift long drags; single undo/redo; cancel; exact Canvas eye dimensions/placement/hidden state, selection preserved; hidden save/open; guides/snapping disabled.");
+        await window.NewProjectAsync();Console.WriteLine("PASS live fields: coalesced X/Y/W/H/rotation; contextual bar identity/focus; precise typed values; locked/unlocked/rotated/zoomed/Shift long drags; rotation live readout + single undo/redo; cancel; exact Canvas eye dimensions/placement/hidden state, selection preserved; hidden save/open; guides/snapping disabled.");
     }
 }

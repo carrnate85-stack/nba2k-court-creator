@@ -26,7 +26,7 @@ internal static partial class Program
         {
             await window.NewProjectAsync();await window.AddLogoAsync(file,"Boundary logo");window.SwitchSection("logos");
             var layer=window.Canvas.SelectedLayer!;layer.X=1700;layer.Y=1000;layer.Width=900;layer.Height=700;layer.Rotation=23;
-            ((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1440,900);
+            window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,1440,900);
             foreach(var name in new[]{"_undo","_redo"})((IList)typeof(StudioWindow).GetField(name,flags)!.GetValue(window)!).Clear();
         }
         void Opacity()

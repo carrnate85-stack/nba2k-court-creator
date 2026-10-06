@@ -149,16 +149,18 @@ public partial class StudioWindow
             var revision = ++_logoInspectorRevision;
             var logo = CourtCanvas.SelectedLayer; LogoList.SelectedItem = logo; LogoProperties.Children.Clear();
             LogoOpacitySlider.IsEnabled=logo is not null; LogoOpacitySlider.Value=logo?.Opacity ?? 100; LogoOpacityValue.Text=$"{logo?.Opacity ?? 100:0}%";
-            if (logo is null)
-            { LogoProperties.Children.Add(new TextBlock { Text = "Import a logo to place and edit it on the court.", FontSize = 11, Margin = new Thickness(4), TextWrapping = TextWrapping.Wrap }); RefreshToolState(); return; }
+            if (logo is null || !CourtCanvas.Layers.Contains(logo))
+            { RefreshToolState(); return; }
             bool CurrentInspector() => revision == _logoInspectorRevision && ReferenceEquals(logo, CourtCanvas.SelectedLayer) && CourtCanvas.Layers.Contains(logo);
             var numericFields = new List<(TextBox Input, Func<double> Get)>();
             var displays = new Dictionary<TextBox,string>();
             TextBox Field(Panel parent, string label, Func<double> getter, Action<double> setter, string? fieldKey=null)
             {
-                var stack = new StackPanel { Margin = new Thickness(0, 0, 6, 0) };
-                var caption=new TextBlock { Text = label, FontSize = 12, Margin = new Thickness(0,0,0,4) };caption.SetResourceReference(TextBlock.ForegroundProperty,"MutedTextBrush");stack.Children.Add(caption);
-                var input = new TextBox { Text = getter().ToString("0.##", CultureInfo.InvariantCulture), Tag = fieldKey ?? label, FontSize = 13, MinHeight = 28, Padding = new Thickness(6,4,6,4) };
+                var stack = new StackPanel { Orientation=Orientation.Horizontal,Margin = new Thickness(0, 0, 10, 0),VerticalAlignment=VerticalAlignment.Center };
+                var caption=new TextBlock { Text = label, FontSize = 12, Margin = new Thickness(0,0,5,0),VerticalAlignment=VerticalAlignment.Center };caption.SetResourceReference(TextBlock.ForegroundProperty,"MutedTextBrush");stack.Children.Add(caption);
+                var key=fieldKey ?? label;
+                var input = new TextBox { Text = getter().ToString("0.##", CultureInfo.InvariantCulture), Tag = key, FontSize = 12, Width=64, Height=28, Padding = new Thickness(6,4,6,4),ToolTip=key=="Rotation (°)"?"Rotation in degrees":key+" in texture pixels" };
+                System.Windows.Automation.AutomationProperties.SetName(input,key);
                 displays[input]=input.Text; stack.Children.Add(input); parent.Children.Add(stack); numericFields.Add((input,getter));
                 bool Apply(bool strict=false)
                 {
@@ -176,15 +178,7 @@ public partial class StudioWindow
                 input.LostKeyboardFocus += (_,_)=>Apply();input.KeyDown+=(_,e)=>{if(!CanChangeDocument || !CurrentInspector())return;if(e.Key==Key.Enter){Apply();e.Handled=true;}else if(e.Key==Key.Escape){input.Text=displays[input];e.Handled=true;}};
                 return input;
             }
-            System.Windows.Controls.Primitives.UniformGrid Group(string title,int columns=2)
-            {
-                var group=new StackPanel();
-                group.Children.Add(new TextBlock { Text=title, FontSize=14,FontWeight=FontWeights.SemiBold,Margin=new Thickness(0,0,0,6) });
-                var fields=new System.Windows.Controls.Primitives.UniformGrid { Columns=columns };group.Children.Add(fields);
-                var frame=new Border { Tag=title,Child=group,Padding=new Thickness(10),Margin=new Thickness(0,0,0,8),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(6) };
-                frame.SetResourceReference(Border.BackgroundProperty,"PanelBrush");frame.SetResourceReference(Border.BorderBrushProperty,"BorderBrush");LogoProperties.Children.Add(frame);return fields;
-            }
-            var position=Group("Position");Field(position,"X",()=>logo.X,value=>logo.X=value);Field(position,"Y",()=>logo.Y,value=>logo.Y=value);
+            Field(LogoProperties,"X",()=>logo.X,value=>logo.X=value);Field(LogoProperties,"Y",()=>logo.Y,value=>logo.Y=value);
             void Resize(double value,bool width)
             {
                 if(!logo.ScaleLocked){if(width)logo.Width=value;else logo.Height=value;return;}
@@ -195,26 +189,26 @@ public partial class StudioWindow
                 var newHeight=!width && scale==requestedScale?value:dimensions.Height;
                 logo.Width=newWidth;logo.Height=newHeight;
             }
-            var size=Group("Size");Field(size,"Width",()=>logo.Width,value=>Resize(value,true));Field(size,"Height",()=>logo.Height,value=>Resize(value,false));
+            Field(LogoProperties,"W",()=>logo.Width,value=>Resize(value,true),"Width");
             _refreshLiveLogoFields=()=>
             {
                 if(!CurrentInspector())return;
                 foreach(var field in numericFields)
                 {
-                    if(field.Input.Tag is not string key || key is not ("X" or "Y" or "Width" or "Height") || field.Input.IsKeyboardFocusWithin)continue;
+                    if(field.Input.IsKeyboardFocusWithin)continue;
                     var text=field.Get().ToString("0.##",CultureInfo.InvariantCulture);
                     if(field.Input.Text!=text)field.Input.Text=text;
                     displays[field.Input]=text;
                 }
             };
-            var lockRow=new StackPanel { Orientation=Orientation.Horizontal,Margin=new Thickness(0,8,0,0) };
-            var lockButton=new Button { Style=(Style)FindResource("CanvasActionButton"),Width=28,Height=28,Padding=new Thickness(6),ToolTip="Aspect ratio: proportional by default. Hold Shift to temporarily invert the lock." };
-            var lockIcon=new System.Windows.Shapes.Path { Stroke=(Brush)FindResource("TextBrush"),StrokeThickness=1.5,Data=Geometry.Parse("M4,10 H18 V21 H4 Z M7,10 V6 A4,4 0 0 1 15,6 V10") };
+            var lockButton=new Button { Style=(Style)FindResource("CanvasActionButton"),Width=28,Height=28,Padding=new Thickness(6),Margin=new Thickness(0,0,10,0),ToolTip=logo.ScaleLocked?"Aspect ratio locked; click to unlock":"Aspect ratio unlocked; click to lock" };
+            var lockIcon=new System.Windows.Shapes.Path { Stroke=(Brush)FindResource("TextBrush"),StrokeThickness=1.5,Data=Geometry.Parse(logo.ScaleLocked?"M4,10 H18 V21 H4 Z M7,10 V6 A4,4 0 0 1 15,6 V10":"M4,10 H18 V21 H4 Z M7,10 V6 A4,4 0 0 1 15,6 V7") };
             lockButton.Content=new Viewbox { Width=16,Height=16,Child=lockIcon };
-            var lockText=new TextBlock { Text=logo.ScaleLocked?"Aspect ratio locked":"Free stretch",FontSize=11,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(6,0,0,0) };
+            System.Windows.Automation.AutomationProperties.SetName(lockButton,"Lock aspect ratio");
             lockButton.SetResourceReference(Control.BackgroundProperty,logo.ScaleLocked?"AccentDarkBrush":"PanelBrush");
-            lockButton.Click+=(_,_)=>{if(!CanChangeDocument || !CurrentInspector())return;Change(()=>{if(CurrentInspector())logo.ScaleLocked=!logo.ScaleLocked;});if(CurrentInspector())RefreshLogoInspector();};lockRow.Children.Add(lockButton);lockRow.Children.Add(lockText);((StackPanel)size.Parent).Children.Add(lockRow);
-            var rotation=Group("Rotation",1);Field(rotation,"Degrees",()=>logo.Rotation,value=>logo.Rotation=value,"Rotation (°)");
+            lockButton.Click+=(_,_)=>{if(!CanChangeDocument || !CurrentInspector())return;Change(()=>{if(CurrentInspector())logo.ScaleLocked=!logo.ScaleLocked;});if(CurrentInspector())RefreshLogoInspector();};LogoProperties.Children.Add(lockButton);
+            Field(LogoProperties,"H",()=>logo.Height,value=>Resize(value,false),"Height");
+            Field(LogoProperties,"°",()=>logo.Rotation,value=>logo.Rotation=value,"Rotation (°)");
             RefreshToolState();
         }
         finally { _syncing=false; }

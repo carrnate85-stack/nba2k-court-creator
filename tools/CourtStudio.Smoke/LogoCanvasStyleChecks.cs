@@ -12,7 +12,7 @@ internal static partial class Program
     private static async Task CheckLogoCanvasStyle(StudioWindow window,string output)
     {
         await window.NewProjectAsync();window.SwitchSection("logos");
-        var details=(Expander)window.FindName("LogoDetailsExpander");details.IsExpanded=false;
+        var options=(Border)window.FindName("TransformOptionsBar");
         var list=(ListBox)window.FindName("LogoList");var actions=(FrameworkElement)window.FindName("LogoActions");
         var slider=(Slider)window.FindName("LogoOpacitySlider");
         var file=Path.Combine(output,"canvas-style-logo.png");WriteLogoExample(file);
@@ -27,8 +27,8 @@ internal static partial class Program
                 var current=actions.TransformToAncestor(root).TransformBounds(new Rect(actions.RenderSize));
                 Assert(list.ActualHeight==224 && current==baseline,"Layer count shifts fixed list/actions.");
                 Assert(list.BorderThickness==new Thickness(1) && ((SolidColorBrush)list.Background).Color==((SolidColorBrush)window.FindResource("PanelBrush")).Color,"List border/background differs from Canvas.");
-                Assert(details.TransformToAncestor(root).Transform(new Point()).Y>current.Bottom,"Details overlap layer actions.");
-                Assert(!details.IsExpanded && details.Visibility == Visibility.Visible && (!_allowNativeWindows || details.IsVisible),"Details not collapsed/visible.");Assert(((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight<1,$"Collapsed panel unnecessarily scrolls at {width} / {count}: {((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight}, viewport {((ScrollViewer)window.FindName("LogoPropertiesScroll")).ViewportHeight}, extent {((ScrollViewer)window.FindName("LogoPropertiesScroll")).ExtentHeight}.");
+                Assert(options.Visibility==Visibility.Collapsed && window.FindName("LogoDetailsExpander") is null,"Default logo workflow shows transform details.");
+                Assert(((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight<1,"Logo panel unnecessarily scrolls without transform details.");
                 Assert(slider.IsEnabled==(count>0),"Opacity empty/selected state wrong.");
                 Assert(((TextBlock)window.FindName("LogoLayerCount")).Text==(count==1?"1 layer":$"{count} layers"),"Layer count does not track imports/New.");
                 foreach(var item in Descendants<ListBoxItem>(list)){var row=Descendants<Border>(item).First(border=>border.Name=="LayerRow");Assert(row.BorderThickness==new Thickness(1)&&row.CornerRadius==new CornerRadius(4)&&row.Padding==new Thickness(6,4,6,4),"Reference-inspired row outline/padding differs.");}
@@ -43,22 +43,39 @@ internal static partial class Program
             typeof(StudioWindow).GetMethod("FinishLogoOpacity",flags)!.Invoke(window,null);
             Assert(undo.Count==history+1,"Opacity gesture isn't one undo action.");
             await window.UndoAsync();Assert(window.Canvas.SelectedLayer!.Opacity==before && slider.Value==before,"Opacity undo/control sync failed.");await window.UndoAsync(true);Assert(window.Canvas.Layers.Single(item=>item.Id==logo.Id).Opacity==59.75,"Opacity redo failed.");
-            window.Canvas.SelectedLayer=window.Canvas.Layers.Single(item=>item.Id==logo.Id);details.IsExpanded=true;Layout(window,width,height);RenderDpi(window,Path.Combine(output,$"canvas-logos-details-{width}.png"),width,height,1);
-            Assert(Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Any(box=>Equals(box.Tag,"Width")),"Transform fields missing after expansion.");
-            var properties=(StackPanel)window.FindName("LogoProperties");var groups=properties.Children.OfType<Border>().ToArray();
-            Assert(groups.Select(group=>group.Tag).SequenceEqual(new[]{"Position","Size","Rotation"})
-                && groups.All(group=>group.BorderThickness==new Thickness(1)&&group.CornerRadius==new CornerRadius(6)),"Position/Size/Rotation are not separate compact boxes.");
-            Assert(!Descendants<ComboBox>(properties).Any() && !Descendants<Button>(properties).Any(button=>Equals(button.Content,"Align")),"Alignment controls remain visible.");
-            Assert(Descendants<Button>(groups[1]).Single(button=>button.Content is Viewbox) is not null,"Aspect lock is not inside Size.");
-            var scroll=(ScrollViewer)window.FindName("LogoPropertiesScroll");scroll.ScrollToBottom();Layout(window,width,height);
-            var rotationBounds=groups[2].TransformToAncestor(scroll).TransformBounds(new Rect(groups[2].RenderSize));
-            Assert(rotationBounds.Top>=0 && rotationBounds.Bottom<=scroll.ActualHeight+1,"Rotation box cannot be fully reached by scrolling.");
-            RenderDpi(window,Path.Combine(output,$"canvas-logos-details-bottom-{width}.png"),width,height,1);
-            StudioTheme.Apply(true);typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);
-            scroll.ScrollToBottom();Layout(window,width,height);RenderDpi(window,Path.Combine(output,$"canvas-logos-details-dark-{width}.png"),width,height,1);
-            StudioTheme.Apply(false);typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);scroll.ScrollToTop();
-            details.IsExpanded=false;Layout(window,width,height);foreach(var scale in new[]{1d,1.25,1.5,2d})RenderDpi(window,Path.Combine(output,$"canvas-logos-dpi-{width}-{scale:0.##}.png"),width,height,scale);await window.NewProjectAsync();window.SwitchSection("logos");
+            window.Canvas.SelectedLayer=window.Canvas.Layers.Single(item=>item.Id==logo.Id);window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,width,height);
+            var properties=(StackPanel)window.FindName("LogoProperties");
+            var inputs=Descendants<TextBox>(properties).ToArray();
+            Assert(options.Visibility==Visibility.Visible && options.IsEnabled && options.ActualHeight<=44
+                && properties.Orientation==Orientation.Horizontal && !properties.IsDescendantOf((DependencyObject)window.FindName("LogoPanel")),"Transform options are not a slim contextual bar outside the sidebar.");
+            Assert(((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight<1,"Transform mode reduced sidebar space and hid logo actions.");
+            Assert(inputs.Select(input=>input.Tag).SequenceEqual(new[]{"X","Y","Width","Height","Rotation (°)"})
+                && properties.Children.OfType<Border>().Count()==0 && !Descendants<ComboBox>(properties).Any(),"Transform fields retained large boxes or alignment controls.");
+            foreach(var input in inputs)
+            {
+                var bounds=input.TransformToAncestor(options).TransformBounds(new Rect(input.RenderSize));
+                Assert(bounds.Left>=0 && bounds.Right<=options.ActualWidth && bounds.Top>=0 && bounds.Bottom<=options.ActualHeight,"Transform field clipped or wrapped: "+input.Tag);
+            }
+            var sizeLock=Descendants<Button>(properties).Single(button=>button.Content is Viewbox);
+            var lockBounds=sizeLock.TransformToAncestor(options).TransformBounds(new Rect(sizeLock.RenderSize));
+            Assert(inputs[2].TransformToAncestor(options).Transform(new Point()).X<lockBounds.Left
+                && lockBounds.Right<inputs[3].TransformToAncestor(options).Transform(new Point()).X,"Aspect lock is not between W and H.");
+            var saving=typeof(StudioWindow).GetField("_saving",flags)!;saving.SetValue(window,true);
+            typeof(StudioWindow).GetMethod("RefreshMutationState",flags)!.Invoke(window,null);Layout(window,width,height);
+            Assert(!options.IsEnabled,"Options bar escaped save-time mutation guard.");saving.SetValue(window,false);
+            typeof(StudioWindow).GetMethod("RefreshMutationState",flags)!.Invoke(window,null);Layout(window,width,height);
+            Assert(options.IsEnabled,"Options bar stayed disabled after save.");
+            foreach(var dark in new[]{false,true})
+            {
+                StudioTheme.Apply(dark);typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);Layout(window,width,height);
+                foreach(var scale in new[]{1d,1.25,1.5,2d})RenderDpi(window,Path.Combine(output,$"canvas-transform-{(dark?"dark":"light")}-{width}-{scale:0.##}.png"),width,height,scale);
+            }
+            StudioTheme.Apply(false);window.SelectCanvasTool(ArtworkTool.Hand);Assert(options.Visibility==Visibility.Collapsed,"Hand tool left transform options visible.");
+            window.SelectCanvasTool(ArtworkTool.Transform);window.Canvas.SelectedLayer=null;Assert(options.Visibility==Visibility.Collapsed,"Deselection left transform options visible.");
+            window.Canvas.SelectedLayer=window.Canvas.Layers[0];Assert(options.Visibility==Visibility.Visible,"Selecting a logo did not restore active transform options.");
+            window.SwitchSection("paint");Assert(options.Visibility==Visibility.Collapsed,"Paint tab left transform options visible.");
+            await window.NewProjectAsync();window.SwitchSection("logos");Assert(options.Visibility==Visibility.Collapsed,"New document retained transform options.");
         }
-        Console.WriteLine("PASS Canvas logo panel: fixed 224-DIP list across 0–4 layers, live count and outlined rows, stable icon actions, separate Position/Size/Rotation boxes with lock inside Size; no Alignment; collapsed fit and reachable expanded controls; matching 400-DIP inspector/12-DIP gutters, opacity preview + one undo/redo; light/dark normal/compact renders.");
+        Console.WriteLine("PASS Canvas logo panel: fixed 224-DIP list across 0–4 layers, live count/outlined rows and icon actions; no sidebar transform section; slim X/Y/W/H/Angle bar only for selected logos in Transform, lock between W/H, save-time guards; no clipping at compact/full-size and 100–200% DPI light/dark renders; Hand/deselection/Paint/New hide options; opacity retains one undo/redo.");
     }
 }

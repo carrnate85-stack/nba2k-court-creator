@@ -43,7 +43,7 @@ internal static partial class Program
             try
             {
                 await window.InitializeAsync();await window.AddLogoAsync(logo,"First");window.SwitchSection("logos");var layer=window.Canvas.SelectedLayer!;layer.X=1700;layer.Y=1000;layer.Width=900;layer.Height=700;
-                typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1440,900);
+                typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);window.SelectCanvasTool(TwoK.Studio.ArtworkTool.Transform);Layout(window,1440,900);
                 ((DispatcherTimer)typeof(StudioWindow).GetField("_recoveryTimer",flags)!.GetValue(window)!).Stop();
                 foreach(var name in new[]{"_undo","_redo"})((IList)typeof(StudioWindow).GetField(name,flags)!.GetValue(window)!).Clear();
                 await window.QueueRecovery()!;await writer.FlushAsync();var bytes=File.ReadAllBytes(path);var time=File.GetLastWriteTimeUtc(path);var before=window.CreateProject().ToJsonString();

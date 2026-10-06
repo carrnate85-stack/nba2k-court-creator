@@ -34,7 +34,7 @@ internal static partial class Program
             focused=null;typeof(StudioWindow).GetMethod("FinishRename",flags)!.Invoke(window,[false]);
             await window.NewProjectAsync();await window.AddLogoAsync(logo,"First");window.SwitchSection("logos");
             var layer=window.Canvas.SelectedLayer!;layer.X=1700;layer.Y=1000;layer.Width=900;layer.Height=700;
-            typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1440,900);
+            typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);window.SelectCanvasTool(TwoK.Studio.ArtworkTool.Transform);Layout(window,1440,900);
             foreach(var name in new[]{"_undo","_redo"})((IList)typeof(StudioWindow).GetField(name,flags)!.GetValue(window)!).Clear();
         }
         TextBox Edit(string kind,string text)
@@ -148,7 +148,7 @@ internal static partial class Program
         {
             await window.InitializeAsync();await window.AddLogoAsync(Path.Combine(output,"focused-export-logo.png"),"Focused artwork");window.SwitchSection("logos");
             var layer=window.Canvas.SelectedLayer!;layer.X=1700;layer.Y=1000;layer.Width=300;layer.Height=200;
-            typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);((Expander)window.FindName("LogoDetailsExpander")).IsExpanded=true;Layout(window,1440,900);
+            typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);window.SelectCanvasTool(TwoK.Studio.ArtworkTool.Transform);Layout(window,1440,900);
             focused=Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Single(box=>Equals(box.Tag,"X"));focused.Text="2200.875";
             var positionPath=Path.GetFullPath(Path.Combine(output,"focused-position.png"));await window.ExportToAsync(positionPath,false);var positionImage=StudioImages.Load(positionPath);
             Assert(positionImage.PixelWidth==8192 && positionImage.PixelHeight==4096 && layer.X==2200.875,"Real focused position export used the wrong dimensions/coordinate.");
