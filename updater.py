@@ -167,7 +167,7 @@ def validate_runtime(destination):
     current = read_json(current_marker)
     marker = owned_path(destination / "studio-build.json")
     candidate = read_json(marker) if marker.exists() else {}
-    if any(candidate.get(key) != current.get(key) for key in ("runtime", "projectSchema", "backend", "exchangeSchema", "canvasToolkit") if key in current):
+    if any(candidate.get(key) != current.get(key) for key in ("runtime", "projectSchema", "backend", "exchangeSchema", "canvasToolkit", "canvasHostContract") if key in current):
         raise ValueError("This release uses a different desktop runtime; a full installation is required")
     if any(not owned_path(destination / "desktop" / name).is_file() for name in NATIVE_FILES):
         raise ValueError("The native desktop application is incomplete in this update")

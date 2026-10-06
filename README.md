@@ -20,7 +20,10 @@ sharing a project; duplicate images reuse content-hashed files. Saves run off th
 UI thread and preserve the prior project on an asset failure. A startup failure
 offers Retry in the status bar without requiring an application restart.
 
-Run `Build Court Creator.bat` after code changes. The desktop launcher uses the
+Run `Build Court Creator.bat` after code changes. In a source checkout, the desktop
+launcher also adopts newer matching published central Canvas packages automatically
+before opening the app: it tests a candidate build and retains the last working
+build on failure. Unchanged launches do not rebuild. The launcher uses the
 published `desktop` build. `Launch Electron Fallback.bat` preserves access to the
 previous interface; the Electron files have not been removed.
 
@@ -28,7 +31,9 @@ previous interface; the Electron files have not been removed.
 sibling Canvas app. The accompanying court JSON stays editable in Court Creator.
 This is a one-way flattened texture handoff, not live two-way layer synchronization.
 **Edit Artwork...** opens a compact native editor for the selected hardwood or
-logo/graphic using `TwoK.Canvas.Core` and `TwoK.Canvas.Wpf` v0.3.1. Shared selections,
+logo/graphic using matching `TwoK.Canvas.Core` and `TwoK.Canvas.Wpf` packages,
+starting at v0.4.1. Supported programmatic edits use `CanvasEditor.Commands` for
+atomic history and automatic preview updates. Shared selections,
 brush/eraser, eyedropper, text, layers/masks, transforms and navigation operate on
 a private draft. Apply updates the court with one undo step; Cancel, Escape and
 close keep the original unchanged. Save includes editable `.2kstudio` archives

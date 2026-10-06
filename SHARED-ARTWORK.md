@@ -8,11 +8,17 @@ also provide Edit Artwork. Court geometry, paints, markings and IFF rules stay i
 Court Creator; this popup edits the source artwork, not court placement.
 
 The host-owned popup embeds the released `TwoK.Canvas.Core` and
-`TwoK.Canvas.Wpf` **0.3.1** packages. Shared tools provide selection, painting,
+`TwoK.Canvas.Wpf` matching packages, starting at **0.4.1**. Shared tools provide selection, painting,
 erasing, eyedropper, text, masks/layers, transforms, zoom and pan. The compact
 configuration hides file management, document resize and mip controls; it supplies
 court-green, white-marking and black-graphic color adjustment presets. It uses
 the host's light/dark choice without changing application-global resources.
+
+Supported host-driven edits use `CanvasEditor.Commands`: insertion, transforms,
+selection, opacity, adjustments and undo/redo publish atomically with shared
+history and automatic preview refresh. The host reports command notifications
+in the editor footer. Lower-level pixel/text/mask fixtures remain in regression
+checks to verify the legacy services and independent RGBA contract.
 
 Apply accepts detached straight RGBA and an editable `.2kstudio` archive. It
 prepares and validates new owned files before updating the selected court asset,
@@ -50,19 +56,52 @@ tolerance, not byte-identical recompression.
 
 ## Build Dependency
 
-A source build needs the x64 .NET 8 SDK and both matching **0.3.1** NuGet packages.
-The default private feed is the sibling Canvas project's
-`artifacts/published-shared-v0.3.1` directory. To use another local/private feed:
+A source build needs the x64 .NET 8 SDK, the app-owned Python backend and both
+matching stable NuGet packages, minimum **0.4.1**. Normal Build and the source
+checkout's launcher use `tools/sync_canvas_toolkit.py` to find the newest pair
+under the sibling Canvas project's `artifacts/published-*-v*` folders.
+
+Publish a new version of both central packages; on the next user-requested launch
+Court Creator adopts it without manually updating its references or copying DLLs.
+This is release synchronization, not hot replacement of a running app or a watcher
+of unpublished source edits. No scheduled/background task is installed.
+
+The sync checks package identity, stable version, WPF's matching Core dependency
+and package/assembly hashes. It builds a private candidate, verifies both published
+and test assemblies against the packages, then runs the off-screen artwork gate,
+including the real stock 4096 x 2048 Philadelphia 76ers hardwood workflow.
+Failed builds/tests leave `desktop` unchanged. Successful swaps use a serialized
+recovery journal; the app must be closed. Source changes during verification,
+same-version package republishing and unintended downgrades are refused.
+No-change launches compare the recorded source/package/output revisions and skip
+building. The shared updater lock serializes local build swaps and release updates.
+
+Set `CanvasToolkitRoot` for a differently located central project, or
+`CanvasToolkitFeed` for another private feed. Set `CanvasToolkitVersion` to pin
+a stable release intentionally. A raw `dotnet` build still defaults to 0.4.1;
+use the build script for automatic latest-release resolution. For a deliberate
+direct build:
 
 ```powershell
-dotnet publish src/NBA2KCourtCreator/NBA2KCourtCreator.csproj -c Release --self-contained false -o desktop -p:CanvasToolkitFeed=C:\path\to\feed
+dotnet publish src/NBA2KCourtCreator/NBA2KCourtCreator.csproj -c Release --self-contained false -o desktop -p:CanvasToolkitVersion=0.4.1 -p:CanvasToolkitFeed=C:\path\to\feed
 ```
 
 The `CanvasToolkitFeed` environment variable can also select that feed for
 `Build Court Creator.bat` or Setup. A published copy includes the shared DLLs and
 does not need the Canvas desktop application or the NuGet feed to run. Toolkit
 binaries are not vendored into this source repository. Newer Canvas development
-sources are not substituted for the requested release.
+sources are not substituted for a published release. Standalone copies do not
+attempt a local development rebuild; they retain bundled libraries and use the
+normal complete-app release updater. `desktop/.canvas-toolkit.json` records the
+actual installed version and validated file hashes. `studio-build.json` records
+the court host contract separately so compatible complete-app updates can include
+newer toolkit versions. Public binary publishing is still a separate operation.
+
+Preserve `updates/canvas-install.json` and any named backup if recovery is blocked.
+A normal successful/failed build cleans its temporary stage. Abrupt process
+termination may leave an unreferenced `updates/canvas-build-*` directory; it is
+not swept automatically. The active journal/backup must never be deleted to
+bypass a recovery error.
 
 The shared engine transitively brings BCnEncoder.Net 2.3.0,
 BCnEncoder.Net.ImageSharp 1.1.3, CommunityToolkit.HighPerformance 8.4.0 and
@@ -94,7 +133,25 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.0, audited 2026-10-06:
+Version 1.6.1, audited 2026-10-06:
+
+- Matching published Core/WPF 0.4.1 packages and exact assembly hashes verified.
+- Full native suite passed, including actual-size PNG/IFF export/conversion,
+  placement, compact layouts and the shared artwork checks.
+- Real stock Philadelphia 76ers 4096 x 2048 hardwood: command selection,
+  insertion/transform, automatic preview/notifications, undo/redo, Accept,
+  portable save/reopen with retained selections/layers, and separate Cancel passed.
+- Existing DDS profile, dimensions, hidden RGB and independent alpha checks passed.
+- Central sync tests cover newest stable pairs, no-change checks, first-time SDK
+  selection, no source/standalone feed, missing/mismatched/stale packages, failed
+  gates, source changes, busy builds, immutable versions, downgrade prevention,
+  directory publication rollback and interrupted recovery.
+- Launcher and Setup use the verified sync path. No app was opened automatically.
+
+Current native evidence is under `outputs/canvas-041-full-audit`; the source
+repository includes repeatable checks, not extracted game assets or binaries.
+
+Previous version 1.6.0, audited 2026-10-06 (historical baseline):
 
 - Released toolkit 0.3.1 confirmed in the published dependency manifest.
 - Full native suite passed against the final source, including 15 layouts and

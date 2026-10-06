@@ -1,16 +1,20 @@
 # Set up on another Windows PC
 
 1. Clone https://github.com/carrnate85-stack/nba2k-court-creator using GitHub Desktop.
-2. For a source checkout, install 64-bit Python 3.12 or newer and the x64 .NET 8 SDK, then run `Setup Court Creator.bat`. A complete published copy can reuse its bundled Python and needs only the x64 .NET 8 Desktop Runtime, not the SDK. The console/ASP.NET runtime alone cannot run this WPF application.
+2. For a source checkout, install 64-bit Python 3.12 or newer and the x64 .NET 8 SDK. A complete published copy can reuse its bundled Python and needs only the x64 .NET 8 Desktop Runtime, not the SDK. The console/ASP.NET runtime alone cannot run this WPF application.
 3. The PSD `templates` folder is optional while the legacy template system is hidden.
 4. Transfer the local `assets` folder into the cloned repository. This contains the extracted NBA 2K27 court library. The app automatically chooses the newest library found there.
 5. Transfer `custom_floors`, `logos`, and personal `data\court_presets.json` if needed.
-6. Run `Launch NBA 2K Court Creator.bat`.
+6. Configure the central package feed below, then run `Setup Court Creator.bat` and `Launch NBA 2K Court Creator.bat`. Transfer court assets before a source build: its integration gate verifies a real stock-court workflow.
 
 Source builds now also require the matching `TwoK.Canvas.Core` and
-`TwoK.Canvas.Wpf` 0.3.1 packages from the suite's private feed. Put that feed in
-the sibling `2k Texture Studio\artifacts\published-shared-v0.3.1` folder or set
-`CanvasToolkitFeed` to its location before Setup/Build. A complete published
+`TwoK.Canvas.Wpf` packages from the suite's private feed, starting at 0.4.1.
+Put published releases in the sibling `2k Texture Studio\artifacts\published-*-v*`
+folders, or set `CanvasToolkitRoot` to the central project or `CanvasToolkitFeed`
+to a private feed before Setup/Build. The source-checkout launcher finds the newest
+matching stable pair, verifies an off-screen build, and updates the desktop folder
+on the next user launch. Set `CanvasToolkitVersion` to deliberately pin a version.
+Unpublished source edits and prereleases are not adopted. A complete published
 desktop folder already contains these libraries and needs no separate Canvas
 installation. See [Shared Artwork](SHARED-ARTWORK.md).
 
@@ -74,7 +78,15 @@ stays open and releases editing when cancellation finishes. Retry close after
 correcting the save problem. A project save already in progress must finish
 before closing.
 
-For development, use GitHub Desktop to pull and push. Automatic release installation is disabled in Git checkouts so local code changes remain protected. Standalone copies check releases in the background, stage an update, and install it on the next launch while the app is closed. A rollback copy is retained in `updates\rollback`. Interrupted installs are recovered from `updates\apply-journal.json` before retrying. If the launcher reports that recovery needs attention, preserve the entire `updates` folder and review `updates\last-error.txt`; do not delete the journal or rollback files to bypass the check.
+For development, use GitHub Desktop to pull and push. GitHub release installation
+is disabled in Git checkouts so local code changes remain protected. Local central
+Canvas synchronization is a separate build-only path; it does not overwrite source
+or launch the app during tests. Standalone copies check releases in the background,
+stage an update, and install it on the next launch while the app is closed.
+A rollback copy is retained in `updates\rollback`. Interrupted release installs
+are recovered from `updates\apply-journal.json`; local Canvas build swaps use
+`updates\canvas-install.json`. If recovery needs attention, preserve the entire
+`updates` folder and do not delete journals or backups to bypass the check.
 
 To publish a compatible update, increment `package.json`, run `Build Court
 Creator.bat`, run `python tools/build_release.py`, and attach

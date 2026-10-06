@@ -48,6 +48,8 @@ class SetupTests(unittest.TestCase):
         path = self.root / "src/NBA2KCourtCreator/NBA2KCourtCreator.csproj"
         path.parent.mkdir(parents=True)
         path.write_text("source sentinel")
+        (self.root / "tools").mkdir(exist_ok=True)
+        (self.root / "tools/sync_canvas_toolkit.py").write_text("source build gate sentinel")
 
     def snapshot(self):
         return {str(path.relative_to(self.root)): (path.read_bytes(), path.stat().st_mtime_ns)
@@ -186,7 +188,7 @@ class SetupTests(unittest.TestCase):
             commands.append(command)
             if "venv" in command:
                 self.existing_python(venv=True)
-            elif "publish" in command:
+            elif "--build" in command and self.root / "tools/sync_canvas_toolkit.py" in command:
                 self.native()
             else:
                 self.fail("Unexpected command: " + str(command))
@@ -196,7 +198,8 @@ class SetupTests(unittest.TestCase):
             self.assertTrue(installer.setup(self.root)["ready"])
         self.assertEqual(len(commands), 2)
         self.assertEqual(commands[0][-2:], ["--copies", self.root / "runtime/python"])
-        self.assertEqual(commands[1][1], "publish")
+        self.assertEqual(commands[1][1:4], ["-I", "-B", self.root / "tools/sync_canvas_toolkit.py"])
+        self.assertEqual(commands[1][-3:], ["--build", "--dotnet", self.dotnet["path"]])
         self.assertFalse(any(command[0] == self.root / "desktop/NBA2KCourtCreator.exe" for command in commands))
 
     def test_dotnet_checks_architecture_and_desktop_runtime_only_installation(self):
@@ -338,7 +341,7 @@ class SetupTests(unittest.TestCase):
         (self.root / "data/palette_sources/source.json").write_text("{}")
         (self.root / "data/court_presets.json").write_text("personal presets")
         (self.root / "data/game_installation.json").write_text("personal game settings")
-        for name in ("texconv.exe", "texconv-LICENSE.txt", "court_logo_web.py", "export_2k26_court_texture.py", "setup_court_creator.py"):
+        for name in ("texconv.exe", "texconv-LICENSE.txt", "court_logo_web.py", "export_2k26_court_texture.py", "setup_court_creator.py", "sync_canvas_toolkit.py"):
             (tools / name).write_bytes(b"tool sentinel")
         (self.root / "court_creator/__pycache__").mkdir(parents=True)
         (self.root / "court_creator/backend.py").write_bytes(b"backend sentinel")

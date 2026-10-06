@@ -11,7 +11,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- WPF owns startup/DPI; WinForms is only referenced by legacy color dialogs. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
-    <CanvasToolkitFeed Condition="'$(CanvasToolkitFeed)' == ''">$(MSBuildThisFileDirectory)..\..\..\2k Texture Studio\artifacts\published-shared-v0.3.1</CanvasToolkitFeed>
+    <CanvasToolkitVersion Condition="'$(CanvasToolkitVersion)' == ''">0.4.1</CanvasToolkitVersion>
+    <CanvasToolkitFeed Condition="'$(CanvasToolkitFeed)' == ''">$(MSBuildThisFileDirectory)..\..\..\2k Texture Studio\artifacts\published-command-v$(CanvasToolkitVersion)</CanvasToolkitFeed>
     <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);$(CanvasToolkitFeed)</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
@@ -19,8 +20,8 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <ProjectReference Include="../TwoK.Studio/TwoK.Studio.csproj" />
-    <PackageReference Include="TwoK.Canvas.Core" Version="0.3.1" />
-    <PackageReference Include="TwoK.Canvas.Wpf" Version="0.3.1" />
+    <PackageReference Include="TwoK.Canvas.Core" Version="$(CanvasToolkitVersion)" />
+    <PackageReference Include="TwoK.Canvas.Wpf" Version="$(CanvasToolkitVersion)" />
     <Resource Include="Assets\app-icon.ico" />
     <Resource Include="Assets\app-icon.png" />
     <Content Include="ThirdParty\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

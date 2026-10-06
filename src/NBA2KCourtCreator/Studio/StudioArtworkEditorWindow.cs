@@ -47,6 +47,7 @@ public sealed class StudioArtworkEditorWindow : Window
         footer.Children.Add(actions); footer.Children.Add(_status); layout.Children.Add(footer); Content = layout;
         try { Editor.BeginEdit(original); }
         catch { Editor.Dispose(); _lifetime.Dispose(); throw; }
+        Editor.Commands.Changed += (_, change) => _status.Text = $"{change.Kind}: {change.Label}";
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) { e.Handled = true; Close(); } };
         Closing += (_, e) =>
         {

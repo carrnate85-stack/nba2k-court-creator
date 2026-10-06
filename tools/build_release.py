@@ -14,7 +14,7 @@ import updater
 
 ROOT_FILES = ("package.json", "studio-build.json", "requirements.txt", "updater.py",
               "Launch NBA 2K Court Creator.bat", "Setup Court Creator.bat", "Build Court Creator.bat", "data/team_palettes.json")
-TOOL_FILES = ("texconv.exe", "texconv-LICENSE.txt", "court_logo_web.py", "export_2k26_court_texture.py", "setup_court_creator.py")
+TOOL_FILES = ("texconv.exe", "texconv-LICENSE.txt", "court_logo_web.py", "export_2k26_court_texture.py", "setup_court_creator.py", "sync_canvas_toolkit.py")
 
 
 def safe_path(root, path):

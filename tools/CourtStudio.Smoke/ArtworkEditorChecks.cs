@@ -56,8 +56,8 @@ internal static partial class Program
             AddArtworkDraft(first.Editor);
             Assert(!second.Editor.ActiveDocument.CanUndo && second.Editor.ActiveDocument.Layers.Count == 1
                 && source.Layers[0].Image[1, 1] == new Rgba32(90, 120, 180, 73) && !source.CanUndo, "Private editing changed the caller or another editor.");
-            Assert(first.Editor.ActiveDocument!.Undo() && first.Editor.ActiveDocument.Redo(), "Shared editor undo/redo unavailable.");
-            first.Editor.RefreshArtwork();
+            Assert(first.Editor.Commands.Undo() && first.Editor.Commands.Redo(), "Shared editor command undo/redo unavailable.");
+            Assert(first.Editor.Commands.LastNotificationErrors.Count == 0, "Commands failed to refresh the editor preview.");
             foreach (var size in new[] { new Size(1080, 720), new Size(920, 560) })
             {
                 var element = (FrameworkElement)first.Content; element.Measure(size); element.Arrange(new Rect(size)); element.UpdateLayout();
@@ -105,8 +105,66 @@ internal static partial class Program
         Assert(preparing.Editor.IsDisposed, "Host preparation cancellation retained the editor.");
         await CheckArtworkHost(root, managed, png, originalHash);
         await CheckArtworkDds(root, managed, source);
+        await CheckStockCourtCommandWorkflow(root, managed);
         Assert(StudioImages.FileRevision(png) == originalHash && !source.CanUndo && !source.IsModified, "Host integration overwrote the original source/history.");
-        Console.WriteLine("PASS shared artwork integration: isolated scoped editors; compact tools/presets/renders; detached hidden RGB/data alpha; Apply/Cancel/Escape/close; retry/cancel cleanup; one host undo; placement; floor/preview; portable layers/text/masks; DDS metadata/export/reopen; stale source and failed operation safety. No native windows opened.");
+        Console.WriteLine("PASS shared artwork integration: isolated scoped editors; compact tools/presets/renders; detached hidden RGB/data alpha; Apply/Cancel/Escape/close; retry/cancel cleanup; one host undo; placement; floor/preview; portable layers/text/masks; DDS metadata/export/reopen; stock court Commands/selection/undo/redo/Accept/save/reopen/Cancel; stale source and failed operation safety. No native windows opened.");
+    }
+
+    private static async Task CheckStockCourtCommandWorkflow(string root, string managed)
+    {
+        var window = new StudioWindow(true);
+        try
+        {
+            await window.InitializeAsync();
+            var before = window.CreateProject(); var floor = before["floor"]!.AsObject();
+            var originalPath = floor["path"]!.GetValue<string>(); var originalHash = StudioImages.FileRevision(originalPath);
+            var mapping = before["mappingMode"]?.ToJsonString();
+            using var source = await WpfTextureCodec.LoadAsync(originalPath);
+            var width = source.CanvasWidth; var height = source.CanvasHeight;
+            Guid inserted = Guid.Empty;
+            var selection = new PixelSelection(2, 2, 12, 12);
+            await window.EditArtworkAsync(false, async popup =>
+            {
+                var commands = popup.Editor.Commands; int changes = 0;
+                commands.Changed += (_, _) => changes++;
+                Assert(commands.Execute(new SetSelectionCommand(selection)), "Stock court selection was not applied.");
+                Assert(!popup.Editor.ActiveDocument!.IsModified, "Selection-only command dirtied stock court pixels.");
+                using var graphic = new RgbaImage(8, 8, new Rgba32(200, 40, 60, 255));
+                var insert = new InsertImageLayerCommand(graphic, "Court workflow test"); inserted = insert.LayerId;
+                Assert(commands.Execute(insert), "Stock court artwork insertion failed.");
+                Assert(commands.Execute(new TransformLayersCommand([inserted], 1, 1, 0, 0, 0, 24, 24)), "Stock court artwork transform failed.");
+                Assert(commands.Undo() && commands.Redo(), "Stock court command undo/redo failed.");
+                Assert(changes == 5 && commands.LastNotificationErrors.Count == 0
+                    && ((System.Windows.Controls.Image)popup.Editor.FindName("TextureImage")!).Source is not null,
+                    "Stock court commands did not notify/refresh safely.");
+                var draft = popup.Editor.ActiveDocument!;
+                Assert(draft.CanvasWidth == width && draft.CanvasHeight == height && draft.Selection == selection
+                    && draft.Layers.Single(layer => layer.Id == inserted).X == 24, "Commands changed stock court dimensions/selection/placement.");
+                await popup.ApplyAsync();
+            }, managed);
+            var applied = window.CreateProject();
+            Assert(applied["floor"]!["path"]!.GetValue<string>() != originalPath && applied["mappingMode"]?.ToJsonString() == mapping,
+                "Stock court Apply did not return artwork or changed UV mapping.");
+            var destination = Path.Combine(root, "stock-court-saved", "stock.court.json");
+            await window.SaveProjectToAsync(destination); await window.OpenProjectFromAsync(destination);
+            await window.EditArtworkAsync(false, popup =>
+            {
+                var doc = popup.Editor.ActiveDocument!;
+                Assert(doc.CanvasWidth == width && doc.CanvasHeight == height && doc.Selection == selection
+                    && doc.Layers.Single(layer => layer.Id == inserted).X == 24, "Stock court save/reopen lost dimensions, selection or editable artwork.");
+                return Task.CompletedTask;
+            }, managed);
+            var canceledBefore = window.CreateProject().ToJsonString();
+            await window.EditArtworkAsync(false, popup =>
+            {
+                popup.Editor.Commands.Execute(new SetLayerOpacityCommand(inserted, .25));
+                popup.Close(); return Task.CompletedTask;
+            }, managed);
+            Assert(window.CreateProject().ToJsonString() == canceledBefore && StudioImages.FileRevision(originalPath) == originalHash,
+                "Stock court Cancel changed the court or original hardwood.");
+            Console.WriteLine($"PASS real stock court workflow: {floor["name"]}, {width}x{height}; Commands, selection, undo/redo, Accept, save/reopen and independent Cancel.");
+        }
+        finally { window.Close(); }
     }
 
     private static void AddArtworkDraft(CanvasEditor editor)

@@ -1,7 +1,8 @@
 Court Creator shared editor dependencies
 
-TwoK.Canvas.Core 0.3.1 and TwoK.Canvas.Wpf 0.3.1 are suite-owned libraries.
-Their transitive dependencies include:
+Matching TwoK.Canvas.Core and TwoK.Canvas.Wpf packages are suite-owned libraries.
+NBA2KCourtCreator.deps.json records the versions in this build.
+The verified 0.4.1 baseline's transitive dependencies include:
 
 BCnEncoder.Net 2.3.0
 BCnEncoder.Net.ImageSharp 1.1.3

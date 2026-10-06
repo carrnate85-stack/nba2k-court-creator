@@ -266,8 +266,8 @@ def setup(root, *, check_only=False):
         if probe_python(executable, root)["issues"]:
             raise SetupError("Python dependencies still failed their version/import checks. The existing runtime was preserved.")
     if report["nativeMissing"]:
-        run([dotnet["path"], "publish", root / "src/NBA2KCourtCreator/NBA2KCourtCreator.csproj", "-c", "Release",
-             "--self-contained", "false", "-o", root / "desktop", "--nologo"], root, capture=False, timeout=600)
+        run([executable, "-I", "-B", root / "tools/sync_canvas_toolkit.py", "--build", "--dotnet", dotnet["path"]],
+            root, capture=False, timeout=1800)
     result = inspect_setup(root)
     if not result["ready"]:
         raise SetupError("Setup did not complete: " + "; ".join(result["issues"]))
