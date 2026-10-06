@@ -9,6 +9,27 @@
 - `court_creator`: persistent Python engine for stock discovery, geometry, image composition, conversion, and IFF exports.
 - `electron`: retained fallback, not the default launcher target.
 
+## Logo Actions
+
+The logo action row has compact Flip and Mirror dropdowns instead of a Center
+button. Flip X/Y changes the selected artwork in its own horizontal/vertical
+coordinates without moving or rotating it. Mirror X/Y creates a copy at the
+reflected court X/Y position: left/right across midcourt, or top/bottom across
+the court's lengthwise centerline. Copies retain rotation, flip state,
+appearance and editable artwork metadata. Mirror and Copy share the four-logo
+limit; Flip remains available when all four slots are occupied.
+
+Each edit uses one whole-court undo step and the existing live preview. Menus
+respect selection and document-mutation guards. The focused `--logo-actions`
+check covers both axes, source preservation, exact undo/redo, portable save/reopen,
+capacity and light/dark compact layout; gesture and keyboard checks also cover
+vertical flipping, committed poses and cancellation-time guards. These are
+off-screen checks, not native popup mouse/focus automation.
+
+```powershell
+dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/logo-actions-check --logo-actions
+```
+
 ## Shared Controls and Images
 
 `src/Directory.Build.props` gives the host and placement library one matching

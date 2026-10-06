@@ -154,7 +154,25 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.3, audited 2026-10-06:
+Version 1.6.4, audited 2026-10-06:
+
+- Logo actions now provide compact Flip X/Y and Mirror X/Y dropdowns; the Center
+  button is removed. Mirror copies retain artwork orientation. See
+  [Native Studio](NATIVE-STUDIO.md#logo-actions) for axis semantics and checks.
+- Focused logo-action, gesture-lifecycle and keyboard-command checks passed against
+  matching Core/WPF 0.7.0: exact undo/redo, portable reopen, four-slot/selection
+  limits, committed drag poses, cancellation-time guards and compact light/dark
+  renders. The three central integration gates also passed before publication.
+- Temporary 1.6.4 package audit passed: 47 files, 7,373,344 expanded bytes,
+  3,480,926 archive bytes; tampering rejected, rollback and seven personal files
+  preserved, original source unchanged and temporary installation removed.
+- The launcher build was updated without launching the app. Verification was
+  off-screen; native dropdown mouse/focus acceptance remains manual QA.
+
+Evidence is under `outputs/logo-actions-check`, `outputs/logo-actions-gestures`
+and `outputs/logo-actions-guards`; generated assets remain untracked.
+
+Version 1.6.3, audited 2026-10-06 (historical baseline):
 
 - All five conversions completed: central theme/token aliases, actual Canvas tool
   icons, shared RGBA/RGB previews, guarded raster/DDS/profile-aware logo decoding

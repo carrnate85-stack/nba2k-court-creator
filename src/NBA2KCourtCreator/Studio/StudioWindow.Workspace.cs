@@ -46,7 +46,7 @@ public partial class StudioWindow
         EyedropperToolButton.IsEnabled = usable && _section != "import";
         LogoActions.IsEnabled = CourtCanvas.SelectedLayer is not null;
         ImportLogoButton.IsEnabled = CanChangeDocument && !_logoImporterOpen && CourtCanvas.Layers.Count + PendingLogoImports < 4;
-        DuplicateLogoButton.IsEnabled = CopyXMenu.IsEnabled = CopyYMenu.IsEnabled = CourtCanvas.Layers.Count + PendingLogoImports < 4 && CourtCanvas.SelectedLayer is not null;
+        DuplicateLogoButton.IsEnabled = MirrorLogoButton.IsEnabled = CopyXMenu.IsEnabled = CopyYMenu.IsEnabled = CourtCanvas.Layers.Count + PendingLogoImports < 4 && CourtCanvas.SelectedLayer is not null;
         var index = CourtCanvas.SelectedLayer is null ? -1 : CourtCanvas.Layers.IndexOf(CourtCanvas.SelectedLayer);
         ForwardMenu.IsEnabled = index >= 0 && index < CourtCanvas.Layers.Count - 1;
         BackwardMenu.IsEnabled = index > 0;
@@ -105,10 +105,10 @@ public partial class StudioWindow
             finally { _logoImporterOpen = false; if (!_closed) RefreshToolState(); }
         }
     }
-    public void FlipSelectedLogo()
+    public void FlipSelectedLogo(bool vertical = false)
     {
         if(!CanChangeDocument || CourtCanvas.SelectedLayer is not { } logo || !CourtCanvas.Layers.Contains(logo))return;
-        if(Change(()=>{if(CourtCanvas.Layers.Contains(logo))logo.FlipX=!logo.FlipX;}))RefreshLogoInspector();
+        if(Change(()=>{if(!CourtCanvas.Layers.Contains(logo))return;if(vertical)logo.FlipY=!logo.FlipY;else logo.FlipX=!logo.FlipX;}))RefreshLogoInspector();
     }
     public void CenterSelectedLogo()
     {
@@ -116,8 +116,13 @@ public partial class StudioWindow
         var center=CourtCanvas.Anchors.FirstOrDefault(anchor=>anchor.Id=="court-center")?.Position ?? new Point(4096,2048);
         if(Change(()=>{if(CourtCanvas.Layers.Contains(logo)){logo.X=center.X-logo.Width/2;logo.Y=center.Y-logo.Height/2;}}))RefreshLogoInspector();
     }
-    private void FlipLogoClick(object sender, RoutedEventArgs e) => FlipSelectedLogo();
-    private void CenterLogoClick(object sender, RoutedEventArgs e) => CenterSelectedLogo();
+    private void FlipXClick(object sender, RoutedEventArgs e) => FlipSelectedLogo();
+    private void FlipYClick(object sender, RoutedEventArgs e) => FlipSelectedLogo(true);
+    private void LogoActionMenuClick(object sender, RoutedEventArgs e)
+    {
+        if(!CanChangeDocument || sender is not Button { IsEnabled: true, ContextMenu: { } menu } button)return;
+        menu.PlacementTarget=button;menu.Placement=PlacementMode.Bottom;menu.IsOpen=true;
+    }
     private void ExportMenuClick(object sender, RoutedEventArgs e) { ExportTopButton.ContextMenu.PlacementTarget = ExportTopButton; ExportTopButton.ContextMenu.Placement = PlacementMode.Bottom; ExportTopButton.ContextMenu.IsOpen = true; }
     private void ExportSectionClick(object sender, RoutedEventArgs e) => SwitchSection("export");
     private void TitleBarMouseDown(object sender, MouseButtonEventArgs e)

@@ -5,7 +5,9 @@
 The desktop launcher now opens the C#/WPF studio, backed by the existing persistent
 Python game-file engine. The court is a native editable canvas: import logos, move,
 resize with scale lock, rotate, reorder, rename, duplicate across court axes,
-and undo/redo directly in the main preview. No separate
+and undo/redo directly in the main preview. Compact Flip and Mirror dropdowns
+offer X (left/right) and Y (top/bottom): Flip changes the artwork in place, while
+Mirror creates an opposite-side copy retaining rotation and flip state. No separate
 browser editor is required. Paint & Lines retains its row toggles, editable hex
 fields, color swatches, and searchable NBA/college Team Colors.
 Swatch and pinned color actions open Canvas's shared `ColorPickerDialog`, with

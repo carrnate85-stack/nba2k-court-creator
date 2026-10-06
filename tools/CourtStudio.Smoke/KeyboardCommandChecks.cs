@@ -93,7 +93,7 @@ internal static partial class Program
         using (var file = File.Create(logoPath)) encoder.Save(file);
         var window = new StudioWindow(true);
         var flags = new Dictionary<string, bool> { ["_initialized"] = false, ["_ready"] = false, ["_syncing"] = true, ["_restoring"] = true, ["_saving"] = true, ["_catalogBusy"] = true, ["_closed"] = true, ["_closePending"] = true };
-        var actions = new[] { "delete", "flip", "center", "duplicate", "copy-x", "copy-y", "reorder" };
+        var actions = new[] { "delete", "flip", "flip-y", "center", "duplicate", "copy-x", "copy-y", "reorder" };
         FieldInfo Field(string name) => typeof(StudioWindow).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!;
         void Command(string action)
         {
@@ -101,6 +101,7 @@ internal static partial class Program
             {
                 case "delete": window.DeleteSelectedLogo(); break;
                 case "flip": window.FlipSelectedLogo(); break;
+                case "flip-y": window.FlipSelectedLogo(true); break;
                 case "center": window.CenterSelectedLogo(); break;
                 case "duplicate": ((Button)window.FindName("DuplicateLogoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
                 default: ((MenuItem)window.FindName(action == "copy-x" ? "CopyXMenu" : action == "copy-y" ? "CopyYMenu" : "ForwardMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); break;
@@ -174,6 +175,6 @@ internal static partial class Program
         }
         finally { window.Close(); }
         Assert(failures.Count == 0, "Keyboard/command failures:\n" + string.Join("\n", failures));
-        Console.WriteLine("PASS native keyboard/command guards: routed arrow nudges cancel pending drags and use exact undo/redo; reentrant X/Y selection/disable callbacks leave no partial edit; unavailable artwork cannot nudge/delete/drag; seven logo commands preserve document/selection/history/readiness across eight blocked states, reject foreign layers and recheck readiness after cancellation; boundary reorder is a no-op; blocked renames report failure. Synthetic presentation source only; no native windows opened.");
+        Console.WriteLine("PASS native keyboard/command guards: routed arrow nudges cancel pending drags and use exact undo/redo; reentrant X/Y selection/disable callbacks leave no partial edit; unavailable artwork cannot nudge/delete/drag; eight logo commands preserve document/selection/history/readiness across eight blocked states, reject foreign layers and recheck readiness after cancellation; boundary reorder is a no-op; blocked renames report failure. Synthetic presentation source only; no native windows opened.");
     }
 }

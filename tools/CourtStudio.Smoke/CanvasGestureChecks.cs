@@ -208,7 +208,7 @@ internal static partial class Program
         try
         {
             await window.InitializeAsync();
-            foreach (var action in new[] { "delete", "flip", "center", "duplicate", "copy-x", "copy-y", "reorder" })
+            foreach (var action in new[] { "delete", "flip", "flip-y", "center", "duplicate", "copy-x", "copy-y", "reorder" })
             {
                 await window.NewProjectAsync(); await window.AddLogoAsync(logoPath, "First"); await window.AddLogoAsync(logoPath, "Second");
                 window.SwitchSection("logos"); Layout(window, 1440, 900);
@@ -220,6 +220,7 @@ internal static partial class Program
                 {
                     case "delete": window.DeleteSelectedLogo(); break;
                     case "flip": window.FlipSelectedLogo(); break;
+                    case "flip-y": window.FlipSelectedLogo(true); break;
                     case "center": window.CenterSelectedLogo(); break;
                     case "duplicate": ((Button)window.FindName("DuplicateLogoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
                     default: ((MenuItem)window.FindName(action == "copy-x" ? "CopyXMenu" : action == "copy-y" ? "CopyYMenu" : "ForwardMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); break;
@@ -229,8 +230,8 @@ internal static partial class Program
                 {
                     var copy = window.Canvas.Layers.Last();
                     var center = window.Canvas.Anchors.Single(anchor => anchor.Id == "court-center").Position;
-                    var expectedX = action == "duplicate" ? original.X + 40 : action == "copy-x" ? original.X : center.X * 2 - original.X - original.Width;
-                    var expectedY = action == "duplicate" ? original.Y + 40 : action == "copy-y" ? original.Y : center.Y * 2 - original.Y - original.Height;
+                    var expectedX = action == "duplicate" ? original.X + 40 : action == "copy-x" ? center.X * 2 - original.X - original.Width : original.X;
+                    var expectedY = action == "duplicate" ? original.Y + 40 : action == "copy-y" ? center.Y * 2 - original.Y - original.Height : original.Y;
                     if (copy.Capture() != new ArtworkState(expectedX, expectedY, original.Width, original.Height, original.Rotation)) failures.Add(action + ": copied the drag preview instead of committed coordinates.");
                 }
                 var after = window.CreateProject().ToJsonString();

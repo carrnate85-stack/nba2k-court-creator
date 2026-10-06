@@ -30,6 +30,12 @@ internal static partial class Program
                     Directory.CreateDirectory(output);
                     await CheckArtworkEditors(output);
                 }
+                else if (args.Contains("--logo-actions"))
+                {
+                    output ??= "outputs/logo-actions-check";
+                    Directory.CreateDirectory(output);
+                    await CheckLogoActions(output);
+                }
                 else if (args.Contains("--shared-controls"))
                 {
                     output ??= "outputs/shared-controls-check";
@@ -280,6 +286,7 @@ internal static partial class Program
             await CheckProjectSafety(window, output);
             await CheckCurrentFixes(window, output);
             await CheckLiveResize(window, output);
+            await CheckLogoActions(output);
             await CheckLogoCanvasStyle(window, output);
             Assert(window.Floors.Count > 200, "Stock floor library did not load.");
             Assert(window.LineLayers.Count == 16 && window.PaintLayers.Count == 6, "Stock layers are incomplete.");
