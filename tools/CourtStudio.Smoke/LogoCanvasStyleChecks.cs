@@ -1,4 +1,5 @@
 using System.IO;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -21,13 +22,19 @@ internal static partial class Program
             Layout(window,width,height);var column=(ColumnDefinition)window.FindName("InspectorWidth");Assert(Math.Abs(column.ActualWidth-400)<1,$"Canvas inspector width differs: {column.ActualWidth}, configured {column.Width}.");
             var viewport=(Border)window.FindName("ViewportCard");Assert(viewport.Margin==new Thickness(12)&&viewport.CornerRadius==new CornerRadius(8)&&viewport.BorderThickness==new Thickness(1),"Canvas viewport gutter/border/radius differs.");
             var root=(Visual)window.Content;var baseline=actions.TransformToAncestor(root).TransformBounds(new Rect(actions.RenderSize));
+            Rect CanvasBounds()=>window.Canvas.TransformToAncestor(root).TransformBounds(new Rect(window.Canvas.RenderSize));
+            Point CourtCenter()=>window.Canvas.TransformToAncestor(root).Transform(window.Canvas.ToScreen(new Point(4096,2048)));
+            var canvasBaseline=CanvasBounds();var centerBaseline=CourtCenter();
+            void StableCanvas()=>Assert(CanvasBounds()==canvasBaseline && CourtCenter()==centerBaseline,"Options visibility shifted/resized the court canvas or changed its mapping.");
             for(var count=0;count<=4;count++)
             {
                 if(count>0)await window.AddLogoAsync(file,$"Logo {count}");Layout(window,width,height);
                 var current=actions.TransformToAncestor(root).TransformBounds(new Rect(actions.RenderSize));
                 Assert(list.ActualHeight==224 && current==baseline,"Layer count shifts fixed list/actions.");
                 Assert(list.BorderThickness==new Thickness(1) && ((SolidColorBrush)list.Background).Color==((SolidColorBrush)window.FindResource("PanelBrush")).Color,"List border/background differs from Canvas.");
-                Assert(options.Visibility==Visibility.Collapsed && window.FindName("LogoDetailsExpander") is null,"Default logo workflow shows transform details.");
+                Assert(options.Visibility==(count==0?Visibility.Collapsed:Visibility.Visible) && window.FindName("LogoDetailsExpander") is null,"Move-tool selection did not automatically populate the compact options bar.");
+                StableCanvas();
+                if(count>0)Assert(Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Single(input=>Equals(input.Tag,"X")).Text==window.Canvas.SelectedLayer!.X.ToString("0.##",CultureInfo.InvariantCulture),"Automatic Move options contain stale values.");
                 Assert(((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight<1,"Logo panel unnecessarily scrolls without transform details.");
                 Assert(slider.IsEnabled==(count>0),"Opacity empty/selected state wrong.");
                 Assert(((TextBlock)window.FindName("LogoLayerCount")).Text==(count==1?"1 layer":$"{count} layers"),"Layer count does not track imports/New.");
@@ -44,6 +51,7 @@ internal static partial class Program
             Assert(undo.Count==history+1,"Opacity gesture isn't one undo action.");
             await window.UndoAsync();Assert(window.Canvas.SelectedLayer!.Opacity==before && slider.Value==before,"Opacity undo/control sync failed.");await window.UndoAsync(true);Assert(window.Canvas.Layers.Single(item=>item.Id==logo.Id).Opacity==59.75,"Opacity redo failed.");
             window.Canvas.SelectedLayer=window.Canvas.Layers.Single(item=>item.Id==logo.Id);window.SelectCanvasTool(ArtworkTool.Transform);Layout(window,width,height);
+            StableCanvas();
             var properties=(StackPanel)window.FindName("LogoProperties");
             var inputs=Descendants<TextBox>(properties).ToArray();
             Assert(options.Visibility==Visibility.Visible && options.IsEnabled && options.ActualHeight<=44
@@ -70,12 +78,22 @@ internal static partial class Program
                 StudioTheme.Apply(dark);typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);Layout(window,width,height);
                 foreach(var scale in new[]{1d,1.25,1.5,2d})RenderDpi(window,Path.Combine(output,$"canvas-transform-{(dark?"dark":"light")}-{width}-{scale:0.##}.png"),width,height,scale);
             }
-            StudioTheme.Apply(false);window.SelectCanvasTool(ArtworkTool.Hand);Assert(options.Visibility==Visibility.Collapsed,"Hand tool left transform options visible.");
-            window.SelectCanvasTool(ArtworkTool.Transform);window.Canvas.SelectedLayer=null;Assert(options.Visibility==Visibility.Collapsed,"Deselection left transform options visible.");
-            window.Canvas.SelectedLayer=window.Canvas.Layers[0];Assert(options.Visibility==Visibility.Visible,"Selecting a logo did not restore active transform options.");
-            window.SwitchSection("paint");Assert(options.Visibility==Visibility.Collapsed,"Paint tab left transform options visible.");
-            await window.NewProjectAsync();window.SwitchSection("logos");Assert(options.Visibility==Visibility.Collapsed,"New document retained transform options.");
+            StudioTheme.Apply(false);
+            foreach(var tool in new[]{ArtworkTool.Hand,ArtworkTool.Zoom,ArtworkTool.Move,ArtworkTool.Transform})
+            {window.SelectCanvasTool(tool);Layout(window,width,height);Assert(options.Visibility==(tool is ArtworkTool.Move or ArtworkTool.Transform?Visibility.Visible:Visibility.Collapsed),"Incorrect contextual options for "+tool);StableCanvas();}
+            window.SelectCanvasTool(ArtworkTool.Move);window.Canvas.SelectedLayer=null;Layout(window,width,height);Assert(options.Visibility==Visibility.Collapsed,"Deselection left transform options visible.");StableCanvas();
+            var target=window.Canvas.Layers.Last();var start=window.Canvas.ToScreen(target.Center);
+            Assert(window.Canvas.BeginArtworkGesture(start),"Unselected-logo move did not start.");((FrameworkElement)window.Content).UpdateLayout();
+            Assert(options.Visibility==Visibility.Visible && window.Canvas.SelectedLayer is not null,"Click-drag selection did not show options.");StableCanvas();
+            var moving=window.Canvas.SelectedLayer!;var movePose=moving.Capture();var moveHistory=undo.Count;
+            window.Canvas.ContinueArtworkGesture(start+new Vector(60,30));
+            typeof(StudioWindow).GetMethod("LiveLogoFieldsFrame",flags)!.Invoke(window,[null,EventArgs.Empty]);
+            Assert(moving.Capture()!=movePose && undo.Count==moveHistory && Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Single(input=>Equals(input.Tag,"X")).Text==moving.X.ToString("0.##",CultureInfo.InvariantCulture),"Automatic toolbar canceled the move, committed early or failed to refresh.");
+            window.Canvas.CancelGesture();Assert(moving.Capture()==movePose,"Automatic move options changed cancellation state.");
+            window.Canvas.SelectedLayer=null;window.Canvas.SelectedLayer=window.Canvas.Layers[0];Layout(window,width,height);Assert(options.Visibility==Visibility.Visible,"Selecting a logo did not restore Move options.");StableCanvas();
+            window.SwitchSection("paint");Layout(window,width,height);Assert(options.Visibility==Visibility.Collapsed,"Paint tab left transform options visible.");StableCanvas();
+            await window.NewProjectAsync();window.SwitchSection("logos");Layout(window,width,height);Assert(options.Visibility==Visibility.Collapsed,"New document retained transform options.");StableCanvas();
         }
-        Console.WriteLine("PASS Canvas logo panel: fixed 224-DIP list across 0–4 layers, live count/outlined rows and icon actions; no sidebar transform section; slim X/Y/W/H/Angle bar only for selected logos in Transform, lock between W/H, save-time guards; no clipping at compact/full-size and 100–200% DPI light/dark renders; Hand/deselection/Paint/New hide options; opacity retains one undo/redo.");
+        Console.WriteLine("PASS Canvas logo panel: fixed list/actions; automatic Move/Transform options and live values, including selecting an unselected logo by dragging; fixed canvas bounds/mapping through toolbar visibility, tools, deselection, Paint and New; lock/save guards, compact/full-size 100–200% DPI light/dark renders; move cancellation and opacity undo/redo preserved.");
     }
 }

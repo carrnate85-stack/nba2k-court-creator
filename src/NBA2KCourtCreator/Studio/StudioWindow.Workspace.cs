@@ -49,7 +49,7 @@ public partial class StudioWindow
         ImportLogoButton.IsEnabled = CanChangeDocument && !_logoImporterOpen && CourtCanvas.Layers.Count + PendingLogoImports < 4;
         DuplicateLogoButton.IsEnabled = MirrorLogoButton.IsEnabled = CopyXMenu.IsEnabled = CopyYMenu.IsEnabled = CourtCanvas.Layers.Count + PendingLogoImports < 4 && CourtCanvas.SelectedLayer is not null;
         var index = CourtCanvas.SelectedLayer is null ? -1 : CourtCanvas.Layers.IndexOf(CourtCanvas.SelectedLayer);
-        TransformOptionsBar.Visibility = _section == "logos" && CourtCanvas.Tool == ArtworkTool.Transform && index >= 0 ? Visibility.Visible : Visibility.Collapsed;
+        TransformOptionsBar.Visibility = _section == "logos" && CourtCanvas.Tool is ArtworkTool.Move or ArtworkTool.Transform && index >= 0 ? Visibility.Visible : Visibility.Collapsed;
         PreviewContextLabel.Visibility = TransformOptionsBar.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         MoveLogoDownButton.IsEnabled = index >= 0 && index < CourtCanvas.Layers.Count - 1;
         MoveLogoUpButton.IsEnabled = index > 0;

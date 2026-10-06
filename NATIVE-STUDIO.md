@@ -27,11 +27,13 @@ buttons and one undo step per reorder.
 
 The panel shows an Image Layers heading and live count, outlined selected rows,
 and an Add Image primary action. Numeric transforms no longer occupy the sidebar.
-Ctrl+T or the Transform tool reveals a slim options strip above the court preview:
+A selected logo in Move or Transform automatically populates a slim options strip above the court preview:
 X/Y position, W/H in texture pixels, an aspect lock between W/H, and rotation in
 degrees. Values update live during move, resize and rotation gestures, without
-rebuilding controls or adding preview history. Move/Hand, deselection, another
-section or New hides the strip. Sidebar height stays unchanged. Alignment controls
+rebuilding controls or adding preview history. Hand/Zoom, deselection, another
+section or New hides the strip. Its 42-DIP row remains reserved, so visibility
+changes do not move or resize the court canvas or change its screen mapping.
+Sidebar height stays unchanged. Alignment controls
 are removed; the central Canvas palette remains authoritative in light/dark modes.
 
 Rotation still uses Court Creator's dedicated top handle or the degree field;

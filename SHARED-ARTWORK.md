@@ -155,7 +155,20 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.7, audited 2026-10-06:
+Version 1.6.8, verified 2026-10-06:
+
+- Selected logos automatically populate the options bar in Move and Transform.
+  Its row is fixed at 42 DIPs, retaining canvas bounds and court-to-screen
+  mapping through selection, deselection, tool changes, Paint and New.
+- Focused actions/layout and live transform checks passed, including starting
+  a drag on an unselected logo, live X values, precise resize/rotation history,
+  cancellation and compact/full-size light/dark 100-200% DPI renders.
+- All three central Canvas 0.7.0 integration gates passed before launcher
+  publication. Runtime/build readiness reports ready; no app was launched.
+- Evidence is under `outputs/automatic-transform-check` and
+  `outputs/automatic-transform-live`. Real native mouse/focus remains manual QA.
+
+Version 1.6.7, audited 2026-10-06 (historical baseline):
 
 - Removed the large sidebar transform section. Selected logos in Transform
   (Ctrl+T) show one compact X/Y/W/H/degree strip above the court preview; the
