@@ -24,6 +24,12 @@ internal static partial class Program
             {
                 var output = args.FirstOrDefault(arg => !arg.StartsWith("--"));
                 if (args.Contains("--benchmark")) await Benchmark(output ?? "outputs/native-performance.json");
+                else if (args.Contains("--artwork-editor"))
+                {
+                    output ??= "outputs/artwork-editor-check";
+                    Directory.CreateDirectory(output);
+                    await CheckArtworkEditors(output);
+                }
                 else if (args.Contains("--request-files"))
                 {
                     output ??= "outputs/request-files-check";
@@ -251,6 +257,7 @@ internal static partial class Program
         await CheckFocusedSave(output);
         await CheckFocusedExport(output);
         await CheckFocusedClose(output);
+        await CheckArtworkEditors(output);
         var window = new StudioWindow(true);
         try
         {

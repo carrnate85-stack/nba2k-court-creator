@@ -791,7 +791,9 @@ updater.apply()
         archive.write_bytes(self.archive([("tools/a/b/c/d/e/file.py", b"small deeply nested entry")]))
         destination = self.root / "implicit-extraction"
         destination.mkdir()
-        with patch.object(updater, "MAX_ENTRIES", 12):
+        with zipfile.ZipFile(archive) as contents:
+            entry_limit = len(contents.infolist()) + 1
+        with patch.object(updater, "MAX_ENTRIES", entry_limit):
             with self.assertRaisesRegex(ValueError, "filesystem entries"):
                 updater.extract_archive(archive, destination)
         self.assertEqual(list(destination.iterdir()), [])

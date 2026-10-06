@@ -7,6 +7,13 @@
 5. Transfer `custom_floors`, `logos`, and personal `data\court_presets.json` if needed.
 6. Run `Launch NBA 2K Court Creator.bat`.
 
+Source builds now also require the matching `TwoK.Canvas.Core` and
+`TwoK.Canvas.Wpf` 0.3.1 packages from the suite's private feed. Put that feed in
+the sibling `2k Texture Studio\artifacts\published-shared-v0.3.1` folder or set
+`CanvasToolkitFeed` to its location before Setup/Build. A complete published
+desktop folder already contains these libraries and needs no separate Canvas
+installation. See [Shared Artwork](SHARED-ARTWORK.md).
+
 The launcher starts the native C#/WPF studio with the app-owned Python backend.
 Builds publish into `desktop` using `Build Court Creator.bat`. The earlier
 Electron version is retained as `Launch Electron Fallback.bat`; it needs Node.js
@@ -30,7 +37,8 @@ An incomplete runtime folder is preserved with a repair message, not deleted.
 
 Use Save to store editable `.court.json` files. New native saves also create an
 adjacent `<project-name>.assets` folder with the selected hardwood, custom floors,
-and available logos. Transfer the JSON and this folder together; their relative
+and available logos, including editable artwork archives and derived DDS files.
+Transfer the JSON and this folder together; their relative
 paths work from the new location. Identical images are stored once by content
 hash. The app's full court library is still transferred separately in step 4.
 The saved hardwood remains authoritative when its ID also exists in the new PC's

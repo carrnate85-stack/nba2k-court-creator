@@ -30,6 +30,7 @@ public partial class StudioWindow
     private async void StudioClosing(object? sender, CancelEventArgs e)
     {
         if (_allowClose) return;
+        if (_artworkEditorOpen) { e.Cancel = true; _artworkSessionCancellation?.Cancel(); _artworkEditor?.Close(); SetStatus("Close the artwork editor before closing the court."); return; }
         if (_closePending) { e.Cancel = true; return; }
         if (_saving || _exporting || _syncing || _catalogBusy)
         { e.Cancel = true; SetStatus(_saving?"Finishing the project save...":_exporting?"Finishing the court export...":"Finish the current court operation before closing."); return; }

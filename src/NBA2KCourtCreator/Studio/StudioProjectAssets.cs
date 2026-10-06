@@ -13,7 +13,7 @@ internal static class StudioProjectAssets
         var paths = new List<string>();
         void Add(JsonObject item)
         {
-            foreach (var key in new[] { "path", "previewPath" })
+            foreach (var key in new[] { "path", "previewPath", "artworkProjectPath", "artworkDdsPath" })
                 if (item[key]?.GetValue<string>() is { Length: > 0 } path) paths.Add(Path.GetFullPath(path, basis));
         }
         if (snapshot["floor"] is JsonObject floor) Add(floor);
@@ -75,6 +75,9 @@ internal static class StudioProjectAssets
         {
             if (item["path"] is not JsonValue value || !value.TryGetValue<string>(out var source)) return;
             item["path"] = Bundle(source, item["sourceRevision"]?.GetValue<string>());
+            foreach (var key in new[] { "artworkProjectPath", "artworkDdsPath" })
+                if (item[key]?.GetValue<string>() is { Length: > 0 } artwork)
+                    item[key] = Bundle(artwork, item[key.Replace("Path", "Revision")]?.GetValue<string>());
             if (preview && !string.IsNullOrWhiteSpace(source) && copied.ContainsKey(Path.GetFullPath(source, sourceDirectory))) item["previewPath"] = item["path"]!.DeepClone();
         }
         if (project["floor"] is JsonObject floor) BundlePath(floor, true);

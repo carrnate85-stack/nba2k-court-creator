@@ -58,6 +58,7 @@ public partial class StudioWindow : Window
         _testing = testing; _recovery = recovery ?? (testing ? null : new StudioSnapshotWriter(StudioProjectStore.WriteRecovery));
         _preferences = preferences ?? (testing ? null : new StudioPreferenceStore(StudioProjectStore.SettingsDirectory));
         InitializeComponent(); Style = (Style)FindResource(typeof(Window));
+        ConfigureArtworkActions();
         if (!testing) { StudioWindowBounds.Attach(this); Loaded += async (_, _) => await Guard(InitializeAsync); }
         CourtCanvas.ShowGuides=false;CourtCanvas.SnapEnabled=false;
         CourtCanvas.TransformPreviewChanged+=(_,_)=>QueueLiveLogoFields();
@@ -184,7 +185,7 @@ public partial class StudioWindow : Window
     }
     public async Task SelectFloorAsync(StockFloor? floor)
     {
-        if (_restoring || _saving || PendingLogoImports > 0 || _closed || _closePending) throw new InvalidOperationException("The court is not available for editing right now.");
+        if (_restoring || _saving || PendingLogoImports > 0 || _closed || _closePending || _artworkEditorOpen) throw new InvalidOperationException("The court is not available for editing right now.");
         if (floor is null) throw new InvalidOperationException("No hardwood textures were found in the local library.");
         var revision = InvalidateFloorRequests();
         using var cancellation = new CancellationTokenSource();
@@ -280,7 +281,7 @@ public partial class StudioWindow : Window
     }
     private async Task RestoreProjectFromAsync(Func<Task<JsonObject>> load, bool opened = false)
     {
-        if (_restoring || _saving || _catalogBusy || _closed || _closePending) throw new InvalidOperationException("A court operation is already in progress.");
+        if (_restoring || _saving || _catalogBusy || _closed || _closePending || _artworkEditorOpen) throw new InvalidOperationException("A court operation is already in progress.");
         CourtCanvas.CancelGesture(); FinishLogoOpacity();
         using var cancellation = new CancellationTokenSource();
         _projectRestoreCancellation = cancellation;
@@ -297,12 +298,14 @@ public partial class StudioWindow : Window
             var projectPath = LocalProjectPath(project["_projectPath"]?.GetValue<string>());
             var projectRelative = String(project, "assetPathMode") == "project-relative";
             var preparedLogos = new List<ArtworkLayer>();
+            var preparedArtwork = new Dictionary<string, JsonObject>();
             var missing = new List<string>();
             var updatedAssets = new List<string>();
             foreach (var item in (project["logoImages"] as JsonArray ?? []).OfType<JsonObject>())
             {
                 cancellation.Token.ThrowIfCancellationRequested();
                 var path = ResolvePath(String(item, "path"), projectPath, projectRelative);
+                var artwork = await Task.Run(() => RestoreArtworkReference(item, projectPath, projectRelative), cancellation.Token);
                 var logo = new ArtworkLayer { Id = String(item, "id", Guid.NewGuid().ToString("N")), Name = String(item, "name", "Logo"), Path = path,
                     X = Number(item["x"]), Y = Number(item["y"]), Width = Number(item["width"], 400), Height = Number(item["height"], 400), Rotation = Number(item["rotation"]),
                     Opacity = Number(item["opacity"], 100), Visible = item["visible"]?.GetValue<bool>() ?? true, ScaleLocked = item["scaleLocked"]?.GetValue<bool>() ?? true,
@@ -310,13 +313,16 @@ public partial class StudioWindow : Window
                 try
                 {
                     var asset = await _prepareLogo(path, cancellation.Token);
-                    preparedAssets.Add(asset); logo.Image = asset.Image; logo.Path = asset.Path;
+                    preparedAssets.Add(asset); logo.Image = artwork?["artworkAlphaMode"]?.GetValue<string>() == "GameData"
+                        ? await Task.Run(() => StudioArtworkPreview.Load(asset.Path, artwork), cancellation.Token) : asset.Image;
+                    logo.Path = asset.Path;
                     cancellation.Token.ThrowIfCancellationRequested();
                     if (item["sourceRevision"]?.GetValue<string>() is { } savedRevision && savedRevision != StudioImages.SourceRevision(asset.Image))
                         updatedAssets.Add(logo.Name);
                 }
                 catch (Exception error) when (error is IOException or NotSupportedException or FileFormatException or UnauthorizedAccessException) { missing.Add(logo.Name); }
                 preparedLogos.Add(logo);
+                if (artwork is not null) preparedArtwork[logo.Id] = artwork;
             }
             var visibility = project["visibility"] as JsonObject;
             var floorId = project["floor"]?["id"]?.GetValue<string>() ?? _floors.FirstOrDefault(f => visibility?[f.Id]?.GetValue<bool>() == true)?.Id ?? _defaultFloorId;
@@ -324,6 +330,8 @@ public partial class StudioWindow : Window
             StockFloor ReadSavedFloor(JsonObject source, string path, bool custom)
             {
                 var restored = (JsonObject)source.DeepClone(); restored["path"] = path; restored["previewPath"] = path;
+                if (RestoreArtworkReference(source, projectPath, projectRelative) is { } artwork)
+                    foreach (var item in artwork) restored[item.Key] = item.Value?.DeepClone();
                 if (custom) restored["category"] = "Custom";
                 restored["id"] ??= "custom_floor_" + Guid.NewGuid().ToString("N"); restored["name"] ??= Path.GetFileNameWithoutExtension(path);
                 return StockFloor.Read(restored, _engine.ProjectRoot, custom ? null : _floors);
@@ -368,6 +376,7 @@ public partial class StudioWindow : Window
             _outside.Color = StudioImages.Hex(project["outsideColor"]?.GetValue<string>()) ?? _outside.Color;
             _outside.Visible = project["outsideVisible"]?.GetValue<bool>() ?? _outside.Visible;
             CourtCanvas.Layers.Clear();
+            _logoArtwork.Clear(); foreach (var item in preparedArtwork) _logoArtwork[item.Key] = item.Value;
             foreach (var logo in preparedLogos) CourtCanvas.Layers.Add(logo);
             foreach (var custom in customFloors)
             {
@@ -418,12 +427,14 @@ public partial class StudioWindow : Window
         reset["logoImages"] = new JsonArray(); reset["_projectPath"] = null; reset["projectName"] = "Untitled court";
         await RestoreProjectAsync(reset); ResetImportContext(); RecordUndo(before); Changed(); SwitchSection("paint"); CourtCanvas.Fit();
     }
-    private static JsonObject SerializeLogo(ArtworkLayer layer)
+    private JsonObject SerializeLogo(ArtworkLayer layer)
     {
         var result = new JsonObject { ["id"] = layer.Id, ["name"] = layer.Name, ["path"] = layer.Path,
             ["x"] = layer.X, ["y"] = layer.Y, ["width"] = layer.Width, ["height"] = layer.Height, ["rotation"] = layer.Rotation,
             ["opacity"] = layer.Opacity, ["visible"] = layer.Visible, ["scaleLocked"] = layer.ScaleLocked, ["flipX"] = layer.FlipX, ["flipY"] = layer.FlipY };
         if (StudioImages.SourceRevision(layer.Image) is { } revision) result["sourceRevision"] = revision;
+        if (_logoArtwork.TryGetValue(layer.Id, out var artwork))
+            foreach (var item in artwork) result[item.Key] = item.Value?.DeepClone();
         return result;
     }
     private static void ApplyState(JsonObject item, ArtworkState state) { item["x"] = state.X; item["y"] = state.Y; item["width"] = state.Width; item["height"] = state.Height; item["rotation"] = state.Rotation; }
@@ -458,7 +469,7 @@ public partial class StudioWindow : Window
         if (selectionChanged || changed && visible.HasValue) RefreshToolState();
         if (changed || selectionChanged) RefreshSelectedColor();
     }
-    private bool CanChangeDocument => _initialized && _ready && !_syncing && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending;
+    private bool CanChangeDocument => _initialized && _ready && !_syncing && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending && !_artworkEditorOpen;
     private bool Change(Action change)
     {
         if(!CanChangeDocument)return false;

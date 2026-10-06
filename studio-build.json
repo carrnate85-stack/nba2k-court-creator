@@ -2,5 +2,6 @@
   "runtime": "wpf-net8",
   "projectSchema": 2,
   "backend": "python",
-  "exchangeSchema": 1
+  "exchangeSchema": 1,
+  "canvasToolkit": "0.3.1"
 }

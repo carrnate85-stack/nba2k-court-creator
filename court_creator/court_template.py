@@ -677,9 +677,10 @@ def _composite_logo(
     if max(target_width * target_height, rotated_width * rotated_height) > _LOGO_INTERMEDIATE_MAX_PIXELS:
         _composite_large_logo(canvas, path, revision, clip, (target_width, target_height),
                               (center_x, center_y), cosine, sine, bool(logo.get("flipX", False)),
-                              bool(logo.get("flipY", False)), opacity)
+                              bool(logo.get("flipY", False)), opacity, logo.get("artworkAlphaMode") == "GameData")
         return
-    image = _cached_external_image(path, (target_width, target_height), fit=False, source_revision=revision)
+    image = _cached_external_image(path, (target_width, target_height), fit=False, source_revision=revision,
+                                   data_alpha=logo.get("artworkAlphaMode") == "GameData")
     try:
         if bool(logo.get("flipX", False)):
             transformed = ImageOps.mirror(image); image.close(); image = transformed
@@ -697,7 +698,7 @@ def _composite_logo(
         image.close()
 
 
-def _composite_large_logo(canvas, path, revision, clip, target_size, center, cosine, sine, flip_x, flip_y, opacity):
+def _composite_large_logo(canvas, path, revision, clip, target_size, center, cosine, sine, flip_x, flip_y, opacity, data_alpha=False):
     from PIL import Image
     from .asset_io import validate_asset_image, verified_asset_stream
 
@@ -705,6 +706,8 @@ def _composite_large_logo(canvas, path, revision, clip, target_size, center, cos
     with verified_asset_stream(path, revision) as stream, Image.open(stream) as opened:
         validate_asset_image(opened)
         with closing(opened.convert("RGBA")) as source:
+            if data_alpha:
+                source.putalpha(255)
             # Invert the centered display transform and sample only visible court pixels.
             sx = source.width / target_size[0] * (-1 if flip_x else 1)
             sy = source.height / target_size[1] * (-1 if flip_y else 1)
@@ -739,7 +742,7 @@ def _fit_image_to_box(image, size: tuple[int, int]):
     )
 
 
-def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool, source_revision: str | None = None):
+def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool, source_revision: str | None = None, data_alpha=False):
     try:
         from PIL import Image
     except ImportError as exc:
@@ -748,7 +751,7 @@ def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool, sour
     path = Path(path)
     stat = path.stat()
     signature = source_revision or _sample_file_signature(path, stat.st_size)
-    key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size, signature, size, fit)
+    key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size, signature, size, fit, data_alpha)
     cacheable = size[0] * size[1] <= _EXTERNAL_IMAGE_CACHE_MAX_PIXELS
     from .asset_io import validate_asset_image, verified_asset_stream
     with verified_asset_stream(path, source_revision) as stream:
@@ -761,6 +764,8 @@ def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool, sour
         with Image.open(stream) as opened:
             validate_asset_image(opened)
             image = opened.convert("RGBA")
+            if data_alpha:
+                image.putalpha(255)
     if fit:
         resized = _fit_image_to_box(image, size)
         image.close(); image = resized

@@ -22,7 +22,8 @@ ALLOWED = {"desktop", "electron", "court_creator", "tools"}
 FILES = {"package.json", "studio-build.json", "requirements.txt", "updater.py", "Launch NBA 2K Court Creator.bat", "Setup Court Creator.bat", "Build Court Creator.bat", "data/team_palettes.json"}
 STATIC_FOLDERS = ("data/palette_sources",)
 NATIVE_FILES = ("NBA2KCourtCreator.exe", "NBA2KCourtCreator.dll", "NBA2KCourtCreator.deps.json",
-                "NBA2KCourtCreator.runtimeconfig.json", "TwoK.Studio.dll")
+                "NBA2KCourtCreator.runtimeconfig.json", "TwoK.Studio.dll", "Canvas.Core.dll", "Canvas.Wpf.dll",
+                "BCnEncoder.dll", "BCnEncoder.NET.ImageSharp.dll", "CommunityToolkit.HighPerformance.dll", "SixLabors.ImageSharp.dll")
 RELEASE_URL = "https://api.github.com/repos/carrnate85-stack/nba2k-court-creator/releases/latest"
 DOWNLOAD_PREFIX = "/carrnate85-stack/nba2k-court-creator/releases/download/"
 MAX_JSON_BYTES = 1024 * 1024
@@ -166,7 +167,7 @@ def validate_runtime(destination):
     current = read_json(current_marker)
     marker = owned_path(destination / "studio-build.json")
     candidate = read_json(marker) if marker.exists() else {}
-    if any(candidate.get(key) != current.get(key) for key in ("runtime", "projectSchema", "backend", "exchangeSchema") if key in current):
+    if any(candidate.get(key) != current.get(key) for key in ("runtime", "projectSchema", "backend", "exchangeSchema", "canvasToolkit") if key in current):
         raise ValueError("This release uses a different desktop runtime; a full installation is required")
     if any(not owned_path(destination / "desktop" / name).is_file() for name in NATIVE_FILES):
         raise ValueError("The native desktop application is incomplete in this update")

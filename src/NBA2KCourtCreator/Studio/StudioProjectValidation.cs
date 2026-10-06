@@ -20,6 +20,7 @@ public static class StudioProjectValidation
             var floor = Object(project["floor"], "floor");
             foreach (var key in new[] { "id", "name", "path", "previewPath", "category" }) Text(floor[key], "floor." + key);
             Revision(floor["sourceRevision"], "floor.sourceRevision");
+            Artwork(floor);
         }
         foreach (var key in new[] { "paintSettings", "lineSettings" })
             foreach (var pair in Map(project[key], key))
@@ -49,6 +50,7 @@ public static class StudioProjectValidation
             if (id is not null && !ids.Add(id)) throw Invalid("logo.id", "must be unique");
             Text(logo["name"], "logo.name"); Text(logo["path"], "logo.path");
             Revision(logo["sourceRevision"], "logo.sourceRevision");
+            Artwork(logo);
             foreach (var key in new[] { "visible", "scaleLocked", "flipX", "flipY" }) Boolean(logo[key], "logo." + key);
             foreach (var key in new[] { "x", "y", "rotation" })
                 if (logo[key] is not null && Math.Abs(Number(logo[key], "logo." + key)) > 1_000_000) throw Invalid("logo." + key, "is outside the supported range");
@@ -65,9 +67,22 @@ public static class StudioProjectValidation
             foreach (var key in new[] { "id", "name", "path", "previewPath", "category" }) Text(floor[key], "customFloor." + key);
             if (Text(floor["id"], "customFloor.id") is { } id && !ids.Add(id)) throw Invalid("customFloor.id", "must be unique");
             Boolean(floor["visible"], "customFloor.visible");
+            Artwork(floor);
         }
     }
     private static JsonObject Object(JsonNode? node, string key) => node as JsonObject ?? throw Invalid(key, "must be an object");
+    private static void Artwork(JsonObject item)
+    {
+        if (Text(item["artworkAlphaMode"], "artworkAlphaMode") is { } mode && mode is not ("GameData" or "Transparency"))
+            throw Invalid("artworkAlphaMode", "is not supported");
+        foreach (var key in new[] { "artworkProject", "artworkDds" })
+        {
+            var path = Text(item[key + "Path"], key + "Path");
+            Revision(item[key + "Revision"], key + "Revision");
+            if (path is not null && (path.Length == 0 || item[key + "Revision"] is null))
+                throw Invalid(key, "must have a path and revision");
+        }
+    }
     private static JsonObject Map(JsonNode? node, string key) => node is null ? new() : Object(node, key);
     private static JsonArray Array(JsonNode? node, string key) => node is null ? new() : node as JsonArray ?? throw Invalid(key, "must be an array");
     private static string? Text(JsonNode? node, string key)

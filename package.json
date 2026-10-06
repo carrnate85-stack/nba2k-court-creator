@@ -1,7 +1,7 @@
 {
   "name": "nba2k-court-creator",
-  "version": "1.5.2",
-  "description": "Electron companion app for NBA 2K court creation with a Python rendering backend.",
+  "version": "1.6.0",
+  "description": "Native WPF court studio with shared 2K Canvas artwork editing and a Python game-file backend.",
   "main": "electron/main.js",
   "private": true,
   "scripts": {

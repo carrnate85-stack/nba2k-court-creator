@@ -4,6 +4,8 @@
 
 - `src/NBA2KCourtCreator/Studio`: the active WPF workspace and application workflow.
 - `src/TwoK.Studio`: reusable WPF artwork canvas, transforms, anchors, and theme.
+- `TwoK.Canvas.Core` / `TwoK.Canvas.Wpf` 0.3.1: the shared native pixel editor,
+  documents, layers/masks, text, tools and DDS codecs. See [Shared Artwork](SHARED-ARTWORK.md).
 - `court_creator`: persistent Python engine for stock discovery, geometry, image composition, conversion, and IFF exports.
 - `electron`: retained fallback, not the default launcher target.
 

@@ -241,7 +241,7 @@ public partial class StudioWindow
         var copy = new ArtworkLayer { Name = logo.Name + " Copy", Path = logo.Path, Image = logo.Image, X = x is null ? logo.X + 40 : x == true ? logo.X : center.X * 2 - logo.X - logo.Width,
             Y = x is null ? logo.Y + 40 : x == true ? center.Y * 2 - logo.Y - logo.Height : logo.Y, Width = logo.Width, Height = logo.Height, Rotation = logo.Rotation, Opacity = logo.Opacity,
             Visible = logo.Visible, ScaleLocked = logo.ScaleLocked, FlipX = logo.FlipX, FlipY = logo.FlipY };
-        if(Change(() => CourtCanvas.Layers.Add(copy)) && CourtCanvas.Layers.Contains(copy))
+        if(Change(() => { CourtCanvas.Layers.Add(copy); if (_logoArtwork.TryGetValue(logo.Id, out var artwork)) _logoArtwork[copy.Id] = (JsonObject)artwork.DeepClone(); }) && CourtCanvas.Layers.Contains(copy))
         {CourtCanvas.SelectedLayer=copy;RefreshLogoInspector();}
     }
     private void ReorderLogo(int direction)

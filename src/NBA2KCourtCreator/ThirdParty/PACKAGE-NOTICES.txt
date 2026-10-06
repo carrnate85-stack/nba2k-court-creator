@@ -1,0 +1,23 @@
+Court Creator shared editor dependencies
+
+TwoK.Canvas.Core 0.3.1 and TwoK.Canvas.Wpf 0.3.1 are suite-owned libraries.
+Their transitive dependencies include:
+
+BCnEncoder.Net 2.3.0
+BCnEncoder.Net.ImageSharp 1.1.3
+Author: Nominom
+Package license expression: MIT OR Unlicense
+Project: https://github.com/Nominom/BCnEncoder.NET
+
+CommunityToolkit.HighPerformance 8.4.0
+Copyright .NET Foundation and Contributors
+Package license: MIT
+Supplied License.md and ThirdPartyNotices.txt are included alongside this notice.
+
+SixLabors.ImageSharp 3.1.12
+Copyright Six Labors
+Supplied Six Labors Split License Version 1.0 is included alongside this notice.
+Review its stated eligibility and distribution terms before distributing binaries.
+
+This inventory records package metadata. It does not grant additional rights,
+replace the original licenses or establish commercial-license eligibility.

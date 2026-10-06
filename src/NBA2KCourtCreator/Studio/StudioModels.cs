@@ -86,6 +86,7 @@ public static class StudioImages
     private static long _sourceReads, _hashedBytes;
     internal static (long SourceReads, long HashedBytes) ReadStatistics => (Interlocked.Read(ref _sourceReads),Interlocked.Read(ref _hashedBytes));
     internal static string? SourceRevision(ImageSource? image) => image is BitmapSource bitmap && Revisions.TryGetValue(bitmap, out var revision) ? revision.Hash : null;
+    internal static void AttachRevision(BitmapSource image, string hash) => Revisions.GetValue(image, _ => new Revision(hash));
     internal static string FileRevision(string path)
     {
         using var stream=OpenSource(path);

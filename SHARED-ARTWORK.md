@@ -1,0 +1,119 @@
+# Shared Artwork Editor
+
+## Workflow
+
+Use Edit > Edit Artwork for the selected logo/graphic on the Logos tab, or the
+selected hardwood elsewhere. The selected-court context menu and logo More menu
+also provide Edit Artwork. Court geometry, paints, markings and IFF rules stay in
+Court Creator; this popup edits the source artwork, not court placement.
+
+The host-owned popup embeds the released `TwoK.Canvas.Core` and
+`TwoK.Canvas.Wpf` **0.3.1** packages. Shared tools provide selection, painting,
+erasing, eyedropper, text, masks/layers, transforms, zoom and pan. The compact
+configuration hides file management, document resize and mip controls; it supplies
+court-green, white-marking and black-graphic color adjustment presets. It uses
+the host's light/dark choice without changing application-global resources.
+
+Apply accepts detached straight RGBA and an editable `.2kstudio` archive. It
+prepares and validates new owned files before updating the selected court asset,
+refreshes the preview, retains placement/UV coordinates and records one host undo
+step. A changed source, invalid dimensions/metadata or preparation failure does
+not apply. A failed Apply leaves the editor available for retry. Cancel, Escape
+and window close discard the private draft; closing during Apply cancels it.
+Only one artwork editor may open per Court Creator window; host mutations,
+save/export and overlapping editor sessions are blocked during the transaction.
+
+Editable archives and flattened PNGs live in
+`%LOCALAPPDATA%\2K Studio\Court Creator\artwork` under unique directories.
+Derived DDS files are produced only when the source document has a DDS profile,
+using that original format/sRGB/mip/alpha profile. Original sources are never
+overwritten. Committed artwork is retained for recovery and undo/redo. Failed or
+canceled preparation removes only unchanged owned files; it never sweeps folders.
+Process termination can leave an unreferenced private directory.
+
+Save bundles the PNG, editable archive and optional DDS in the neighboring
+`.assets` folder with relative paths and content revisions. Transfer that folder
+with the `.court.json`. Reopening uses the archive, retaining layers, text, masks,
+dimensions, channel labels and DDS metadata. A missing/changed editable archive
+fails explicitly instead of silently flattening the project. Renamed, duplicated
+or axis-mirrored logos retain the same editable source while keeping independent
+court placement.
+
+Game-data alpha remains independent of display transparency. PNG/archive pixels
+retain alpha-zero RGB; DDS export uses the shared codec. Explicit `GameData`
+artwork displays RGB as opaque in native previews and Python court composition,
+then applies Court Creator's surface clipping/placement. Transparency artwork
+retains its normal alpha behavior. This does not copy a source material channel
+onto the assembled court's alpha: game-specific output rules remain unchanged.
+DDS block compression is lossy, so decoded exports are compared with codec
+tolerance, not byte-identical recompression.
+
+## Build Dependency
+
+A source build needs the x64 .NET 8 SDK and both matching **0.3.1** NuGet packages.
+The default private feed is the sibling Canvas project's
+`artifacts/published-shared-v0.3.1` directory. To use another local/private feed:
+
+```powershell
+dotnet publish src/NBA2KCourtCreator/NBA2KCourtCreator.csproj -c Release --self-contained false -o desktop -p:CanvasToolkitFeed=C:\path\to\feed
+```
+
+The `CanvasToolkitFeed` environment variable can also select that feed for
+`Build Court Creator.bat` or Setup. A published copy includes the shared DLLs and
+does not need the Canvas desktop application or the NuGet feed to run. Toolkit
+binaries are not vendored into this source repository. Newer Canvas development
+sources are not substituted for the requested release.
+
+The shared engine transitively brings BCnEncoder.Net 2.3.0,
+BCnEncoder.Net.ImageSharp 1.1.3, CommunityToolkit.HighPerformance 8.4.0 and
+SixLabors.ImageSharp 3.1.12. Their package metadata/license documents are retained
+under `desktop/ThirdParty`. ImageSharp's supplied split-license conditions and
+all applicable distribution terms require review before public binary sharing;
+this integration does not grant a commercial license or publish a release.
+
+## Verification
+
+```powershell
+dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/artwork-editor-check --artwork-editor
+dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/shared-artwork-audit
+runtime\python\python.exe -B -m unittest discover -s tests -p 'test_*.py'
+runtime\python\python.exe -B tests/check_release.py
+```
+
+The focused checks use actual versioned shared controls, independent light/dark
+sessions, all configured tools, editable text/masks, compact renders, source
+isolation, Apply/Cancel/Escape/close, cancel during Apply, retry/cleanup, one host
+undo/redo, unchanged placement, hardwood preview, portable save/reopen, source
+revision failure, dimension failure and DDS metadata/data-alpha round trips.
+Backend checks cover normal/large logo and hardwood RGB-data-alpha rendering
+before resampling without modifying source bytes.
+
+These are off-screen/in-process checks, not computer automation. Real mouse/focus,
+mixed-monitor DPI and exported IFF loading in NBA 2K27 still need manual acceptance.
+No app is automatically opened after builds; no public binary release is created.
+
+## Verified Build
+
+Version 1.6.0, audited 2026-10-06:
+
+- Released toolkit 0.3.1 confirmed in the published dependency manifest.
+- Full native suite passed against the final source, including 15 layouts and
+  real 8192 x 4096 PNG/BC7 IFF conversion/export round trips.
+- Focused shared-editor checks passed within that full suite: independent sessions,
+  tools/presets, Apply/Cancel/Escape/host-close, close during Accept/preparation,
+  retry, exact one-step court undo/redo, placement and preview refresh,
+  portable layers/text/masks, complete DDS profile preservation and data-alpha
+  round trips, dimension/source failure safety, cleanup and mutation guards.
+- Backend suite: 398 tests run, 397 passed, one platform-specific skip.
+- Compact editor screenshots inspected at 1080 x 720 and 920 x 560.
+- Local desktop publication succeeded; all 11 required native artifacts match
+  the tested Release build. Runtime-only Setup diagnostics report ready.
+- Temporary package audit passed: 45 files, 7,258,172 expanded bytes,
+  3,436,065 archive bytes; tampering rejected, rollback and seven personal files
+  preserved, all installed bytes correct, temporary installation removed.
+- Existing desktop shortcut still targets the local launcher. No Court Creator
+  window was opened; no public binary release was uploaded.
+
+Native evidence is under `outputs/shared-artwork-final-verified`; focused editor
+renders are under `outputs/artwork-editor-check`. The commands above reproduce
+the checks. Source sharing remains separate from public binary release approval.

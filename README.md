@@ -27,7 +27,14 @@ previous interface; the Electron files have not been removed.
 **Send Texture to 2K Canvas** exports a full-resolution PNG and opens it in the
 sibling Canvas app. The accompanying court JSON stays editable in Court Creator.
 This is a one-way flattened texture handoff, not live two-way layer synchronization.
-Raster brushes and the full Canvas toolset are not part of this initial migration.
+**Edit Artwork...** opens a compact native editor for the selected hardwood or
+logo/graphic using `TwoK.Canvas.Core` and `TwoK.Canvas.Wpf` v0.3.1. Shared selections,
+brush/eraser, eyedropper, text, layers/masks, transforms and navigation operate on
+a private draft. Apply updates the court with one undo step; Cancel, Escape and
+close keep the original unchanged. Save includes editable `.2kstudio` archives
+and any derived DDS alongside the portable artwork, so later editing retains
+layers, text and masks. See [Shared Artwork](SHARED-ARTWORK.md) for build setup,
+ownership, verification and limitations.
 
 See [Native Studio](NATIVE-STUDIO.md) for architecture and verification, and
 [Move to Another PC](MOVE-TO-ANOTHER-PC.md) for current setup instructions.

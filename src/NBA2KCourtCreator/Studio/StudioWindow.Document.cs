@@ -31,7 +31,9 @@ public partial class StudioWindow
             {
                 cancellation.ThrowIfCancellationRequested();
                 BitmapSource image,thumbnail;
-                if(_usePairedFloorLoader && StringComparer.OrdinalIgnoreCase.Equals(Path.GetFullPath(floor.Path),Path.GetFullPath(floor.PreviewPath)))
+                if (floor.Source["artworkAlphaMode"]?.GetValue<string>() == "GameData")
+                { image = StudioArtworkPreview.Load(floor.Path, floor.Source, 2048); thumbnail = StudioArtworkPreview.Load(floor.Path, floor.Source, 144); }
+                else if(_usePairedFloorLoader && StringComparer.OrdinalIgnoreCase.Equals(Path.GetFullPath(floor.Path),Path.GetFullPath(floor.PreviewPath)))
                 {
                     var pair=StudioImages.LoadPair(floor.Path,2048,144,cancellation);image=pair.Image;thumbnail=pair.Thumbnail;
                 }
@@ -64,7 +66,7 @@ public partial class StudioWindow
     }
     private void RefreshMutationState()
     {
-        var available = _ready && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending;
+        var available = _ready && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending && !_artworkEditorOpen;
         ApplicationMenu.IsEnabled = DocumentChrome.IsEnabled = WorkspaceRoot.IsEnabled = available;
         SaveToolbarButton.IsEnabled = SaveMenuItem.IsEnabled = SaveAsMenuItem.IsEnabled = available && PendingLogoImports == 0;
         ExportTopButton.IsEnabled = available && !_exporting && PendingLogoImports == 0;

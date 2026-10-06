@@ -702,7 +702,11 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
     left, top, width, height = [round(value * scale) for value in (left, top, width, height)]
     with verified_asset_stream(path, revision) as stream, Image.open(stream) as source:
         validate_asset_image(source)
-        hardwood = ImageOps.fit(source.convert("RGBA"), (width, height), method=Image.Resampling.LANCZOS)
+        pixels = source.convert("RGBA")
+        if floor.get("artworkAlphaMode") == "GameData":
+            pixels.putalpha(255)
+        hardwood = ImageOps.fit(pixels, (width, height), method=Image.Resampling.LANCZOS)
+        pixels.close()
         if native:
             from PIL import ImageChops
             mask = Image.new("L", (width, height))

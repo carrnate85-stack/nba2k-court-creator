@@ -15,7 +15,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 NATIVE_FILES = ("NBA2KCourtCreator.exe", "NBA2KCourtCreator.dll", "NBA2KCourtCreator.deps.json",
-                "NBA2KCourtCreator.runtimeconfig.json", "TwoK.Studio.dll")
+                "NBA2KCourtCreator.runtimeconfig.json", "TwoK.Studio.dll", "Canvas.Core.dll", "Canvas.Wpf.dll",
+                "BCnEncoder.dll", "BCnEncoder.NET.ImageSharp.dll", "CommunityToolkit.HighPerformance.dll", "SixLabors.ImageSharp.dll")
 PROBE = r'''
 import importlib, importlib.metadata, importlib.util, json, pathlib, struct, sys
 result = {"version": list(sys.version_info[:3]), "bits": struct.calcsize("P") * 8,
