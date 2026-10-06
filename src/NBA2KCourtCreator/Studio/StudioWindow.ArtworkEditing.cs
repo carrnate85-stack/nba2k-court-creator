@@ -24,12 +24,15 @@ public partial class StudioWindow
         action.Click += EditArtworkClick; edit.Items.Add(action);
         var floor = new MenuItem { Header = "Edit Artwork..." }; floor.Click += EditFloorArtworkClick;
         SelectedCourtCard.ContextMenu = new ContextMenu(); SelectedCourtCard.ContextMenu.Items.Add(floor);
-        var graphic = new MenuItem { Header = "Edit Artwork..." }; graphic.Click += EditArtworkClick;
-        LogoMoreButton.ContextMenu.Items.Insert(0, graphic); LogoMoreButton.ContextMenu.Items.Insert(1, new Separator());
     }
     private async void EditArtworkClick(object sender, RoutedEventArgs e)
         => await Guard(() => EditArtworkAsync(_section == "logos" && CourtCanvas.SelectedLayer is not null));
     private async void EditFloorArtworkClick(object sender, RoutedEventArgs e) => await Guard(() => EditArtworkAsync(false));
+    private async void EditLogoArtworkClick(object sender, RoutedEventArgs e)
+    {
+        if(!CanChangeDocument || _exporting || PendingLogoImports>0 || sender is not Button { IsEnabled: true } || CourtCanvas.SelectedLayer is not { } logo || !CourtCanvas.Layers.Contains(logo))return;
+        await Guard(() => EditArtworkAsync(true));
+    }
 
     internal async Task EditArtworkAsync(bool logoTarget,
         Func<StudioArtworkEditorWindow, Task>? interact = null, string? artworkRoot = null)

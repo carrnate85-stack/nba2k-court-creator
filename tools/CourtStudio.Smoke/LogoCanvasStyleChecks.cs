@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using NBA2KCourtCreator.Studio;
+using TwoK.Studio;
 
 internal static partial class Program
 {
@@ -29,7 +30,8 @@ internal static partial class Program
                 Assert(details.TransformToAncestor(root).Transform(new Point()).Y>current.Bottom,"Details overlap layer actions.");
                 Assert(!details.IsExpanded && details.Visibility == Visibility.Visible && (!_allowNativeWindows || details.IsVisible),"Details not collapsed/visible.");Assert(((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight<1,$"Collapsed panel unnecessarily scrolls at {width} / {count}: {((ScrollViewer)window.FindName("LogoPropertiesScroll")).ScrollableHeight}, viewport {((ScrollViewer)window.FindName("LogoPropertiesScroll")).ViewportHeight}, extent {((ScrollViewer)window.FindName("LogoPropertiesScroll")).ExtentHeight}.");
                 Assert(slider.IsEnabled==(count>0),"Opacity empty/selected state wrong.");
-                foreach(var item in Descendants<ListBoxItem>(list)){var row=Descendants<Border>(item).First(border=>border.Name=="LayerRow");Assert(row.BorderThickness==new Thickness(0,0,0,1)&&row.Padding==new Thickness(6,4,6,4),"Canvas row separators/padding differ.");}
+                Assert(((TextBlock)window.FindName("LogoLayerCount")).Text==(count==1?"1 layer":$"{count} layers"),"Layer count does not track imports/New.");
+                foreach(var item in Descendants<ListBoxItem>(list)){var row=Descendants<Border>(item).First(border=>border.Name=="LayerRow");Assert(row.BorderThickness==new Thickness(1)&&row.CornerRadius==new CornerRadius(4)&&row.Padding==new Thickness(6,4,6,4),"Reference-inspired row outline/padding differs.");}
                 if(count is 0 or 1 or 4)RenderDpi(window,Path.Combine(output,$"canvas-logos-{count}-{width}.png"),width,height,1);
             }
             var flags=BindingFlags.NonPublic|BindingFlags.Instance;
@@ -43,8 +45,20 @@ internal static partial class Program
             await window.UndoAsync();Assert(window.Canvas.SelectedLayer!.Opacity==before && slider.Value==before,"Opacity undo/control sync failed.");await window.UndoAsync(true);Assert(window.Canvas.Layers.Single(item=>item.Id==logo.Id).Opacity==59.75,"Opacity redo failed.");
             window.Canvas.SelectedLayer=window.Canvas.Layers.Single(item=>item.Id==logo.Id);details.IsExpanded=true;Layout(window,width,height);RenderDpi(window,Path.Combine(output,$"canvas-logos-details-{width}.png"),width,height,1);
             Assert(Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Any(box=>Equals(box.Tag,"Width")),"Transform fields missing after expansion.");
+            var properties=(StackPanel)window.FindName("LogoProperties");var groups=properties.Children.OfType<Border>().ToArray();
+            Assert(groups.Select(group=>group.Tag).SequenceEqual(new[]{"Position","Size","Rotation"})
+                && groups.All(group=>group.BorderThickness==new Thickness(1)&&group.CornerRadius==new CornerRadius(6)),"Position/Size/Rotation are not separate compact boxes.");
+            Assert(!Descendants<ComboBox>(properties).Any() && !Descendants<Button>(properties).Any(button=>Equals(button.Content,"Align")),"Alignment controls remain visible.");
+            Assert(Descendants<Button>(groups[1]).Single(button=>button.Content is Viewbox) is not null,"Aspect lock is not inside Size.");
+            var scroll=(ScrollViewer)window.FindName("LogoPropertiesScroll");scroll.ScrollToBottom();Layout(window,width,height);
+            var rotationBounds=groups[2].TransformToAncestor(scroll).TransformBounds(new Rect(groups[2].RenderSize));
+            Assert(rotationBounds.Top>=0 && rotationBounds.Bottom<=scroll.ActualHeight+1,"Rotation box cannot be fully reached by scrolling.");
+            RenderDpi(window,Path.Combine(output,$"canvas-logos-details-bottom-{width}.png"),width,height,1);
+            StudioTheme.Apply(true);typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);
+            scroll.ScrollToBottom();Layout(window,width,height);RenderDpi(window,Path.Combine(output,$"canvas-logos-details-dark-{width}.png"),width,height,1);
+            StudioTheme.Apply(false);typeof(StudioWindow).GetMethod("RefreshLogoInspector",flags)!.Invoke(window,null);scroll.ScrollToTop();
             details.IsExpanded=false;Layout(window,width,height);foreach(var scale in new[]{1d,1.25,1.5,2d})RenderDpi(window,Path.Combine(output,$"canvas-logos-dpi-{width}-{scale:0.##}.png"),width,height,scale);await window.NewProjectAsync();window.SwitchSection("logos");
         }
-        Console.WriteLine("PASS Canvas logo panel: fixed 224-DIP list across 0–4 layers, bordered Canvas row template/spacing, actions stable below, collapsed/expanded transforms, matching 400-DIP inspector and 12-DIP viewport gutters, opacity preview + one undo/redo; normal/compact renders.");
+        Console.WriteLine("PASS Canvas logo panel: fixed 224-DIP list across 0–4 layers, live count and outlined rows, stable icon actions, separate Position/Size/Rotation boxes with lock inside Size; no Alignment; collapsed fit and reachable expanded controls; matching 400-DIP inspector/12-DIP gutters, opacity preview + one undo/redo; light/dark normal/compact renders.");
     }
 }

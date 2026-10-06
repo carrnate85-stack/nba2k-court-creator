@@ -104,7 +104,8 @@ internal static partial class Program
                 case "flip-y": window.FlipSelectedLogo(true); break;
                 case "center": window.CenterSelectedLogo(); break;
                 case "duplicate": ((Button)window.FindName("DuplicateLogoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
-                default: ((MenuItem)window.FindName(action == "copy-x" ? "CopyXMenu" : action == "copy-y" ? "CopyYMenu" : "ForwardMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); break;
+                case "reorder": ((Button)window.FindName("MoveLogoDownButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
+                default: ((MenuItem)window.FindName(action == "copy-x" ? "CopyXMenu" : "CopyYMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); break;
             }
         }
         async Task Prepare()
@@ -160,7 +161,7 @@ internal static partial class Program
                 await Prepare();var active=forward?window.Canvas.Layers.Last():window.Canvas.Layers.First();window.Canvas.SelectedLayer=active;
                 var pointer=window.Canvas.ToScreen(active.Center);window.Canvas.BeginArtworkGesture(pointer);window.Canvas.ContinueArtworkGesture(pointer+new Vector(60,30));
                 var preview=active.Capture();var undo=((ICollection)Field("_undo").GetValue(window)!).Count;
-                ((MenuItem)window.FindName(forward?"ForwardMenu":"BackwardMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                ((Button)window.FindName(forward?"MoveLogoDownButton":"MoveLogoUpButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Verify("boundary reorder / "+forward,()=>Assert(active.Capture()==preview && ReferenceEquals(window.Canvas.SelectedLayer,active) &&
                     ((ICollection)Field("_undo").GetValue(window)!).Count==undo,"A no-op reorder interrupted a pending drag or changed history."));
                 window.Canvas.CancelGesture();

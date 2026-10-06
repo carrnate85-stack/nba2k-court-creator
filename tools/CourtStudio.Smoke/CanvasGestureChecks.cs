@@ -223,7 +223,8 @@ internal static partial class Program
                     case "flip-y": window.FlipSelectedLogo(true); break;
                     case "center": window.CenterSelectedLogo(); break;
                     case "duplicate": ((Button)window.FindName("DuplicateLogoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
-                    default: ((MenuItem)window.FindName(action == "copy-x" ? "CopyXMenu" : action == "copy-y" ? "CopyYMenu" : "ForwardMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); break;
+                    case "reorder": ((Button)window.FindName("MoveLogoDownButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
+                    default: ((MenuItem)window.FindName(action == "copy-x" ? "CopyXMenu" : "CopyYMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); break;
                 }
                 if (action is not ("delete" or "center") && first.Capture() != original) failures.Add(action + ": command retained the drag preview.");
                 if (action is "duplicate" or "copy-x" or "copy-y")

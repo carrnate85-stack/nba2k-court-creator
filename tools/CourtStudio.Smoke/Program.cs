@@ -35,6 +35,9 @@ internal static partial class Program
                     output ??= "outputs/logo-actions-check";
                     Directory.CreateDirectory(output);
                     await CheckLogoActions(output);
+                    var logoWindow=new StudioWindow(true);
+                    try { await logoWindow.InitializeAsync();await CheckLogoCanvasStyle(logoWindow,output); }
+                    finally { logoWindow.Close(); }
                 }
                 else if (args.Contains("--shared-controls"))
                 {

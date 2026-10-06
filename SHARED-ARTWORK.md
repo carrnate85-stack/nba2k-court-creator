@@ -3,7 +3,7 @@
 ## Workflow
 
 Use Edit > Edit Artwork for the selected logo/graphic on the Logos tab, or the
-selected hardwood elsewhere. The selected-court context menu and logo More menu
+selected hardwood elsewhere. The selected-court context menu and logo Edit button
 also provide Edit Artwork. Court geometry, paints, markings and IFF rules stay in
 Court Creator; this popup edits the source artwork, not court placement.
 
@@ -154,7 +154,29 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.4, audited 2026-10-06:
+Version 1.6.5, audited 2026-10-06:
+
+- Logo panel has clearer headings, a live image-layer count, outlined rows,
+  Copy/Delete icons, direct Edit and guarded Up/Down order buttons. Position,
+  Size and Rotation are separate boxes; Alignment is removed. The aspect lock
+  stays in Size and the central Canvas palette remains unchanged.
+- Focused logo actions/layout, inspector ownership, draft save/reopen, gesture
+  lifecycle and keyboard checks passed against matching Core/WPF 0.7.0. Compact
+  and full-size light/dark renders were inspected; Rotation is reachable by
+  scrolling and numeric edits preserve exact history.
+- Artwork, color-picker and shared-control integration gates passed before
+  publication. Runtime/build readiness reports ready; the desktop shortcut
+  still targets the local launcher. No app was opened automatically.
+- Temporary 1.6.5 package audit passed: 47 files, 7,376,116 expanded bytes,
+  3,482,944 archive bytes. Tampering rejected; rollback and seven personal files
+  preserved; source bytes/timestamps unchanged; temporary installation removed.
+
+Evidence is under `outputs/logo-panel-final-verified`, `outputs/logo-panel-inspector`,
+`outputs/logo-panel-save`, `outputs/logo-panel-gestures` and
+`outputs/logo-panel-keyboard`; generated assets remain untracked. Real native
+mouse/focus remains manual acceptance, and no public binary release was uploaded.
+
+Version 1.6.4, audited 2026-10-06 (historical baseline):
 
 - Logo actions now provide compact Flip X/Y and Mirror X/Y dropdowns; the Center
   button is removed. Mirror copies retain artwork orientation. See

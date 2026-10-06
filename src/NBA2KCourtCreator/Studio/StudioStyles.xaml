@@ -84,6 +84,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" /><Setter Property="BorderThickness" Value="1" />
         </Style>
 <Style x:Key="CanvasLogoAction" TargetType="Button">
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Background" Value="{DynamicResource PanelRaisedBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />

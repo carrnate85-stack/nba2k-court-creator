@@ -38,12 +38,11 @@ internal static partial class Program
         {
             await window.InitializeAsync();
             foreach(var transition in new[]{"select another","rebuild same logo","select away and back","theme rebuild","new document","undo"})
-            foreach(var action in new[]{"X","Y","Width","Height","Rotation","lock","align"})
+            foreach(var action in new[]{"X","Y","Width","Height","Rotation","lock"})
             {
                 await Prepare();var first=window.Canvas.SelectedLayer!;
                 var oldFields=Descendants<TextBox>(Properties()).ToArray();
                 var oldLock=Descendants<Button>(Properties()).Single(button=>button.Content is Viewbox);
-                var oldAlign=Descendants<Button>(Properties()).Single(button=>Equals(button.Content,"Align"));
                 switch(transition)
                 {
                     case "select another":window.Canvas.SelectedLayer=window.Canvas.Layers[1];break;
@@ -64,7 +63,6 @@ internal static partial class Program
                 try
                 {
                     if(action=="lock")oldLock.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                    else if(action=="align")oldAlign.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     else
                     {
                         var input=oldFields.Single(box=>box.Tag is string label && (action=="Rotation"?label.StartsWith("Rotation",StringComparison.Ordinal):label==action));
@@ -92,12 +90,12 @@ internal static partial class Program
                 finally{state.SetValue(window,previous);}
             }
             foreach(var (name,value) in blocked)
-            foreach(var action in new[]{"X","lock","align","name","paint"})
+            foreach(var action in new[]{"X","lock","name","paint"})
             {
                 await Prepare();var selected=window.Canvas.SelectedLayer!;var before=window.CreateProject().ToJsonString();
                 var undo=History("_undo");var redo=History("_redo");var state=typeof(StudioWindow).GetField(name,flags)!;var previous=state.GetValue(window);
                 var input=action=="name"?Descendants<TextBox>((DependencyObject)window.FindName("LogoList")).Single(box=>ReferenceEquals(box.Tag,selected)):Field("X");
-                var button=action is "lock" or "align"?Descendants<Button>(Properties()).Single(item=>action=="lock"?item.Content is Viewbox:Equals(item.Content,"Align")):null;
+                var button=action=="lock"?Descendants<Button>(Properties()).Single(item=>item.Content is Viewbox):null;
                 state.SetValue(window,value);
                 try
                 {
@@ -122,10 +120,10 @@ internal static partial class Program
             try{opacity.Value=17;}
             finally{window.Canvas.TransformPreviewEnded-=select;}
             Verify("opacity cancellation changes selection",()=>Assert(original.Opacity==80 && second.Opacity==45 && opacity.Value==45 && ReferenceEquals(window.Canvas.SelectedLayer,second),"Opacity wrote to the prior selection after cancellation changed its owner."));
-            foreach(var action in new[]{"X","lock","align"})
+            foreach(var action in new[]{"X","lock"})
             {
                 await Prepare();original=window.Canvas.SelectedLayer!;second=window.Canvas.Layers[1];
-                var input=Field("X");var button=action=="X"?null:Descendants<Button>(Properties()).Single(item=>action=="lock"?item.Content is Viewbox:Equals(item.Content,"Align"));
+                var input=Field("X");var button=action=="X"?null:Descendants<Button>(Properties()).Single(item=>item.Content is Viewbox);
                 var originalPose=original.Capture();var originalLock=original.ScaleLocked;var secondPose=second.Capture();var countBefore=History("_undo");
                 start=window.Canvas.ToScreen(original.Center);Assert(window.Canvas.BeginArtworkGesture(start),"Cancellation-owner fixture failed to begin a drag.");window.Canvas.ContinueArtworkGesture(start+new Vector(60,30));
                 EventHandler changeOwner=(_,_)=>window.Canvas.SelectedLayer=second;window.Canvas.TransformPreviewEnded+=changeOwner;
@@ -179,7 +177,7 @@ internal static partial class Program
                     case "copy":((Button)window.FindName("DuplicateLogoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));break;
                     case "delete":window.DeleteSelectedLogo();break;
                     case "flip":window.FlipSelectedLogo();break;
-                    case "reorder":((MenuItem)window.FindName("ForwardMenu")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));break;
+                    case "reorder":((Button)window.FindName("MoveLogoDownButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));break;
                     case "typed field":var input=Field("X");input.Text="1800.987654321";Blur(input);break;
                     case "paint color":window.SetLayerSettings(window.PaintLayers[0].Id,color:"#123456");break;
                     default:window.RenameProject("Opacity then rename");break;
@@ -212,6 +210,6 @@ internal static partial class Program
         }
         finally{StudioTheme.Apply(false);window.Close();}
         Assert(failures.Count==0,"Inspector event failures:\n"+string.Join("\n",failures));
-        Console.WriteLine("PASS logo inspector ownership: 42 stale controls cannot mutate or interrupt a newer drag; numeric/lock/align/name/paint/opacity edits respect eight guarded states and cancellation-time ownership; obsolete slider events and detached names are ignored; precise current edits, opacity followed by seven commands, live-opacity undo/redo, Escape cancellation and no-op colors preserve ordered history. All windows remained invisible.");
+        Console.WriteLine("PASS logo inspector ownership: 36 stale controls cannot mutate or interrupt a newer drag; numeric/lock/name/paint/opacity edits respect eight guarded states and cancellation-time ownership; obsolete slider events and detached names are ignored; precise current edits, opacity followed by seven commands, live-opacity undo/redo, Escape cancellation and no-op colors preserve ordered history. All windows remained invisible.");
     }
 }

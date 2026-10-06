@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using NBA2KCourtCreator.Studio;
@@ -12,6 +13,7 @@ internal static partial class Program
         var sourceRevision=StudioImages.FileRevision(file);
         var window=new StudioWindow(true);
         void Click(string name) => ((MenuItem)window.FindName(name)).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        void ButtonClick(string name) => ((Button)window.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         async Task<ArtworkLayer> Prepare()
         {
             await window.NewProjectAsync();await window.AddLogoAsync(file,"Axis logo");window.SwitchSection("logos");
@@ -61,24 +63,53 @@ internal static partial class Program
                 "Four-slot capacity disabled flip or left mirror available.");
             var full=window.CreateProject().ToJsonString();Click("CopyXMenu");Click("CopyYMenu");
             Assert(window.CreateProject().ToJsonString()==full,"Mirror exceeded the four-logo limit.");
+            window.Canvas.SelectedLayer=window.Canvas.Layers[1];var ordered=window.CreateProject().ToJsonString();
+            var selected=window.Canvas.SelectedLayer!;var originalOrder=window.Canvas.Layers.Select(layer=>layer.Id).ToArray();var selectedPose=selected.Capture();
+            ButtonClick("MoveLogoUpButton");
+            Assert(window.Canvas.Layers.IndexOf(selected)==0 && window.Canvas.SelectedLayer==selected && selected.Capture()==selectedPose
+                && !((Button)window.FindName("MoveLogoUpButton")).IsEnabled,"Up arrow failed row movement, selection or boundary state.");
+            var moved=window.CreateProject().ToJsonString();ButtonClick("MoveLogoUpButton");
+            Assert(window.CreateProject().ToJsonString()==moved,"Top boundary arrow changed the project.");
+            await window.UndoAsync();Assert(window.CreateProject().ToJsonString()==ordered,"Layer-order undo differs.");
+            await window.UndoAsync(true);Assert(window.CreateProject().ToJsonString()==moved,"Layer-order redo differs.");
+            window.Canvas.SelectedLayer=window.Canvas.Layers.Single(layer=>layer.Id==selected.Id);ButtonClick("MoveLogoDownButton");
+            Assert(window.Canvas.Layers.Select(layer=>layer.Id).SequenceEqual(originalOrder) && window.Canvas.SelectedLayer!.Id==selected.Id,
+                "Down arrow did not restore row order and selection.");
+            window.Canvas.SelectedLayer=window.Canvas.Layers.Last();var bottom=window.CreateProject().ToJsonString();
+            Assert(!((Button)window.FindName("MoveLogoDownButton")).IsEnabled,"Bottom arrow remains available.");ButtonClick("MoveLogoDownButton");
+            Assert(window.CreateProject().ToJsonString()==bottom,"Bottom boundary arrow changed the project.");
+            foreach(var (name,blocked) in new[]{("_initialized",false),("_ready",false),("_syncing",true),("_restoring",true),
+                ("_saving",true),("_catalogBusy",true),("_closed",true),("_closePending",true),("_artworkEditorOpen",true),("_exporting",true)})
+            {
+                var field=typeof(StudioWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!;var prior=field.GetValue(window);
+                field.SetValue(window,blocked);
+                try { ButtonClick("EditLogoButton");Assert(window.CreateProject().ToJsonString()==bottom && window.ArtworkEditorOpen==(name=="_artworkEditorOpen"),
+                    "Blocked Edit action mutated the project or opened an editor."); }
+                finally { field.SetValue(window,prior); }
+            }
             window.Canvas.SelectedLayer=null;
-            Assert(!((Button)window.FindName("FlipLogoButton")).IsEnabled && !((Button)window.FindName("MirrorLogoButton")).IsEnabled,
-                "Empty selection left the axis actions enabled.");
+            Assert(new[]{"FlipLogoButton","MirrorLogoButton","EditLogoButton","MoveLogoUpButton","MoveLogoDownButton"}
+                .All(name=>!((Button)window.FindName(name)).IsEnabled),"Empty selection left logo actions enabled.");
+            ButtonClick("EditLogoButton");Assert(window.CreateProject().ToJsonString()==bottom,"Empty Edit fell back to hardwood.");
+            window.Canvas.SelectedLayer=new ArtworkLayer { Path=file };ButtonClick("EditLogoButton");
+            Assert(!((Button)window.FindName("EditLogoButton")).IsEnabled && window.CreateProject().ToJsonString()==bottom,
+                "Edit accepted a foreign logo or changed hardwood.");
             foreach(var dark in new[]{false,true})
             {
                 StudioTheme.Apply(dark);window.Canvas.SelectedLayer=window.Canvas.Layers[0];window.SwitchSection("logos");
                 foreach(var width in new[]{1000,1440})
                 {
                     Layout(window,width,680);
-                    var actions=(System.Windows.Controls.Primitives.UniformGrid)window.FindName("LogoActions");
-                    Assert(actions.Children.Count==5 && !actions.Children.OfType<Button>().Any(button=>Equals(button.Content,"Center")),
-                        "Logo action row retained Center or extra actions.");
-                    foreach(var name in new[]{"FlipLogoButton","MirrorLogoButton"})
+                    var actions=(Grid)window.FindName("LogoActions");
+                    Assert(actions.Children.Count==7 && !actions.Children.OfType<Button>().Any(button=>Equals(button.Content,"Center") || Equals(button.Content,"More"))
+                        && Equals(((Button)window.FindName("EditLogoButton")).Content,"Edit"),"Logo action row retained Center/More or omitted direct Edit/arrows.");
+                    foreach(var name in new[]{"FlipLogoButton","MirrorLogoButton","DuplicateLogoButton","DeleteLogoButton"})
                     {
                         var button=(Button)window.FindName(name);var content=(FrameworkElement)button.Content;
-                        Assert(button.ContextMenu.Items.OfType<MenuItem>().Count()==2
-                            && content.DesiredSize.Width<=button.ActualWidth-button.Padding.Left-button.Padding.Right+0.1,
-                            "Axis dropdown menu or compact label bounds are incorrect.");
+                        Assert(content.DesiredSize.Width<=button.ActualWidth-button.Padding.Left-button.Padding.Right+0.1,"Compact action label/icon bounds are incorrect: "+name);
+                        if(name is "FlipLogoButton" or "MirrorLogoButton")Assert(button.ContextMenu.Items.OfType<MenuItem>().Count()==2,"Axis menu does not contain both options.");
+                        else Assert(Descendants<TextBlock>(button).Any(text=>text.FontFamily.Source.Contains("Segoe Fluent Icons")
+                            && text.Text==(name=="DuplicateLogoButton"?"\uE8C8":"\uE74D")),"Copy/Delete icon is missing.");
                     }
                     RenderDpi(window,Path.Combine(output,$"logo-actions-{(dark?"dark":"light")}-{width}.png"),width,680,1);
                 }
@@ -86,6 +117,6 @@ internal static partial class Program
             Assert(!window.IsVisible && StudioImages.FileRevision(file)==sourceRevision,"Logo checks opened the app or changed source artwork.");
         }
         finally { StudioTheme.Apply(false);window.Close(); }
-        Console.WriteLine("PASS logo actions: compact Flip/Mirror X/Y dropdowns, no Center action; in-place flips, opposite-side copies retaining orientation; exact undo/redo and portable reopen; capacity/selection guards; light/dark layout. No native windows opened.");
+        Console.WriteLine("PASS logo actions: compact Flip/Mirror X/Y dropdowns and direct Edit; no Center/More; in-place flips, opposite-side copies retaining orientation; exact undo/redo and portable reopen; up/down row order, selected artwork and end guards; empty/foreign/busy Edit guards; capacity/selection guards; light/dark layout. No native windows opened.");
     }
 }
