@@ -3,11 +3,52 @@
 ## Ownership
 
 - `src/NBA2KCourtCreator/Studio`: the active WPF workspace and application workflow.
-- `src/TwoK.Studio`: reusable WPF artwork canvas, transforms, anchors, and theme.
-- `TwoK.Canvas.Core` / `TwoK.Canvas.Wpf` matching releases (minimum 0.4.1): the shared native pixel editor,
+- `src/TwoK.Studio`: court placement canvas, transforms, anchors, and thin central theme/icon adapters.
+- `TwoK.Canvas.Core` / `TwoK.Canvas.Wpf` matching releases (minimum 0.6.0): the shared native pixel editor,
   documents, layers/masks, text, tools and DDS codecs. See [Shared Artwork](SHARED-ARTWORK.md).
 - `court_creator`: persistent Python engine for stock discovery, geometry, image composition, conversion, and IFF exports.
 - `electron`: retained fallback, not the default launcher target.
+
+## Shared Controls and Images
+
+`src/Directory.Build.props` gives the host and placement library one matching
+Canvas version/feed. `TwoK.Studio.StudioTheme` delegates its palette and theme
+state to central `TextureStudio.StudioTheme`; its three chrome resource names are
+aliases, not copied colors. `TwoK.Studio.ToolIcon` adapts the existing court enum
+to the actual central `TextureStudio.ToolIcon`, preserving toolbar dimensions.
+
+Logo raster decoding uses `ImageFormatService` with the shared Windows
+`WicRasterProfileConverter`; DDS uses `WpfTextureCodec` and its complete-2D
+validation. Conversion is recorded when the shared profile adapter actually runs,
+not inferred solely from header metadata. Path-based decoding reads a private,
+create-new guarded snapshot, with the existing byte limit, source hash, identity,
+cancellation and ownership-aware cleanup. No borrowed source is overwritten.
+PNG/BMP can retain original bytes when no profile/orientation conversion is needed.
+Other formats and converted artwork become owned PNGs through the shared encoder;
+both the importer and direct placement use the same normalization. Save/reopen and
+Python court export consume those normalized pixels, not the unconverted original.
+The shared PNG writer preserves straight alpha and RGB beneath alpha zero.
+
+`PreviewRenderer` supplies RGBA logo and RGB game-data views. Game-data preview
+resizing disables alpha premultiplication, retaining hidden RGB without changing
+source alpha. The existing finite revision caches, thumbnail scheduling, clipping
+and court compositor remain host-owned.
+
+`StudioImageMemory` calls central `MemoryPreflight` before image decode/conversion,
+preview buffers, cleanup snapshots/flood-fill/reset and accepted-artwork copies.
+Its injected available-memory source is only for off-screen rejection tests;
+normal operation uses the shared physical/commit headroom check. Fixed file/pixel
+limits and existing cache/history budgets still apply. Preflight estimates are
+conservative and do not guarantee that third-party allocation cannot later fail.
+
+`--shared-controls` verifies actual released theme/icon components, both palettes,
+RGBA/RGB parity, hidden alpha-zero RGB, PNG/TGA/WebP/DDS/profile/orientation imports,
+normalization in UI and direct placement, source preservation, cancellation and
+low-memory retry/draft/history safety. A real normalized-logo workflow checks
+undo/redo, portable save/reopen and 8192 x 4096 Python export. This gate is required
+alongside artwork and color-picker checks before an automatic library update.
+These checks never open native windows; pointer/focus and in-game acceptance remain
+manual QA. Court geometry, IFF rules and whole-court project history stay separate.
 
 The Python worker reads binary JSON-line requests with a 1 MiB frame limit and
 bounded reads, including while discarding an oversized frame. It reports that
@@ -323,7 +364,7 @@ separate Court Creator RGB slider implementation. Shared spectrum/hue, RGB/HSB,
 hex validation and swatches are retained; the host adds Team Colors and starts
 with the hex field selected. The dialog uses isolated host-matched theme resources
 and preserves RGB-only court colors. Central package updates must pass both
-artwork and shared-color integration gates before replacing the desktop build.
+artwork, shared-color and shared-control integration gates before replacing the desktop build.
 Duplicate header buttons and the short layer search
 are removed. Switching tabs preserves the palette target. Save and Export stay in
 the upper right. Fine dividers separate the global document chrome. The entire

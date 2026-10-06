@@ -39,7 +39,7 @@ internal sealed class PreparedLogoAsset : IDisposable
         });
     }
     internal static PreparedLogoAsset CopyAndLoad(string source, string directory, CancellationToken cancellation,
-        Action<string, long>? copiedChunk = null, Action<string>? beforeDecode = null)
+        Action<string, long>? copiedChunk = null, Action<string>? beforeDecode = null, bool normalize = true)
     {
         cancellation.ThrowIfCancellationRequested();
         source = System.IO.Path.GetFullPath(source); directory = System.IO.Path.GetFullPath(directory);
@@ -74,14 +74,38 @@ internal sealed class PreparedLogoAsset : IDisposable
             beforeDecode?.Invoke(owned);
             cancellation.ThrowIfCancellationRequested();
             StudioFileSafety.EnsureOwnedStaging(owned, identity.Value);
-            var image = StudioImages.Load(owned);
+            var image = StudioImages.LoadLogo(owned, cancellation);
             cancellation.ThrowIfCancellationRequested();
-            return new PreparedLogoAsset(image, owned, true, identity, revision);
+            var asset = new PreparedLogoAsset(image, owned, true, identity, revision);
+            if (!normalize || !StudioImages.NeedsNormalization(image)) return asset;
+            try { return Normalize(image, directory, cancellation); }
+            finally { asset.Dispose(); }
         }
         catch
         {
             Cleanup(owned, identity, revision);
             throw;
         }
+    }
+    private static PreparedLogoAsset Normalize(BitmapSource image, string directory, CancellationToken cancellation)
+    {
+        var path = System.IO.Path.Combine(directory, Guid.NewGuid().ToString("N") + ".png");
+        StudioFileSafety.FileIdentity? identity = null; string? revision = null;
+        try
+        {
+            cancellation.ThrowIfCancellationRequested();
+            using (var output = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+            {
+                identity = StudioFileSafety.StagingIdentity(output.SafeFileHandle);
+                try { StudioImages.WriteLogoPng(image, output); output.Flush(true); }
+                finally { output.Position = 0; revision = Convert.ToHexString(SHA256.HashData(output)).ToLowerInvariant(); }
+            }
+            cancellation.ThrowIfCancellationRequested();
+            StudioFileSafety.EnsureOwnedStaging(path, identity.Value);
+            var bitmap = StudioImages.LoadLogo(path, cancellation);
+            cancellation.ThrowIfCancellationRequested();
+            return new PreparedLogoAsset(bitmap, path, true, identity, revision);
+        }
+        catch { Cleanup(path, identity, revision); throw; }
     }
 }

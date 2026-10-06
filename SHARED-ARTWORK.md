@@ -8,7 +8,7 @@ also provide Edit Artwork. Court geometry, paints, markings and IFF rules stay i
 Court Creator; this popup edits the source artwork, not court placement.
 
 The host-owned popup embeds the released `TwoK.Canvas.Core` and
-`TwoK.Canvas.Wpf` matching packages, starting at **0.4.1**. Shared tools provide selection, painting,
+`TwoK.Canvas.Wpf` matching packages, minimum **0.6.0**. Shared tools provide selection, painting,
 erasing, eyedropper, text, masks/layers, transforms, zoom and pan. The compact
 configuration hides file management, document resize and mip controls; it supplies
 court-green, white-marking and black-graphic color adjustment presets. It uses
@@ -73,7 +73,7 @@ These are off-screen checks, not native mouse/focus acceptance.
 ## Build Dependency
 
 A source build needs the x64 .NET 8 SDK, the app-owned Python backend and both
-matching stable NuGet packages, minimum **0.4.1**. Normal Build and the source
+matching stable NuGet packages, minimum **0.6.0**. Normal Build and the source
 checkout's launcher use `tools/sync_canvas_toolkit.py` to find the newest pair
 under the sibling Canvas project's `artifacts/published-*-v*` folders.
 
@@ -84,9 +84,11 @@ of unpublished source edits. No scheduled/background task is installed.
 
 The sync checks package identity, stable version, WPF's matching Core dependency
 and package/assembly hashes. It builds a private candidate, verifies both published
-and test assemblies against the packages, then runs the off-screen artwork and
-shared-color-picker gates, including the real stock 4096 x 2048 Philadelphia
-76ers hardwood workflow and all 23 inline color targets.
+and test assemblies against the packages, then runs the off-screen artwork,
+shared-color-picker and shared-control gates, including the real stock 4096 x 2048
+Philadelphia 76ers workflow, all 23 inline color targets, normalized logo exports,
+central theme/icons and low-memory safety. See [Native Studio](NATIVE-STUDIO.md)
+for the five shared-control/image integrations.
 Failed builds/tests leave `desktop` unchanged. Successful swaps use a serialized
 recovery journal; the app must be closed. Source changes during verification,
 same-version package republishing and unintended downgrades are refused.
@@ -95,12 +97,12 @@ building. The shared updater lock serializes local build swaps and release updat
 
 Set `CanvasToolkitRoot` for a differently located central project, or
 `CanvasToolkitFeed` for another private feed. Set `CanvasToolkitVersion` to pin
-a stable release intentionally. A raw `dotnet` build still defaults to 0.4.1;
+a stable release intentionally. A raw `dotnet` build defaults to 0.6.0;
 use the build script for automatic latest-release resolution. For a deliberate
 direct build:
 
 ```powershell
-dotnet publish src/NBA2KCourtCreator/NBA2KCourtCreator.csproj -c Release --self-contained false -o desktop -p:CanvasToolkitVersion=0.4.1 -p:CanvasToolkitFeed=C:\path\to\feed
+dotnet publish src/NBA2KCourtCreator/NBA2KCourtCreator.csproj -c Release --self-contained false -o desktop -p:CanvasToolkitVersion=0.6.0 -p:CanvasToolkitFeed=C:\path\to\feed
 ```
 
 The `CanvasToolkitFeed` environment variable can also select that feed for
@@ -132,6 +134,7 @@ this integration does not grant a commercial license or publish a release.
 ```powershell
 dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/artwork-editor-check --artwork-editor
 dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/color-picker-check --color-pickers
+dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/shared-controls-check --shared-controls
 dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/shared-artwork-audit
 runtime\python\python.exe -B -m unittest discover -s tests -p 'test_*.py'
 runtime\python\python.exe -B tests/check_release.py
@@ -151,7 +154,38 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.2, audited 2026-10-06:
+Version 1.6.3, audited 2026-10-06:
+
+- All five conversions completed: central theme/token aliases, actual Canvas tool
+  icons, shared RGBA/RGB previews, guarded raster/DDS/profile-aware logo decoding
+  and normalization, and shared allocation preflight. Existing court geometry,
+  inline hex/Team Colors controls and whole-court history remain host-owned.
+- Full off-screen native suites passed against matching Core/WPF 0.6.0 and 0.7.0,
+  including all 15 layouts, managed import safety, normalized-logo undo/redo,
+  portable save/reopen, and real 8192 x 4096 PNG/BC7 IFF export/conversion.
+- The real stock Philadelphia 76ers artwork workflow passed: Commands edits,
+  selection, undo/redo, Accept, save/reopen and separate Cancel. Source dimensions,
+  selections, independent alpha and hidden RGB checks passed.
+- The verified sync found the newly published matching 0.7.0 pair, passed artwork,
+  color-picker and shared-control gates, checked package/assembly hashes and
+  installed it. A subsequent sync skipped rebuilding. The raw-build minimum and
+  default remain 0.6.0; the installed build records 0.7.0.
+- Backend suite: 415 tests run, 414 passed, one platform-specific skip. New sync
+  checks reject releases below 0.6.0 and preserve the prior build if the third gate
+  fails. Low-memory checks preserve draft pixels, source files and undo history.
+- Light/dark and compact off-screen renders inspected. Runtime/build readiness
+  reported ready; the desktop shortcut still points to the local native launcher.
+- Temporary package audit passed: 47 files, 7,371,868 expanded bytes, 3,480,120
+  archive bytes. Tampering rejected; rollback and seven personal files preserved;
+  original source bytes/timestamps unchanged and temporary installation removed.
+- No app was launched, no native mouse/focus automation was performed, and no
+  public binary release was uploaded. In-game loading remains manual acceptance.
+
+Evidence is under `outputs/shared-conversions-final-check`,
+`outputs/shared-conversions-final-audit` and
+`outputs/shared-conversions-canvas-070-audit`; generated assets remain untracked.
+
+Version 1.6.2, audited 2026-10-06 (historical baseline):
 
 - Matching published Core/WPF 0.6.0 installed through the verified sync path;
   package and assembly hashes checked. A subsequent sync skipped rebuilding.
@@ -171,7 +205,7 @@ Version 1.6.2, audited 2026-10-06:
 - Runtime/build readiness reported ready. Desktop shortcut still targets the
   local launcher. No app was started and no public binary release was uploaded.
 
-Current evidence is under `outputs/shared-color-picker-full-audit` and
+Baseline evidence is under `outputs/shared-color-picker-full-audit` and
 `outputs/shared-color-picker-check`; binaries and game assets remain untracked.
 Real native mouse/focus and in-game loading remain manual acceptance checks.
 

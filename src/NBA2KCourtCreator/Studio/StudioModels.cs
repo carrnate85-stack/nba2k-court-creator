@@ -6,6 +6,8 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using TextureStudio.Models;
+using TextureStudio.Services;
 
 namespace NBA2KCourtCreator.Studio;
 
@@ -80,17 +82,77 @@ public sealed record StockFloor(string Id, string Name, string Category, string 
 public static class StudioImages
 {
     internal const long MaximumAssetBytes = 512L * 1024 * 1024;
-    private sealed record Revision(string Hash);
+    private sealed record Revision(string Hash, bool Normalize = false);
+    private sealed class LogoProfileConverter : IRasterProfileConverter
+    {
+        internal bool Converted { get; private set; }
+        public void ConvertToSrgb(string path, SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32> image)
+        {
+            new WicRasterProfileConverter().ConvertToSrgb(path, image); Converted = true;
+        }
+    }
     private static readonly StudioBitmapCache Cache = new(128L * 1024 * 1024, 80);
     private static readonly ConditionalWeakTable<BitmapSource, Revision> Revisions = new();
     private static long _sourceReads, _hashedBytes;
     internal static (long SourceReads, long HashedBytes) ReadStatistics => (Interlocked.Read(ref _sourceReads),Interlocked.Read(ref _hashedBytes));
     internal static string? SourceRevision(ImageSource? image) => image is BitmapSource bitmap && Revisions.TryGetValue(bitmap, out var revision) ? revision.Hash : null;
-    internal static void AttachRevision(BitmapSource image, string hash) => Revisions.GetValue(image, _ => new Revision(hash));
+    internal static void AttachRevision(BitmapSource image, string hash, bool normalize = false) => Revisions.GetValue(image, _ => new Revision(hash, normalize));
+    internal static bool NeedsNormalization(BitmapSource image) => Revisions.TryGetValue(image, out var revision) && revision.Normalize;
+    internal static Task<BitmapSource> LoadLogoAsync(string path, CancellationToken cancellation = default) => Task.Run(() =>
+    {
+        // Path-based profile conversion reads only our guarded snapshot, never a changing borrowed source.
+        using var prepared = PreparedLogoAsset.CopyAndLoad(path, Path.GetTempPath(), cancellation, normalize: false);
+        return prepared.Image;
+    }, cancellation);
+    internal static BitmapSource LoadLogo(string path, CancellationToken cancellation = default)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        using var stream = OpenSource(path);
+        var hash = HashSource(stream);
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        if (!ImageFormatService.IsSupported(path) || extension == ".2kstudio")
+            throw new NotSupportedException("Choose a raster image or a single 2D DDS texture for this logo.");
+        try { return Cache.Get($"logo|{extension}|{hash}", () =>
+        {
+            int width, height; var normalize = extension is not (".png" or ".bmp");
+            if (extension == ".dds")
+            {
+                var metadata = DdsInspector.Read(path); DdsInspector.ValidateComplete2D(metadata);
+                width = metadata.Width; height = metadata.Height;
+            }
+            else
+            {
+                stream.Position = 0; var info = SixLabors.ImageSharp.Image.Identify(stream);
+                width = info.Width; height = info.Height;
+                var exif = info.Metadata.ExifProfile;
+                normalize |= info.Metadata.IccProfile is not null || exif is not null
+                    && exif.TryGetValue(SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag.Orientation, out var orientation) && orientation.Value != 1;
+            }
+            ImageFormatService.ValidateDimensions(width, height);
+            StudioImageMemory.RequirePixels((long)width * height, 6);
+            cancellation.ThrowIfCancellationRequested();
+            var profileConverter = new LogoProfileConverter();
+            using var image = extension == ".dds"
+                ? WpfTextureCodec.LoadLayerImageAsync(path).GetAwaiter().GetResult()
+                : ImageFormatService.Load(path, profileConverter);
+            cancellation.ThrowIfCancellationRequested();
+            var bitmap = PreviewRenderer.Create(image, ChannelView.Rgba);
+            AttachRevision(bitmap, hash, normalize || profileConverter.Converted);
+            return bitmap;
+        }); }
+        catch (SixLabors.ImageSharp.ImageFormatException error)
+        { throw new NotSupportedException("This logo image is malformed or has an unsupported image format.", error); }
+    }
     internal static string FileRevision(string path)
     {
         using var stream=OpenSource(path);
         return HashSource(stream);
+    }
+    internal static void WriteLogoPng(BitmapSource bitmap, Stream stream)
+    {
+        StudioImageMemory.RequirePixels((long)bitmap.PixelWidth * bitmap.PixelHeight, 4);
+        using var image = PreviewRenderer.FromBitmapSource(bitmap);
+        image.Save(stream, ImageFormatService.EncoderFor(".png"));
     }
     internal static (int Count, long Bytes, long Budget) CacheStatistics => Cache.Statistics;
     public static BitmapSource Load(string path, int decodeWidth = 0)
@@ -142,6 +204,9 @@ public static class StudioImages
         var header = BitmapFrame.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
         if (header.PixelWidth > 16384 || header.PixelHeight > 16384 || (long)header.PixelWidth * header.PixelHeight > 64L * 1024 * 1024)
             throw new NotSupportedException("Image is too large. Use an image up to 16384 pixels per side and 64 megapixels.");
+        var width = decodeWidth > 0 ? Math.Min(decodeWidth, header.PixelWidth) : header.PixelWidth;
+        var height = (long)Math.Ceiling((double)header.PixelHeight * width / header.PixelWidth);
+        StudioImageMemory.Require(checked((long)header.PixelWidth * header.PixelHeight * 4 + width * height * 8));
         stream.Position = 0;
         var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad;
         if (decodeWidth > 0) image.DecodePixelWidth = Math.Min(decodeWidth, header.PixelWidth);

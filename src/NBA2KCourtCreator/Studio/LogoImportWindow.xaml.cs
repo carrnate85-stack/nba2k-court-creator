@@ -15,6 +15,7 @@ public partial class LogoImportWindow : Window
     public string? PreparedPath { get; private set; }
     internal string? PreparedSourceRevision { get; private set; }
     private string? _sourceRevision;
+    private bool _sourceNeedsNormalization;
     private StudioFileSafety.FileIdentity? _preparedIdentity;
     private bool _wand, _busy, _closed, _loading, _preparing;
     private Color _background = Colors.White;
@@ -29,8 +30,8 @@ public partial class LogoImportWindow : Window
     internal LogoImportWindow(Window? owner, bool testing, Func<string, CancellationToken, Task<BitmapSource>>? loadImage, Action<BitmapSource, Stream>? writeImage)
     {
         _testing = testing;
-        _loadImage = loadImage ?? ((path, cancellation) => Task.Run(() => StudioImages.Load(path), cancellation));
-        _writeImage = writeImage ?? ((image, stream) => { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(image)); encoder.Save(stream); });
+        _loadImage = loadImage ?? StudioImages.LoadLogoAsync;
+        _writeImage = writeImage ?? StudioImages.WriteLogoPng;
         InitializeComponent(); Style = (Style)FindResource(typeof(Window)); if (owner is not null) Owner = owner; if (!testing) StudioWindowBounds.Attach(this);
         Closed += (_, _) => { _closed = true; _revision++; _imageLoadCancellation?.Cancel(); if (DialogResult != true) ReleaseTemporaryOutput(); };
     }
@@ -51,19 +52,21 @@ public partial class LogoImportWindow : Window
         try
         {
             await _imageDecoder.WaitAsync(cancellation.Token);
-            LogoCleanupImage image; string sourceRevision;
+            LogoCleanupImage image; string sourceRevision; bool normalize;
             try
             {
                 var bitmap = await _loadImage(path, cancellation.Token);
                 cancellation.Token.ThrowIfCancellationRequested();
                 sourceRevision = StudioImages.SourceRevision(bitmap) ?? throw new InvalidDataException("Logo pixels have no retained source revision.");
+                normalize = StudioImages.NeedsNormalization(bitmap);
                 image = await Task.Run(() => { cancellation.Token.ThrowIfCancellationRequested(); return new LogoCleanupImage(bitmap); }, cancellation.Token);
             }
             finally { _imageDecoder.Release(); }
             if (_closed || revision != _revision) return;
             ReleaseTemporaryOutput();
             if (_closed || revision != _revision) return;
-            Cleanup = image; SourcePath = path; _sourceRevision = sourceRevision; SourceText.Text = Path.GetFileName(path) + $"  /  {image.Width} x {image.Height}";
+            Cleanup = image; SourcePath = path; _sourceRevision = sourceRevision; _sourceNeedsNormalization = normalize;
+            SourceText.Text = Path.GetFileName(path) + $"  /  {image.Width} x {image.Height}";
             _background = image.Pixel(0, 0); if (_background.A == 0) _background = Colors.White;
             EmptyHint.Visibility = Visibility.Collapsed;
             AllMatchingCheck.IsChecked = false; SetWand(false); CleanupStatus.Text = "Existing transparency is preserved."; RefreshPreview();
@@ -80,7 +83,7 @@ public partial class LogoImportWindow : Window
     private async void ChooseClick(object sender, RoutedEventArgs e)
     {
         if (!CanEdit) return;
-        var file = new OpenFileDialog { Filter = "Logo images|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff" };
+        var file = new OpenFileDialog { Filter = "Logo images|*.dds;*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.gif;*.tif;*.tiff;*.webp" };
         if (file.ShowDialog(this) != true) return;
         try { await LoadImageAsync(file.FileName); }
         catch (Exception error) { if (!_closed) CleanupStatus.Text = error.Message; }
@@ -121,13 +124,16 @@ public partial class LogoImportWindow : Window
         if (_closed || _loading || _preparing || _busy && !fromRun || Cleanup is null || SourcePath is null || _sourceRevision is null) return false;
         _preparing = true; RefreshControls();
         var revision = _revision; var cleanup = Cleanup; var source = SourcePath; var sourceRevision = _sourceRevision;
+        var changed = cleanup.HasChanges; var normalize = _sourceNeedsNormalization;
         var prepared = source;
         StudioFileSafety.FileIdentity? identity = null;
         var pinned = false;
         bool Current() => !_closed && revision == _revision && ReferenceEquals(cleanup, Cleanup);
         try
         {
-            if (cleanup.HasChanges)
+            if (!changed && await Task.Run(() => StudioImages.FileRevision(source)) != sourceRevision)
+                throw new InvalidDataException("The logo changed after its preview. Choose the image again before placing it.");
+            if (changed || normalize)
             {
                 var pixels = cleanup.Bitmap();
                 prepared = Path.Combine(Path.GetTempPath(), "court-logo-" + Guid.NewGuid().ToString("N") + ".png");
@@ -143,8 +149,6 @@ public partial class LogoImportWindow : Window
                 pinned = true;
                 StudioFileSafety.EnsureOwnedStaging(prepared, identity.Value);
             }
-            else if (await Task.Run(() => StudioImages.FileRevision(source)) != sourceRevision)
-                throw new InvalidDataException("The logo changed after its preview. Choose the image again before placing it.");
             if (!Current()) return false;
             ReleaseTemporaryOutput();
             if (!Current()) return false;

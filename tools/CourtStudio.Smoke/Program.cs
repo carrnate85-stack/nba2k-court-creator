@@ -30,6 +30,12 @@ internal static partial class Program
                     Directory.CreateDirectory(output);
                     await CheckArtworkEditors(output);
                 }
+                else if (args.Contains("--shared-controls"))
+                {
+                    output ??= "outputs/shared-controls-check";
+                    Directory.CreateDirectory(output);
+                    await CheckSharedControls(output);
+                }
                 else if (args.Contains("--request-files"))
                 {
                     output ??= "outputs/request-files-check";
@@ -231,6 +237,7 @@ internal static partial class Program
         await CheckWorkerRequestFiles(output);
         CheckBitmapCache();
         await CheckPairedImages(output);
+        await CheckSharedControls(output);
         await CheckColorPickers(output);
         await CheckLogoImporters(output);
         await CheckManagedLogos(output);

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 import updater
 
-MINIMUM_VERSION = "0.4.1"
+MINIMUM_VERSION = "0.6.0"
 STAMP = ".canvas-toolkit.json"
 JOURNAL = "canvas-install.json"
 PACKAGES = ("TwoK.Canvas.Core", "TwoK.Canvas.Wpf")
@@ -229,7 +229,7 @@ def sync(root=ROOT, *, force=False, automatic=False, runner=run, dotnet_path=Non
             for name, assembly in zip(PACKAGES, ASSEMBLIES):
                 if digest(candidate / assembly) != pair[name]["assemblyHash"]:
                     raise ValueError("Candidate used a stale cached Canvas assembly; clear that NuGet version and retry")
-            for gate in ("--artwork-editor", "--color-pickers"):
+            for gate in ("--artwork-editor", "--color-pickers", "--shared-controls"):
                 runner([str(dotnet), "run", "--project", "tools/CourtStudio.Smoke/CourtStudio.Smoke.csproj", "-c", "Release",
                         *properties, "--", str(stage / "checks"), gate], root)
             for name, assembly in zip(PACKAGES, ASSEMBLIES):

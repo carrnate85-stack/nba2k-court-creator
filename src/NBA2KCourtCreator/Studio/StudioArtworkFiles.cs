@@ -38,6 +38,7 @@ internal sealed class StudioArtworkFiles : IDisposable
             await Task.Run(async () =>
             {
                 cancellation.ThrowIfCancellationRequested();
+                StudioImageMemory.RequirePixels((long)width * height);
                 using var image = result.CreateImage();
                 files.Write(files.ImagePath, stream => image.SaveAsPng(stream));
                 files.Write(files.ProjectPath, stream => stream.Write(result.ProjectData.Span));

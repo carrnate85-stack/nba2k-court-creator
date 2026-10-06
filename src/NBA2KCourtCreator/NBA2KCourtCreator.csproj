@@ -11,9 +11,6 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- WPF owns startup/DPI; WinForms is only referenced by legacy color dialogs. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
-    <CanvasToolkitVersion Condition="'$(CanvasToolkitVersion)' == ''">0.4.1</CanvasToolkitVersion>
-    <CanvasToolkitFeed Condition="'$(CanvasToolkitFeed)' == ''">$(MSBuildThisFileDirectory)..\..\..\2k Texture Studio\artifacts\published-command-v$(CanvasToolkitVersion)</CanvasToolkitFeed>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);$(CanvasToolkitFeed)</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <ItemGroup>

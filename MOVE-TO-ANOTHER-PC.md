@@ -8,7 +8,7 @@
 6. Configure the central package feed below, then run `Setup Court Creator.bat` and `Launch NBA 2K Court Creator.bat`. Transfer court assets before a source build: its integration gate verifies a real stock-court workflow.
 
 Source builds now also require the matching `TwoK.Canvas.Core` and
-`TwoK.Canvas.Wpf` packages from the suite's private feed, starting at 0.4.1.
+`TwoK.Canvas.Wpf` packages from the suite's private feed, minimum 0.6.0.
 Put published releases in the sibling `2k Texture Studio\artifacts\published-*-v*`
 folders, or set `CanvasToolkitRoot` to the central project or `CanvasToolkitFeed`
 to a private feed before Setup/Build. The source-checkout launcher finds the newest

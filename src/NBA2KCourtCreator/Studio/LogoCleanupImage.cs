@@ -19,12 +19,13 @@ public sealed class LogoCleanupImage
     {
         Width = image.PixelWidth; Height = image.PixelHeight;
         if ((long)Width * Height > 24_000_000) throw new InvalidDataException("Logo cleanup supports images up to 24 million pixels. Resize this logo before importing.");
+        StudioImageMemory.RequirePixels((long)Width * Height, 3);
         // BGRA conversion unpremultiplies semi-transparent pixels before color comparisons.
         var converted = image.Format == PixelFormats.Bgra32 ? image : new FormatConvertedBitmap(image, PixelFormats.Bgra32, null, 0);
         _original = new byte[checked(Width * Height * 4)]; converted.CopyPixels(_original, Width * 4, 0); _pixels = (byte[])_original.Clone();
     }
     public BitmapSource Bitmap()
-    { var result = BitmapSource.Create(Width, Height, 96, 96, PixelFormats.Bgra32, null, _pixels, Width * 4); result.Freeze(); return result; }
+    { StudioImageMemory.RequirePixels((long)Width * Height); var result = BitmapSource.Create(Width, Height, 96, 96, PixelFormats.Bgra32, null, _pixels, Width * 4); result.Freeze(); return result; }
     public Color Pixel(int x, int y)
     { var index = (Math.Clamp(y, 0, Height - 1) * Width + Math.Clamp(x, 0, Width - 1)) * 4; return Color.FromArgb(_pixels[index + 3], _pixels[index + 2], _pixels[index + 1], _pixels[index]); }
     public static Point? MapPreview(Point point, Size viewport, Size image)
@@ -52,6 +53,7 @@ public sealed class LogoCleanupImage
     private int Remove(Color color, int tolerance, IEnumerable<int>? seeds)
     {
         tolerance = Math.Clamp(tolerance, 0, 255);
+        StudioImageMemory.Require(checked((long)Width * Height * (seeds is null ? 4 : 13)));
         var next = (byte[])_pixels.Clone(); int removed = 0;
         bool Matches(int pixel) { var i = pixel * 4; return _pixels[i + 3] > 0 && Math.Abs(_pixels[i] - color.B) <= tolerance && Math.Abs(_pixels[i + 1] - color.G) <= tolerance && Math.Abs(_pixels[i + 2] - color.R) <= tolerance; }
         if (seeds is null)
@@ -77,7 +79,7 @@ public sealed class LogoCleanupImage
     }
     public void Undo() { if (!CanUndo) return; _pixels = _undo[^1]; _undo.RemoveAt(_undo.Count - 1); }
     private void RememberUndo() { _undo.Add(_pixels); var limit = Math.Clamp(128 * 1024 * 1024 / _pixels.Length, 1, 8); while (_undo.Count > limit) _undo.RemoveAt(0); }
-    public void Reset() { if (!HasChanges) return; RememberUndo(); _pixels = (byte[])_original.Clone(); }
+    public void Reset() { if (!HasChanges) return; StudioImageMemory.RequirePixels((long)Width * Height); var restored = (byte[])_original.Clone(); RememberUndo(); _pixels = restored; }
     public void WritePng(string path)
     { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(Bitmap())); using var output = File.Create(path); encoder.Save(output); }
 }

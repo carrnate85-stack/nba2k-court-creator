@@ -38,7 +38,7 @@ class CanvasSyncTests(unittest.TestCase):
         patch.dict(os.environ, {}, clear=True).start()
         self.calls = []
 
-    def release(self, version="0.4.1", *, core_dependency=None, only=None, folder=None, salt=""):
+    def release(self, version="0.6.0", *, core_dependency=None, only=None, folder=None, salt=""):
         directory = self.central / "artifacts" / (folder or "published-command-v" + version)
         directory.mkdir(parents=True, exist_ok=True)
         for name, assembly in zip(sync.PACKAGES, sync.ASSEMBLIES):
@@ -69,15 +69,15 @@ class CanvasSyncTests(unittest.TestCase):
         return sync.inventory(self.root / "desktop")
 
     def test_latest_matching_published_pair_is_installed_and_next_check_is_noop(self):
-        self.release("0.4.1"); self.release("0.4.2")
-        self.assertIn("0.4.2", sync.sync(self.root, automatic=True, runner=self.runner))
-        self.assertEqual(len(self.calls), 3)
+        self.release("0.6.0"); self.release("0.6.1")
+        self.assertIn("0.6.1", sync.sync(self.root, automatic=True, runner=self.runner))
+        self.assertEqual(len(self.calls), 4)
         self.assertEqual([arguments[-1] for arguments in self.calls[1:]],
-                         ["--artwork-editor", "--color-pickers"])
-        self.assertIn("0.4.2", (self.root / "desktop/Canvas.Core.dll").read_text())
+                         ["--artwork-editor", "--color-pickers", "--shared-controls"])
+        self.assertIn("0.6.1", (self.root / "desktop/Canvas.Core.dll").read_text())
         before = self.snapshot()
         self.assertIn("already", sync.sync(self.root, automatic=True, runner=self.runner))
-        self.assertEqual(len(self.calls), 3); self.assertEqual(before, self.snapshot())
+        self.assertEqual(len(self.calls), 4); self.assertEqual(before, self.snapshot())
         self.assertFalse(list(self.updates.glob("canvas-build-*")))
         self.assertFalse(list(self.updates.glob("canvas-backup-*")))
         self.assertEqual((self.root / "logos/personal.png").read_bytes(), b"personal artwork")
@@ -89,13 +89,20 @@ class CanvasSyncTests(unittest.TestCase):
         self.assertIn("Standalone", sync.sync(self.root, automatic=True, runner=self.runner))
         self.assertFalse(self.calls)
 
+    def test_older_pinned_release_cannot_build_shared_conversions(self):
+        feed = self.release("0.5.1"); before = self.snapshot()
+        os.environ["CanvasToolkitFeed"] = str(feed)
+        with self.assertRaisesRegex(ValueError, ">= 0.6.0"):
+            sync.sync(self.root, automatic=True, runner=self.runner)
+        self.assertEqual(before, self.snapshot()); self.assertFalse(self.calls)
+
     def test_incomplete_or_mismatched_release_is_rejected_without_mutation(self):
-        self.release(); self.release("0.4.2", only=sync.PACKAGES[0])
+        self.release(); self.release("0.6.1", only=sync.PACKAGES[0])
         before = self.snapshot()
         with self.assertRaisesRegex(ValueError, "missing"):
             sync.sync(self.root, automatic=True, runner=self.runner)
         self.assertEqual(before, self.snapshot()); self.assertFalse(self.calls)
-        self.release("0.4.2", core_dependency="0.4.1")
+        self.release("0.6.1", core_dependency="0.6.0")
         with self.assertRaisesRegex(ValueError, "matching Core"):
             sync.sync(self.root, automatic=True, runner=self.runner)
 
@@ -133,15 +140,28 @@ class CanvasSyncTests(unittest.TestCase):
         self.assertFalse((self.updates / sync.JOURNAL).exists())
 
     def test_same_version_republish_and_automatic_downgrade_are_rejected(self):
-        self.release("0.4.2"); sync.sync(self.root, runner=self.runner); before = self.snapshot()
-        self.release("0.4.2", salt="changed")
+        self.release("0.6.1"); sync.sync(self.root, runner=self.runner); before = self.snapshot()
+        self.release("0.6.1", salt="changed")
         with self.assertRaisesRegex(ValueError, "version bump"):
             sync.sync(self.root, runner=self.runner)
         self.assertEqual(before, self.snapshot())
-        self.release("0.4.1")
-        os.environ["CanvasToolkitFeed"] = str(self.central / "artifacts/published-command-v0.4.1")
+        self.release("0.6.0")
+        os.environ["CanvasToolkitFeed"] = str(self.central / "artifacts/published-command-v0.6.0")
         with self.assertRaisesRegex(ValueError, "downgrade"):
             sync.sync(self.root, runner=self.runner)
+
+    def test_shared_controls_gate_failure_preserves_previous_build(self):
+        self.release(); before = self.snapshot()
+        def fail_shared(arguments, root):
+            self.runner(arguments, root)
+            if arguments[-1] == "--shared-controls":
+                raise RuntimeError("shared controls failed")
+        with self.assertRaisesRegex(RuntimeError, "shared controls failed"):
+            sync.sync(self.root, automatic=True, runner=fail_shared)
+        self.assertEqual(len(self.calls), 4)
+        self.assertEqual(before, self.snapshot())
+        self.assertFalse(list(self.updates.glob("canvas-build-*")))
+        self.assertFalse((self.updates / sync.JOURNAL).exists())
 
     def test_host_changes_and_running_process_prevent_installation(self):
         self.release(); before = self.snapshot()
@@ -181,10 +201,10 @@ class CanvasSyncTests(unittest.TestCase):
         self.assertEqual((self.root / "desktop/foreign.txt").read_text(), "personal")
 
     def test_explicit_private_feed_and_version_can_pin_release(self):
-        self.release(); self.release("0.4.2")
-        os.environ["CanvasToolkitVersion"] = "0.4.1"
-        self.assertIn("0.4.1", sync.sync(self.root, runner=self.runner))
-        self.assertTrue(all("-p:CanvasToolkitVersion=0.4.1" in arguments for arguments in self.calls))
+        self.release(); self.release("0.6.1")
+        os.environ["CanvasToolkitVersion"] = "0.6.0"
+        self.assertIn("0.6.0", sync.sync(self.root, runner=self.runner))
+        self.assertTrue(all("-p:CanvasToolkitVersion=0.6.0" in arguments for arguments in self.calls))
 
     def test_automatic_recovery_runs_before_missing_source_or_feed_checks(self):
         self.updates.mkdir(); old = self.snapshot()
@@ -198,7 +218,7 @@ class CanvasSyncTests(unittest.TestCase):
     def test_source_changes_trigger_reverification_without_package_changes(self):
         self.release(); sync.sync(self.root, runner=self.runner)
         (self.root / "src/NBA2KCourtCreator/new.cs").write_text("new source")
-        sync.sync(self.root, runner=self.runner); self.assertEqual(len(self.calls), 6)
+        sync.sync(self.root, runner=self.runner); self.assertEqual(len(self.calls), 8)
 
     def test_setup_sdk_path_is_used_even_when_dotnet_is_not_on_path(self):
         self.release()

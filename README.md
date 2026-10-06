@@ -12,9 +12,15 @@ Swatch and pinned color actions open Canvas's shared `ColorPickerDialog`, with
 spectrum/hue controls, RGB/HSB inputs, hex entry and standard swatches. Court
 Creator adds Team Colors to that same dialog; Cancel leaves the court untouched.
 
-`src/TwoK.Studio` provides the native artwork canvas, transform model, and semantic
-theme foundation for the suite. Its light/dark palette matches 2K Canvas. Export
-still uses original source assets at 8192 x 4096, rather than resampling the preview.
+`src/TwoK.Studio` provides the court placement canvas and transform model. Its
+theme and toolbar-icon adapters now use the actual central Canvas WPF controls
+and palette. Shared preview conversion preserves transparency and game-data RGB.
+Logo imports use shared raster/DDS decoding and Windows color-profile conversion;
+profiled, oriented and alternate-format logos are normalized to owned PNGs so the
+preview and exported court use the same pixels. Shared memory preflight rejects
+large image operations before allocation without discarding the preceding draft.
+Export uses full-resolution source or normalized working assets at 8192 x 4096,
+rather than resampling the preview.
 Floor selection uses a searchable popup catalog with categories, favorites, and recents.
 
 Native Save/Save As now creates a portable `.court.json` and a neighboring
@@ -25,7 +31,7 @@ offers Retry in the status bar without requiring an application restart.
 
 Run `Build Court Creator.bat` after code changes. In a source checkout, the desktop
 launcher also adopts newer matching published central Canvas packages automatically
-before opening the app: it tests artwork and shared-color integration in a
+before opening the app: it tests artwork, shared-color and shared-control integration in a
 candidate build and retains the last working build on failure. Unchanged launches
 do not rebuild. The launcher uses the
 published `desktop` build. `Launch Electron Fallback.bat` preserves access to the
@@ -36,7 +42,7 @@ sibling Canvas app. The accompanying court JSON stays editable in Court Creator.
 This is a one-way flattened texture handoff, not live two-way layer synchronization.
 **Edit Artwork...** opens a compact native editor for the selected hardwood or
 logo/graphic using matching `TwoK.Canvas.Core` and `TwoK.Canvas.Wpf` packages,
-starting at v0.4.1. Supported programmatic edits use `CanvasEditor.Commands` for
+with minimum v0.6.0. Supported programmatic edits use `CanvasEditor.Commands` for
 atomic history and automatic preview updates. Shared selections,
 brush/eraser, eyedropper, text, layers/masks, transforms and navigation operate on
 a private draft. Apply updates the court with one undo step; Cancel, Escape and
