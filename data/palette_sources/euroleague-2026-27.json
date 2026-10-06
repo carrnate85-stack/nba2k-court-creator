@@ -1,0 +1,334 @@
+{
+  "league": "EuroLeague",
+  "season": "2026-27",
+  "verifiedAt": "2026-09-30",
+  "membershipVerified": true,
+  "membershipSourceUrls": [
+    "https://mediacentre.euroleague.net/en/app/2/communication/communication/preview/24407",
+    "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2"
+  ],
+  "seasonNote": "Beşiktaş Istanbul replaces AS Monaco. Current official 2026-27 logo package supersedes stale generic team pages.",
+  "method": "All assets downloaded from official EuroLeague team-logo share. Only Efes and Olympiacos have explicitly documented HEX guides; all other values are extracted/derived from official artwork. Primary/secondary/accent assignments are curated court presets, not assertions of official palette rank. No color was taken from memory or third-party color websites. Exact artwork samples can differ across official file formats.",
+  "teams": [
+    {
+      "id": "anadolu-efes",
+      "name": "Anadolu Efes Istanbul",
+      "primary": "#234678",
+      "secondary": "#FFFFFF",
+      "accent": "#E12319",
+      "additionalColors": [
+        "#00A9E0"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_documented_hex",
+      "isOfficialHexSpecification": true,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27172?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9574",
+      "notes": "Official 50th-year logo guide lists HEX values. Its Flaming Red RGB line says R255 but its HEX line is e12319 (R225); use the explicitly documented HEX. Artwork PDF contains slightly different fills; guide takes precedence."
+    },
+    {
+      "id": "olimpia-milano",
+      "name": "Armani Olimpia Milan",
+      "primary": "#AB1C2E",
+      "secondary": "#FFFFFF",
+      "accent": "#000000",
+      "additionalColors": [],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_svg_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35587?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9580",
+      "notes": "SVG red and white CSS fills; black is the SVG default fill on the sponsor lettering."
+    },
+    {
+      "id": "besiktas",
+      "name": "Besiktas Istanbul",
+      "primary": "#000000",
+      "secondary": "#FFFFFF",
+      "accent": "#E30A17",
+      "additionalColors": [
+        "#292929"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_svg_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35618?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/11450",
+      "notes": "RGB emblem SVG: black default fill, white and red CSS fills. Dark gray also appears."
+    },
+    {
+      "id": "crvena-zvezda",
+      "name": "Crvena Zvezda Meridianbet Belgrade",
+      "primary": "#EB1C27",
+      "secondary": "#FFFFFF",
+      "accent": "#D0AE6E",
+      "additionalColors": [],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26859?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9566",
+      "notes": "Most frequent fully opaque flat-color pixels from league-supplied PNG. CMYK PDF renders slightly differently, so these are artwork-derived digital values, not a documented brand specification."
+    },
+    {
+      "id": "dubai-basketball",
+      "name": "Dubai Basketball",
+      "primary": "#101820",
+      "secondary": "#916637",
+      "accent": "#707479",
+      "additionalColors": [
+        "#FFFFFF"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_pdf_rgb_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26860?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9567",
+      "notes": "Embedded RGB vector fills converted to nearest 8-bit RGB: dark navy, gold/brown and gray. Official PNG has different rendered values (#111821/#8B6F4C/#656B71); PDF RGB fills are used consistently here."
+    },
+    {
+      "id": "fc-barcelona",
+      "name": "FC Barcelona",
+      "primary": "#002596",
+      "secondary": "#8B2346",
+      "accent": "#FFD200",
+      "additionalColors": [
+        "#CC092F",
+        "#DEB500",
+        "#FFFFFF",
+        "#000000"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_ai_rgb_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26861?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9568",
+      "notes": "PDF-compatible BARCA V RGB.ai contains RGB vector fills; blue, claret and yellow selected from crest."
+    },
+    {
+      "id": "bayern-munich",
+      "name": "FC Bayern Munich",
+      "primary": "#ED0037",
+      "secondary": "#FFFFFF",
+      "accent": "#286CFC",
+      "additionalColors": [
+        "#1D1D1B"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_svg_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26913?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9597",
+      "notes": "RGB SVG red, white and blue CSS fills; very dark gray lettering is an additional color."
+    },
+    {
+      "id": "fenerbahce",
+      "name": "Fenerbahce Tarfin Istanbul",
+      "primary": "#F3E63C",
+      "secondary": "#21314F",
+      "accent": "#8D734B",
+      "additionalColors": [
+        "#FFFFFF",
+        "#FFED00",
+        "#12326E",
+        "#292F4B"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_pdf_rgb_and_spot_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35570?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9569",
+      "notes": "2026-27 120th-anniversary/sponsor artwork. Yellow/navy selected from main crest on page 1; gold is spot-color conversion. Additional background variants in the PDF use #FFED00 and #12326E; these are not claimed as a documented universal brand palette."
+    },
+    {
+      "id": "hapoel-tel-aviv",
+      "name": "Hapoel IBI Tel Aviv",
+      "primary": "#D10E09",
+      "secondary": "#FFFFFF",
+      "accent": "#D10E09",
+      "additionalColors": [],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_ai_rgb_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35591?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9570",
+      "notes": "RGB fill (0.82,0.055,0.035) and white from PDF-compatible AI. No third distinct color in supplied color emblem; accent intentionally repeats red."
+    },
+    {
+      "id": "baskonia",
+      "name": "Kosner Baskonia Vitoria-Gasteiz",
+      "primary": "#0E2240",
+      "secondary": "#CE162D",
+      "accent": "#FFFFFF",
+      "additionalColors": [
+        "#AB132D",
+        "#D9D9D7"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_pdf_color_converted",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/30348?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9565",
+      "notes": "League-supplied vector PDF includes spot/CMYK artwork; these are MuPDF-rendered RGB approximations for crest navy/red/white, not published HEX standards."
+    },
+    {
+      "id": "asvel",
+      "name": "LDLC ASVEL Villeurbanne",
+      "primary": "#222222",
+      "secondary": "#FFFFFF",
+      "accent": "#333333",
+      "additionalColors": [],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample_with_neutral",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26886?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9582",
+      "notes": "Logo PNG has opaque #222222 main mark and #333333 lettering. White is a neutral court/background selection, not sampled from this transparent PNG. No separate chromatic third team color verified."
+    },
+    {
+      "id": "maccabi-tel-aviv",
+      "name": "Maccabi Rapyd Tel Aviv",
+      "primary": "#FED233",
+      "secondary": "#233A78",
+      "accent": "#FFFFFF",
+      "additionalColors": [
+        "#3866B0"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/29956?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9571",
+      "notes": "Dominant opaque pixels in supplied color PNG. File is named CMYK_Positive.png; values here are decoded RGB artwork samples. PDF rendering is slightly different (#FED333/#3A66B0)."
+    },
+    {
+      "id": "olympiacos",
+      "name": "Olympiacos Piraeus",
+      "primary": "#C8102E",
+      "secondary": "#FFFFFF",
+      "accent": "#C8102E",
+      "additionalColors": [],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_documented_hex",
+      "isOfficialHexSpecification": true,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27189?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9572",
+      "notes": "Official Color Palette defines Eternal Red #C8102E (Pantone 186 C) and Victory White #FFFFFF only. Accent repeats red because no distinct third official color is specified."
+    },
+    {
+      "id": "panathinaikos",
+      "name": "Panathinaikos AKTOR Athens",
+      "primary": "#00793B",
+      "secondary": "#FFFFFF",
+      "accent": "#FF8E00",
+      "additionalColors": [
+        "#FFE500",
+        "#000000"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27143?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9585",
+      "notes": "Dominant opaque colors in ON_LIGHT_BG_RGB.png: green, orange basketball, yellow stars, black and white. White secondary and orange accent are curator-selected court roles."
+    },
+    {
+      "id": "paris-basketball",
+      "name": "Paris Basketball",
+      "primary": "#000000",
+      "secondary": "#FFFFFF",
+      "accent": "#004CFF",
+      "additionalColors": [
+        "#FF0000",
+        "#0050FF"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_pdf_rgb_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26903?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9588",
+      "notes": "Black/white crest artwork also contains red and two near-blue fills. Selected #004CFF is the more prevalent blue in the PNG counterpart; red remains an alternate."
+    },
+    {
+      "id": "partizan",
+      "name": "Partizan Mozzart Bet Belgrade",
+      "primary": "#000000",
+      "secondary": "#FFFFFF",
+      "accent": "#EC2128",
+      "additionalColors": [
+        "#C2922F",
+        "#B2B6BA"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_pdf_color_converted",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26906?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9591",
+      "notes": "League-supplied color.pdf vector fills converted to RGB; black/white with red star. Gold and silver also appear. PNG is slightly different, so not certified brand HEX."
+    },
+    {
+      "id": "real-madrid",
+      "name": "Real Madrid",
+      "primary": "#FFFFFF",
+      "secondary": "#004C9A",
+      "accent": "#FBC200",
+      "additionalColors": [
+        "#E22148"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27125?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9593",
+      "notes": "Dominant opaque flat-color pixels in official league-supplied Logo_madrid.png. White/blue/gold roles chosen for court use; red crown detail remains alternate."
+    },
+    {
+      "id": "valencia-basket",
+      "name": "Valencia Basket",
+      "primary": "#FF6C0E",
+      "secondary": "#000000",
+      "accent": "#009FE3",
+      "additionalColors": [
+        "#FFFFFF",
+        "#E4032C",
+        "#FDD700"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_svg_fill",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35606?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9639",
+      "notes": "2026-27 40th-anniversary RGB color SVG. Orange/blue defined in CSS; black is default SVG fill. Colors reflect current league-supplied anniversary artwork."
+    },
+    {
+      "id": "virtus-bologna",
+      "name": "Virtus Bologna",
+      "primary": "#000000",
+      "secondary": "#FFFFFF",
+      "accent": "#938C6C",
+      "additionalColors": [],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35868?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9576",
+      "notes": "Main 2026-27 logo PNG dominant opaque black, white and gold/olive pixels. CMYK PDF renders gold closer to #87856A; use consistent PNG-derived value, not a documented standard."
+    },
+    {
+      "id": "zalgiris-kaunas",
+      "name": "Zalgiris Kaunas",
+      "primary": "#00803F",
+      "secondary": "#FFFFFF",
+      "accent": "#FC8231",
+      "additionalColors": [
+        "#000000"
+      ],
+      "paletteRoleStatus": "curated_for_court",
+      "evidenceStatus": "official_png_sample",
+      "isOfficialHexSpecification": false,
+      "sourceUrl": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26876?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "sourceFolderUrl": "https://hub.euroleague.tech/en/app/17/files/folder/share/show/3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2/9573",
+      "notes": "Dominant opaque flat colors from league-supplied crest PNG. Green/white/orange roles selected for court use; black outline/wordmark included as extra."
+    }
+  ]
+}

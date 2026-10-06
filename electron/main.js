@@ -1,5 +1,8 @@
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const { spawn } = require("child_process");
+const { PythonWorker } = require("./python-worker");
+const { LogoEditorSession } = require("./logo-editor-session");
+const StudioTheme = require("./studio-theme");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -11,6 +14,7 @@ const legacyAssetRoot = path.join(os.homedir(), "OneDrive", "Documents", "2kcour
 const legacyOneDriveProjectRoot = path.join(os.homedir(), "OneDrive", "Documents", "NBA 2K Court Creator");
 const engineTimeoutMs = 120000;
 let mainWindow = null;
+let studioTheme = "light";
 
 function remapStoredPath(value) {
   if (typeof value !== "string") return value;
@@ -64,98 +68,35 @@ function pythonCommand() {
   return { exe: "py", prefix: ["-3"] };
 }
 
-let worker = null;
-let sequence = 0;
-const requests = new Map();
+const previewWorker = new PythonWorker(pythonCommand, projectRoot);
+const exportWorker = new PythonWorker(pythonCommand, projectRoot);
+const logoEditor = new LogoEditorSession({ BrowserWindow, spawn, pythonCommand, projectRoot,
+  theme: () => studioTheme,
+  prepare: request => runImportRequest("prepare-logo-editor", request, 240000),
+  parent: () => mainWindow,
+  onUpdate: data => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("logo-editor:update", data); },
+});
 
-function rejectRequests(error) {
-  for (const pending of requests.values()) {
-    clearTimeout(pending.timer);
-    pending.reject(error);
-  }
-  requests.clear();
-}
-
-function startWorker() {
-  const command = pythonCommand();
-  const child = spawn(command.exe, [...command.prefix, "-u", "-m", "court_creator.service"], {
-    cwd: projectRoot,
-    windowsHide: true,
-  });
-  worker = child;
-  let stdout = "";
-  let stderr = "";
-
-  const fail = (error) => {
-    if (worker !== child) return;
-    worker = null;
-    if (!child.killed) child.kill();
-    const detail = stderr.trim();
-    rejectRequests(new Error(detail ? `${error.message}: ${detail.slice(-2000)}` : error.message));
-  };
-
-  child.stdout.on("data", (chunk) => {
-    stdout += chunk.toString();
-    let end;
-    while ((end = stdout.indexOf("\n")) >= 0) {
-      const line = stdout.slice(0, end).trim();
-      stdout = stdout.slice(end + 1);
-      if (!line) continue;
-      try {
-        const message = JSON.parse(line);
-        const pending = requests.get(message.id);
-        if (!pending) continue;
-        requests.delete(message.id);
-        clearTimeout(pending.timer);
-        if (message.error) pending.reject(new Error(message.error));
-        else pending.resolve(message.result);
-      } catch (error) {
-        fail(new Error("Rendering engine returned an invalid response"));
-      }
-    }
-  });
-  child.stderr.on("data", (chunk) => {
-    stderr = `${stderr}${chunk.toString()}`.slice(-8000);
-  });
-  child.on("error", (error) => fail(new Error(`Unable to start the rendering engine (${error.message})`)));
-  child.on("close", (code) => fail(new Error(`Rendering engine stopped${code ? ` with code ${code}` : ""}`)));
-  return child;
-}
-
-function runPython(args) {
-  return new Promise((resolve, reject) => {
-    const child = worker || startWorker();
-    const id = ++sequence;
-    const timer = setTimeout(() => {
-      if (!requests.has(id)) return;
-      requests.delete(id);
-      reject(new Error("Rendering took too long. The engine was restarted; try again."));
-      if (worker === child) {
-        worker = null;
-        child.kill();
-        rejectRequests(new Error("The rendering engine was restarted after a timeout."));
-      }
-    }, engineTimeoutMs);
-    requests.set(id, { resolve, reject, timer });
-    const handleWriteError = (error) => {
-      if (!error || !requests.has(id)) return;
-      requests.delete(id);
-      clearTimeout(timer);
-      reject(new Error(`Could not contact the rendering engine (${error.message})`));
-    };
-    try {
-      child.stdin.write(`${JSON.stringify({ id, args })}\n`, handleWriteError);
-    } catch (error) {
-      handleWriteError(error);
-    }
-  });
+function runPython(args, timeoutMs = engineTimeoutMs, lane = "preview") {
+  return (lane === "export" ? exportWorker : previewWorker).run(args, timeoutMs);
 }
 
 async function renderPreview(request) {
   const requestPath = path.join(os.tmpdir(), `nba2k-court-render-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
   await fs.promises.writeFile(requestPath, JSON.stringify(request), "utf8");
   try {
-    return await runPython(["render", "--request", requestPath]);
+    return await runPython(["render", "--request", requestPath], request.exportFullResolution ? 900000 : engineTimeoutMs,
+      request.exportFullResolution ? "export" : "preview");
+  } finally {
+    fs.promises.unlink(requestPath).catch(() => {});
+  }
+}
+
+async function runImportRequest(command, request, timeoutMs = engineTimeoutMs) {
+  const requestPath = path.join(os.tmpdir(), `nba2k-court-import-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
+  await fs.promises.writeFile(requestPath, JSON.stringify(request), "utf8");
+  try {
+    return await runPython([command, requestPath], timeoutMs, command.startsWith("export-") ? "export" : "preview");
   } finally {
     fs.promises.unlink(requestPath).catch(() => {});
   }
@@ -170,14 +111,14 @@ function createWindow() {
     title: "NBA 2K Court Creator",
     titleBarStyle: "hidden",
     titleBarOverlay: {
-      color: "#F8FAFB",
-      symbolColor: "#102134",
-      height: 58,
+      color: StudioTheme.colors(studioTheme).PanelBrush,
+      symbolColor: StudioTheme.colors(studioTheme).TextBrush,
+      height: 46,
     },
     autoHideMenuBar: true,
     show: false,
     icon: path.join(projectRoot, "src", "NBA2KCourtCreator", "Assets", "app-icon.ico"),
-    backgroundColor: "#F6F7F3",
+    backgroundColor: StudioTheme.colors(studioTheme).WindowBrush,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -219,7 +160,9 @@ if (!hasSingleInstanceLock) {
 }
 
 app.on("window-all-closed", () => {
-  if (worker) worker.kill();
+  logoEditor.close().catch(error => console.error(error));
+  previewWorker.stop();
+  exportWorker.stop();
   if (process.platform !== "darwin") app.quit();
 });
 
@@ -257,7 +200,7 @@ ipcMain.on("project:recover-write", (_event, data) => {
   if (recoveryTimer) clearTimeout(recoveryTimer);
   recoveryTimer = setTimeout(flushRecovery, 250);
 });
-app.on("before-quit", flushRecovery);
+app.on("before-quit", () => { flushRecovery(); logoEditor.session?.process?.kill(); });
 ipcMain.handle("project:recovery", () => {
   try { return remapProjectPaths(JSON.parse(fs.readFileSync(recoveryPath(), "utf8"))); } catch { return null; }
 });
@@ -279,7 +222,7 @@ ipcMain.handle("project:open", async () => {
   const result = await dialog.showOpenDialog(mainWindow, { properties: ["openFile"], filters: [{ name: "Court project", extensions: ["json"] }] });
   if (result.canceled) return null;
   const data = remapProjectPaths(JSON.parse(fs.readFileSync(result.filePaths[0], "utf8")));
-  if (data.version !== 1 || !data.templatePath) throw new Error("Not a Court Creator project.");
+  if (!((data.version === 1 && data.templatePath) || (data.version === 2 && data.buildMode === "game-uv"))) throw new Error("Not a Court Creator project.");
   if (!Array.isArray(data.logoImages)) data.logoImages = [];
   if (!data.visibility || typeof data.visibility !== "object") data.visibility = {};
   if (!data.colorOverrides || typeof data.colorOverrides !== "object") data.colorOverrides = {};
@@ -288,17 +231,89 @@ ipcMain.handle("project:open", async () => {
 });
 
 ipcMain.handle("app:info", () => ({ version: app.getVersion() }));
+ipcMain.handle("app:studio-theme", (event, name) => {
+  if (event.sender !== mainWindow?.webContents) throw new Error("Theme changes require the main workspace.");
+  studioTheme = name === "dark" ? "dark" : "light";
+  const palette = StudioTheme.colors(studioTheme);
+  mainWindow.setTitleBarOverlay({ color: palette.PanelBrush, symbolColor: palette.TextBrush, height: 46 });
+  mainWindow.setBackgroundColor(palette.WindowBrush);
+  return studioTheme;
+});
 
 ipcMain.handle("backend:load", async (_event, templatePath) => {
-  const args = templatePath ? ["load", "--template", templatePath] : ["load"];
-  return runPython(args);
+  return runPython(["load-stock"], 240000);
 });
 
 ipcMain.handle("backend:render", async (_event, request) => renderPreview(request));
+ipcMain.handle("backend:experimental", async (_event, prepare) => runPython(["experimental-lines", Boolean(prepare)], 240000));
+ipcMain.handle("logo-editor:open", async (_event, request) => logoEditor.open(request));
 
 ipcMain.handle("backend:sample-color", async (_event, layerId) => runPython(["sample-color", "--layer-id", layerId]));
 
-ipcMain.handle("backend:add-floor", async (_event, sourcePath) => runPython(["add-floor", "--source", sourcePath]));
+ipcMain.handle("backend:add-floor", async (_event, sourcePath) => runPython(["add-stock-floor", "--source", sourcePath]));
+
+ipcMain.handle("backend:inspect-import", async (_event, sourcePath, target, selected) => runPython(["inspect-import", sourcePath, Boolean(target), selected]));
+ipcMain.handle("backend:import-base-status", async () => runPython(["import-base-status"]));
+async function ensureExportBase(event) {
+  try {
+    return await runPython(["prepare-import-base", ""], 600000, "export");
+  } catch (error) {
+    if (!String(error.message || error).includes("NBA 2K27 was not found")) throw error;
+    const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
+      title: "Choose the NBA 2K27 game folder",
+      properties: ["openDirectory"],
+    });
+    if (result.canceled) return null;
+    return runPython(["prepare-import-base", result.filePaths[0]], 600000, "export");
+  }
+}
+ipcMain.handle("backend:prepare-import-base", ensureExportBase);
+ipcMain.handle("backend:preview-import", async (_event, request) => runImportRequest("preview-import", request));
+ipcMain.handle("backend:export-import-png", async (_event, request) => runImportRequest("export-import-png", request, 600000));
+ipcMain.handle("backend:export-import-iff", async (event, request) => {
+  if (!await ensureExportBase(event)) return null;
+  return runImportRequest("export-import-iff", request, 900000);
+});
+ipcMain.handle("backend:export-current-iff", async (event, request) => {
+  if (!await ensureExportBase(event)) return null;
+  return runImportRequest("export-current-iff", request, 900000);
+});
+
+ipcMain.handle("dialog:import-iff", async (event, target) => {
+  const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
+    title: target ? "Choose a working NBA 2K27 floor IFF" : "Import an older court IFF",
+    filters: [{ name: "NBA 2K IFF", extensions: ["iff"] }],
+    properties: ["openFile"],
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle("dialog:export-import-png", async (event) => {
+  const result = await dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), {
+    title: "Save aligned court texture",
+    defaultPath: "converted-court-2k27.png",
+    filters: [{ name: "PNG", extensions: ["png"] }],
+  });
+  return result.canceled ? null : result.filePath;
+});
+
+ipcMain.handle("dialog:export-import-iff", async (event) => {
+  const result = await dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), {
+    title: "Save converted court IFF",
+    defaultPath: "converted-court-2k27.iff",
+    filters: [{ name: "NBA 2K IFF", extensions: ["iff"] }],
+  });
+  return result.canceled ? null : result.filePath;
+});
+
+ipcMain.handle("dialog:export-current-iff", async (event) => {
+  const result = await dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), {
+    title: "Export NBA 2K27 court IFF",
+    defaultPath: "court-export-2k27.iff",
+    filters: [{ name: "NBA 2K IFF", extensions: ["iff"] }],
+  });
+  return result.canceled ? null : result.filePath;
+});
 
 ipcMain.handle("dialog:open-psd", async (event) => {
   const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {

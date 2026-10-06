@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NBA 2K Court Creator</title>
+    <script src="../studio-theme.js"></script>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,38 +13,32 @@
         <img src="../../src/NBA2KCourtCreator/Assets/app-icon.png" alt="" />
         <div><strong>NBA 2K Court Creator</strong><span>Create. Customize. Play.</span></div>
       </div>
+      <div class="top-actions">
+        <button id="newButton" type="button" aria-label="New" title="New"><span data-icon="file-plus"></span><span>New</span></button>
+        <button id="openProjectButton" type="button" aria-label="Open" title="Open"><span data-icon="folder-open"></span><span>Open</span></button>
+        <button id="saveProjectButton" type="button" aria-label="Save" title="Save"><span data-icon="save"></span><span>Save</span></button>
+        <span class="action-divider" aria-hidden="true"></span>
+        <button id="openButton" class="hidden" type="button"><span data-icon="upload"></span><span>Import PSD</span></button>
+        <button id="refreshButton" type="button" aria-label="Refresh" title="Refresh"><span data-icon="refresh-cw"></span><span>Refresh</span></button>
+        <button id="exportButton" class="primary" type="button" aria-label="Export PNG" title="Export PNG"><span data-icon="upload"></span><span>Export PNG</span></button>
+      </div>
+      <button id="themeButton" class="icon-button theme-button" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span data-icon="moon"></span></button>
     </header>
 
     <aside class="sidebar">
-      <div class="brand">
-        <img src="../../src/NBA2KCourtCreator/Assets/app-icon.png" alt="" />
-        <div><strong>NBA 2K</strong><h1>Court Creator</h1><span>Companion workspace</span></div>
-      </div>
       <nav>
         <button class="nav active" data-section="floors"><span data-icon="court"></span><span>Court Floors</span></button>
         <button class="nav" data-section="paint"><span data-icon="pen-line"></span><span>Paint &amp; Lines</span></button>
         <button class="nav" data-section="logos"><span data-icon="image"></span><span>Logos</span></button>
+        <button class="nav" data-section="import"><span data-icon="download"></span><span>Import</span></button>
         <button class="nav" data-section="export"><span data-icon="upload"></span><span>Export</span></button>
       </nav>
       <small id="versionLabel">Loading court library...</small>
     </aside>
 
     <main class="app">
-      <header class="topbar">
-        <div class="project-heading"><h2 id="projectTitle">Untitled court</h2><p id="status" aria-live="polite">Starting workspace...</p></div>
-        <div class="top-actions">
-          <button id="newButton" type="button"><span data-icon="file-plus"></span><span>New</span></button>
-          <button id="openProjectButton" type="button"><span data-icon="folder-open"></span><span>Open</span></button>
-          <button id="saveProjectButton" type="button"><span data-icon="save"></span><span>Save</span></button>
-          <span class="action-divider" aria-hidden="true"></span>
-          <button id="openButton" type="button"><span data-icon="upload"></span><span>Import PSD</span></button>
-          <button id="refreshButton" type="button"><span data-icon="refresh-cw"></span><span>Refresh</span></button>
-          <button id="exportButton" class="primary" type="button"><span data-icon="upload"></span><span>Export PNG</span></button>
-        </div>
-      </header>
-
       <section class="workspace">
-        <div class="workspace-heading">
+        <div class="workspace-heading hidden">
           <div><span class="eyebrow">COURT DESIGN</span><h2 id="sectionTitle">Court Floors</h2><p id="sectionSubtitle">Choose one court floor at a time from NBA 2K27 Courts.</p></div>
           <button id="currentCourtButton" class="current-court-button hidden" type="button"><span>Court: <strong id="currentCourtName">No court selected</strong></span><span data-icon="chevron-down" data-icon-size="16"></span></button>
         </div>
@@ -67,14 +62,15 @@
                 </div>
               </div>
               <div id="previewStage" class="preview-stage">
-                <div id="previewShell" class="preview-shell" aria-busy="false"><img id="previewImage" alt="Court preview" /><div id="previewEmpty">Loading court preview...</div></div>
+                <div id="previewShell" class="preview-shell" aria-busy="false"><img id="previewImage" alt="Court preview" /><canvas id="experimentalCanvas" class="hidden" width="2048" height="1024" aria-label="Court preview"></canvas><div id="previewEmpty">Loading court preview...</div></div>
+                <div id="importPreviewStage" class="import-preview-stage hidden"><img id="importPreviewImage" alt="Aligned imported court" /><span id="importPreviewEmpty">Choose an older court IFF</span></div>
               </div>
             </section>
 
             <div class="selected-card">
               <div class="selected-thumbnail" aria-hidden="true"><img id="selectedFloorImage" alt="" /><span id="selectedFloorFallback" data-icon="court"></span></div>
               <div class="selected-summary"><span id="selectedLabel">Selected Court</span><strong id="selectedText">No court selected.</strong><small id="selectedCategory">NBA 2K27</small></div>
-              <span class="selected-chevron" data-icon="chevron-right"></span>
+              <button id="browseFloorButton" class="icon-button selected-chevron" type="button" aria-label="Browse hardwood catalog" title="Browse hardwood catalog"><span data-icon="chevron-right"></span></button>
               <div class="selected-detail"><span>Court Size</span><strong>NBA (94' x 50')</strong></div>
               <div class="selected-detail surface-detail"><span>Surface</span><strong><i></i>Hardwood</strong></div>
             </div>
@@ -82,19 +78,8 @@
 
           <section class="work-column">
             <section id="layersPanel" class="panel">
-              <div id="floorBrowser" class="floor-browser">
-                <div class="panel-heading"><h3>Courts</h3><button id="addFloorButton" class="primary" type="button"><span data-icon="plus"></span><span>Add Custom Floor</span></button></div>
-                <label class="search-box" for="floorSearch"><span data-icon="search"></span><input id="floorSearch" type="search" placeholder="Search courts..." /></label>
-                <div id="floorFilters" class="floor-filters" role="tablist" aria-label="Court categories"></div>
-                <div class="floor-browser-tools">
-                  <label class="sort-control"><span>Sort by</span><select id="floorSort"><option value="name">A - Z</option><option value="number">Court number</option><option value="category">Category</option><option value="recent">Recently used</option></select></label>
-                  <div class="view-switch" role="group" aria-label="Court browser view"><button id="floorGridButton" class="icon-button active" type="button" aria-label="Grid view"><span data-icon="grid"></span></button><button id="floorListButton" class="icon-button" type="button" aria-label="List view"><span data-icon="list"></span></button></div>
-                </div>
-                <div id="floorGallery" class="floor-gallery" role="listbox" aria-label="Court floors"></div>
-              </div>
-
               <div id="paintBrowser" class="paint-browser hidden">
-                <div class="inspector-tabs" role="tablist" aria-label="Paint editor views"><button class="inspector-tab active" data-paint-tab="layers" type="button"><span data-icon="layers"></span><span>Layers</span></button><button class="inspector-tab" data-paint-tab="colors" type="button"><span data-icon="palette"></span><span>Colors</span></button></div>
+                <div class="inspector-tabs hidden" role="tablist" aria-label="Paint editor views"><button class="inspector-tab active" data-paint-tab="layers" type="button"><span data-icon="layers"></span><span>Layers</span></button><button class="inspector-tab" data-paint-tab="colors" type="button"><span data-icon="palette"></span><span>Colors</span></button></div>
                 <div id="paintLayersView" class="paint-view">
                   <label class="search-box compact-search" for="layerSearch"><span data-icon="search"></span><input id="layerSearch" type="search" placeholder="Search layers..." /></label>
                   <div class="table-head"><span id="layerNameHeader">Layer / section</span><span>State</span><span id="layerColorHeader">Color</span></div>
@@ -110,7 +95,7 @@
 
             <section id="logosPanel" class="panel hidden">
               <div class="panel-heading"><h3>Logo Layers</h3><button id="importLogoButton" class="primary" type="button"><span data-icon="plus"></span><span>Import Logo</span></button></div>
-              <div class="panel-actions"><button id="duplicateLogoXButton">Copy on X</button><button id="duplicateLogoYButton">Copy on Y</button><button id="removeLogoButton">Remove Logo</button></div>
+              <div class="panel-actions"><button id="openLogoEditorButton"><span data-icon="image"></span><span>Logo Editor</span></button><button id="duplicateLogoXButton">Copy on X</button><button id="duplicateLogoYButton">Copy on Y</button><button id="removeLogoButton">Remove Logo</button></div>
               <div class="logo-grid">
                 <div id="logoList" class="logo-list"></div>
                 <div class="inspector">
@@ -122,13 +107,72 @@
               </div>
             </section>
 
+            <section id="experimentalPanel" class="panel experimental-panel hidden">
+              <div class="panel-heading"><h3>Stock Geometry</h3><button id="experimentalPrepare" type="button"><span data-icon="download"></span><span>Decode Stock Lines</span></button></div>
+              <div class="experimental-floor-controls">
+                <select id="experimentalMapping" aria-label="Marking alignment"><option value="game-uv">Game UV</option><option value="template">Template Aligned</option></select>
+                <label class="search-box" for="experimentalFloorSearch"><span data-icon="search"></span><input id="experimentalFloorSearch" type="search" placeholder="Search stock floors..." /></label>
+                <select id="experimentalFloor" aria-label="Stock hardwood"></select>
+                <label class="experimental-outside">Outside<input id="experimentalOutside" type="color" value="#19583F" /><input id="experimentalOutsideHex" type="text" maxlength="7" value="#19583F" aria-label="Outside hex color" /></label>
+              </div>
+              <div class="experimental-line-heading"><strong>Paint &amp; Lines</strong><span>Visible</span><span>Color</span></div>
+              <div id="experimentalLines" class="experimental-lines"></div>
+              <div class="experimental-actions"><button id="experimentalReset" type="button"><span data-icon="refresh-cw"></span><span>Reset Paint &amp; Lines</span></button><button id="experimentalPng" type="button"><span data-icon="image"></span><span>Export PNG</span></button><button id="experimentalIff" class="primary" type="button"><span data-icon="upload"></span><span>Build IFF</span></button></div>
+              <p id="experimentalStatus" class="import-status" aria-live="polite"></p>
+            </section>
+
+            <section id="importPanel" class="panel import-panel hidden">
+              <div class="panel-heading"><h3>Convert Court</h3></div>
+              <div class="import-content">
+                <section class="import-group">
+                  <div class="import-group-heading"><strong>Older Court</strong><button id="importSourceButton" class="primary" type="button"><span data-icon="folder-open"></span><span>Open IFF</span></button></div>
+                  <div id="importSourceName" class="import-file-name">No court selected</div>
+                  <label class="import-field">Floor texture<select id="importTexture" disabled></select></label>
+                  <div id="importTextureInfo" class="import-meta"></div>
+                </section>
+
+                <section class="import-group">
+                  <div class="import-group-heading"><strong>Court Edges</strong><button id="importAutoEdges" type="button" disabled><span data-icon="scan"></span><span>Auto-fit</span></button></div>
+                  <div class="import-edges">
+                    <label>Left<input id="importEdgeLeft" type="number" min="0" step="1" disabled /></label>
+                    <label>Top<input id="importEdgeTop" type="number" min="0" step="1" disabled /></label>
+                    <label>Right<input id="importEdgeRight" type="number" min="1" step="1" disabled /></label>
+                    <label>Bottom<input id="importEdgeBottom" type="number" min="1" step="1" disabled /></label>
+                  </div>
+                </section>
+
+                <section class="import-group">
+                  <div class="import-group-heading"><strong>2K27 Export Base</strong><button id="importPrepareBase" type="button"><span data-icon="download"></span><span>Prepare</span></button></div>
+                  <div id="importTargetName" class="import-file-name">Not prepared</div>
+                  <div class="import-meta">Uses a stock 2K27 MyTEAM floor as the carrier for one baked 8192 x 4096 court texture.</div>
+                </section>
+
+                <div class="import-actions"><button id="importExportPng" type="button" disabled><span data-icon="image"></span><span>Save Texture PNG</span></button><button id="importExportIff" class="primary" type="button" disabled><span data-icon="upload"></span><span>Build IFF</span></button></div>
+                <p id="importStatus" class="import-status" aria-live="polite"></p>
+              </div>
+            </section>
+
             <section id="exportPanel" class="panel hidden">
-              <div class="export-card"><span class="export-icon" data-icon="upload" data-icon-size="28"></span><h3>Export Court</h3><p>Build a full-resolution flattened PNG from the current court design.</p><button id="exportPanelButton" class="primary"><span data-icon="upload"></span><span>Export PNG</span></button><button id="openPsdButton"><span data-icon="folder-open"></span><span>Open Source PSD</span></button></div>
+              <div class="export-card"><span class="export-icon" data-icon="upload" data-icon-size="28"></span><h3>Export Court</h3><p>Flatten the complete design into one 8192 x 4096 texture for PNG or NBA 2K27.</p><button id="exportIffButton" class="primary"><span data-icon="upload"></span><span>Build NBA 2K27 IFF</span></button><button id="exportPanelButton"><span data-icon="image"></span><span>Export Texture PNG</span></button><button id="openPsdButton" class="hidden"><span data-icon="folder-open"></span><span>Open Source PSD</span></button></div>
             </section>
           </section>
         </div>
       </section>
+      <footer class="workspace-status"><span id="projectTitle">Untitled court</span><span id="status" aria-live="polite">Starting workspace...</span></footer>
     </main>
+
+    <dialog id="floorCatalog" class="floor-catalog" aria-labelledby="floorCatalogTitle">
+      <div id="floorBrowser" class="floor-browser">
+        <div class="panel-heading"><h3 id="floorCatalogTitle">Hardwood Catalog</h3><div class="panel-actions"><button id="addFloorButton" type="button"><span data-icon="plus"></span><span>Add Custom Floor</span></button><button id="closeFloorCatalogButton" class="icon-button" type="button" aria-label="Close hardwood catalog" title="Close hardwood catalog"><span data-icon="x"></span></button></div></div>
+        <label class="search-box" for="floorSearch"><span data-icon="search"></span><input id="floorSearch" type="search" placeholder="Search courts..." /></label>
+        <div id="floorFilters" class="floor-filters" role="tablist" aria-label="Court categories"></div>
+        <div class="floor-browser-tools">
+          <label class="sort-control"><span>Sort by</span><select id="floorSort"><option value="name">A - Z</option><option value="number">Court number</option><option value="category">Category</option><option value="recent">Recently used</option></select></label>
+          <div class="view-switch" role="group" aria-label="Court browser view"><button id="floorGridButton" class="icon-button active" type="button" aria-label="Grid view" title="Grid view"><span data-icon="grid"></span></button><button id="floorListButton" class="icon-button" type="button" aria-label="List view" title="List view"><span data-icon="list"></span></button></div>
+        </div>
+        <div id="floorGallery" class="floor-gallery" role="listbox" aria-label="Court floors"></div>
+      </div>
+    </dialog>
 
     <section id="colorEditor" class="color-editor hidden" role="dialog" aria-labelledby="colorEditorTitle">
       <header id="colorEditorHandle" class="color-editor-handle"><div><span>Editing color</span><strong id="colorEditorTitle">Selected layer</strong></div><button id="colorEditorClose" class="icon-button" type="button" aria-label="Close color window">&times;</button></header>

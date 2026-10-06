@@ -5,16 +5,31 @@ import argparse
 import json
 from pathlib import Path
 import re
-import shutil
 import struct
 import sys
+import tempfile
+
+from .export_io import ensure_new_export
+from .json_io import MAX_METADATA_BYTES, read_document, read_request
+from .custom_floor_store import CustomFloorStore
 
 from .court_template import (
     CourtLayer,
+    CourtLayerDocument,
     create_court_preview_png,
     create_visible_court_preview_png,
     parse_court_psd_layers,
     sample_template_layer_color,
+)
+from .court_import import (
+    build_iff,
+    cached_2k27_base,
+    inspect_iff,
+    open_iff,
+    package_png_into_iff,
+    prepare_2k27_base,
+    read_iff_scene,
+    render_texture,
 )
 
 
@@ -31,6 +46,9 @@ LEGACY_ONEDRIVE_PROJECT_ROOT = Path.home() / "OneDrive" / "Documents" / "NBA 2K 
 CUSTOM_FLOORS_DIR = LOCAL_ASSET_ROOT / "custom_floors"
 CUSTOM_FLOORS_META = CUSTOM_FLOORS_DIR / "custom_floors.json"
 FLOOR_TEMPLATE_META_GLOB = "court_floor_templates/**/nba2k*_floor_templates.json"
+IMPORT_PREVIEW = OUTPUT_DIR / "court_import_preview.png"
+NBA2K27_EXPORT_BASE = PROJECT_ROOT / "data" / "generated" / "nba2k27-full-court-base.iff"
+DEFAULT_IMPORT_BACKGROUND = ASSET_ROOT / "court_floor_templates" / "nba2k27" / "images" / "nba2k27-floor-000-court-wood1-basecolor.png"
 BROKEN_FLOOR_TEMPLATE_IDS = {
     "nba2k26-floor-300-court-wood1-basecolor",
     "nba2k27-floor-300-court-wood1-basecolor",
@@ -302,11 +320,76 @@ def load_state(template_path: Path | None = None) -> dict:
     }
 
 
-def render_preview(request_path: Path) -> dict:
-    request = request_path if isinstance(request_path, dict) else json.loads(request_path.read_text(encoding="utf-8"))
+def stock_document(geometry: dict) -> CourtLayerDocument:
+    bounds = tuple(geometry["gameUv"]["hardwoodBounds"])
+    def layer(identifier, name, parent=None, kind="layer", visible=True, index=0):
+        return CourtLayer(identifier, name, kind, parent, index, 1 if parent else 0,
+                          visible, 255, "norm", bounds)
+    layers = [layer("stock-floors", "Court Floors", kind="group"),
+              layer("stock-floor-bounds", "Hardwood bounds", "stock-floors", visible=False),
+              layer("stock-paints", "Paint Colors", kind="group"),
+              layer("stock-lines", "Lines", kind="group"),
+              layer("stock-outside", "Outside Color")]
+    for group, entries in (("stock-paints", geometry["paints"]), ("stock-lines", geometry["layers"])):
+        layers.extend(layer(item["id"], item["name"], group, visible=item["visible"], index=index)
+                      for index, item in enumerate(entries))
+    return CourtLayerDocument("game-uv", 8192, 4096, 4, 8, 3, tuple(layers))
+
+
+def load_stock_state() -> dict:
+    from .experimental_lines import geometry_revision, load_geometry, prepare_geometry
+    geometry = load_geometry(PROJECT_ROOT) or prepare_geometry(PROJECT_ROOT)
+    document = stock_document(geometry)
+    custom_layers, custom_images = load_custom_floor_layers(document)
+    floor_layers, floor_images, library = load_floor_template_layers(document, start_index=len(custom_layers))
+    visible_layers = [item for item in document.layers if item.id != "stock-floor-bounds"]
+    colors = {item["id"]: item["color"] for item in [*geometry["paints"], *geometry["layers"]]}
+    colors["stock-outside"] = "#19583F"
+    images = [dict(item, path=str(resolve_asset_path(item["path"])),
+                   bbox=geometry["gameUv"]["hardwoodBounds"]) for item in [*custom_images, *floor_images]]
+    return {"ok": True, "buildMode": "game-uv", "geometry": geometry, "geometryRevision": geometry_revision(geometry),
+            "projectRoot": str(PROJECT_ROOT), "templatePath": "", "previewPath": "",
+            "document": {"path": "game-uv", "width": 8192, "height": 4096,
+                         "layers": [dict(asdict(item), color=colors.get(item.id)) for item in visible_layers]},
+            "visibility": {item.id: item.visible for item in [*visible_layers, *custom_layers, *floor_layers]},
+            "customFloorLayers": [asdict(item) for item in [*custom_layers, *floor_layers]],
+            "customFloorImages": images, "teamPalettes": load_team_palettes(), "presets": [],
+            "floorLibraryName": library, "floorLibraryCount": len(floor_images)}
+
+
+def _export_sources(request: dict) -> tuple[Path, ...]:
+    from .experimental_lines import geometry_path
+    values = [request.get("_projectPath"), request.get("templatePath"), (request.get("floor") or {}).get("path")]
+    values.extend(item.get("path") for key in ("logoImages", "customFloorImages") for item in request.get(key, []))
+    return (NBA2K27_EXPORT_BASE, PROJECT_ROOT / "tools" / "texconv.exe", geometry_path(PROJECT_ROOT),
+            *(resolve_asset_path(str(value)) for value in values if value))
+
+
+def render_preview(request_path: Path, *, geometry: dict | None = None) -> dict:
+    request = request_path if isinstance(request_path, dict) else read_request(request_path)
+    if request.get("experimental") or request.get("buildMode") == "game-uv":
+        from .experimental_lines import render_experimental, request_geometry
+        geometry = request_geometry(PROJECT_ROOT, request) if geometry is None else geometry
+        output_path = Path(request.get("outputPath") or OUTPUT_DIR / "experimental_preview.png")
+        protected_sources = _export_sources(request)
+        ensure_new_export(output_path, *protected_sources)
+        floor = dict(request.get("floor") or {})
+        floor_path = resolve_asset_path(str(floor.get("path", "")))
+        if not floor_path.is_file() and floor.get("id"):
+            resolved = next((item for item in load_stock_state()["customFloorImages"] if item["id"] == floor["id"]), floor)
+            floor = {**resolved, **({"sourceRevision": floor["sourceRevision"]} if "sourceRevision" in floor else {})}
+            floor_path = resolve_asset_path(str(floor.get("path", "")))
+        floor["path"] = str(floor_path)
+        logos = [dict(item, path=str(resolve_asset_path(str(item.get("path", "")))))
+                 for item in request.get("logoImages", [])]
+        render_experimental(PROJECT_ROOT, {**request, "floor": floor, "logoImages": logos}, output_path,
+                            preview=not request.get("exportFullResolution"), geometry=geometry, protected_sources=protected_sources)
+        return {"ok": True, "previewPath": str(output_path)}
     template_path = resolve_asset_path(str(request.get("templatePath") or default_template_path()))
     document = parse_court_psd_layers(template_path)
     output_path = Path(request.get("outputPath") or PREVIEW_CACHE)
+    protected_sources = (template_path, *_export_sources(request))
+    ensure_new_export(output_path, *protected_sources)
     visibility = {str(key): bool(value) for key, value in request.get("visibility", {}).items()}
     for layer_id in built_in_court_floor_layer_ids(document.layers):
         visibility[layer_id] = False
@@ -334,8 +417,45 @@ def render_preview(request_path: Path) -> dict:
         custom_floor_images=custom_floor_images,
         logo_images=logo_images,
         max_size=None if request.get("exportFullResolution") else (2048, 1024),
+        protected_sources=protected_sources,
     )
     return {"ok": True, "previewPath": str(output_path)}
+
+
+def experimental_state(prepare: bool = False) -> dict:
+    from .experimental_lines import geometry_revision, prepare_geometry
+    if prepare:
+        prepare_geometry(PROJECT_ROOT)
+    state = load_stock_state()
+    geometry = state["geometry"]
+    floors = [dict(item, path=str(resolve_asset_path(item["path"])))
+              for item in state["customFloorImages"] if item.get("isTemplate")]
+    return {"ok": True, "geometry": geometry, "geometryRevision": geometry_revision(geometry), "floors": floors}
+
+
+def prepare_logo_editor(request_path: Path) -> dict:
+    from .experimental_lines import editor_guides, load_geometry, prepare_geometry
+    from tools.court_logo_web import clean_items
+    request = read_request(request_path)
+    native = request.get("buildMode") == "game-uv"
+    document = stock_document(load_geometry(PROJECT_ROOT) or prepare_geometry(PROJECT_ROOT)) if native else parse_court_psd_layers(resolve_asset_path(str(request.get("templatePath") or default_template_path())))
+    background = Path(request["backgroundOutput"])
+    render_preview({**request, "logoImages": [], "outputPath": str(background)})
+    guides = None
+    guide_status = "Stock guides unavailable"
+    try:
+        geometry = load_geometry(PROJECT_ROOT) or prepare_geometry(PROJECT_ROOT)
+        guides = editor_guides(geometry, "game-uv" if native else "template", None if native else request.get("guideBounds"))
+        guide_status = guides["alignment"]
+    except (ValueError, RuntimeError, FileNotFoundError) as error:
+        guide_status = f"Stock guides unavailable: {error}"
+    items = clean_items(request.get("logoImages", []))
+    for item in items:
+        item["path"] = str(resolve_asset_path(item["path"]))
+    return {"projectRoot": str(PROJECT_ROOT), "width": document.width, "height": document.height,
+            "backgroundPath": str(background), "items": items, "selectedId": request.get("selectedId"),
+            "guides": guides, "guideStatus": guide_status,
+            "allowedLogoPaths": sorted({item["path"] for item in items})}
 
 
 def sample_color(layer_id: str) -> dict:
@@ -345,10 +465,21 @@ def sample_color(layer_id: str) -> dict:
     return {"ok": True, "color": list(color) if color else None}
 
 
-def add_custom_floor(source: Path) -> dict:
-    template_path = default_template_path()
-    document = parse_court_psd_layers(template_path)
-    custom_floor_layers, custom_floor_images = load_custom_floor_layers(document)
+def add_custom_floor(source: Path, *, native: bool = False) -> dict:
+    store = CustomFloorStore(PROJECT_ROOT, CUSTOM_FLOORS_DIR, CUSTOM_FLOORS_META)
+    store.snapshot()
+    with store.locked():
+        metadata, revision = store.snapshot()
+        return _add_custom_floor(source, native, store, metadata, revision)
+
+
+def _add_custom_floor(source, native, store, metadata, revision):
+    if native:
+        from .experimental_lines import load_geometry, prepare_geometry
+        document = stock_document(load_geometry(PROJECT_ROOT) or prepare_geometry(PROJECT_ROOT))
+    else:
+        document = parse_court_psd_layers(default_template_path())
+    custom_floor_layers, _custom_floor_images = load_custom_floor_layers(document)
     floor_group = court_floor_group(document.layers)
     floor_bbox = court_floor_bbox(document.layers, floor_group)
     if floor_group is None or floor_bbox is None:
@@ -357,15 +488,10 @@ def add_custom_floor(source: Path) -> dict:
     source = Path(source)
     if not source.exists():
         raise RuntimeError("Custom floor image was not found.")
-    CUSTOM_FLOORS_DIR.mkdir(parents=True, exist_ok=True)
     stem = safe_stem(source.stem)
     suffix = source.suffix.lower() or ".png"
-    destination = CUSTOM_FLOORS_DIR / f"{stem}{suffix}"
-    counter = 2
-    while destination.exists():
-        destination = CUSTOM_FLOORS_DIR / f"{stem}-{counter}{suffix}"
-        counter += 1
-    shutil.copy2(source, destination)
+    copied = store.copy_image(source, stem, suffix, reserved=store.entry_paths(metadata))
+    destination = copied.path
     layer = CourtLayer(
         id=f"custom_floor_{destination.stem}",
         name=destination.stem.replace("-", " ").replace("_", " ").title(),
@@ -385,9 +511,147 @@ def add_custom_floor(source: Path) -> dict:
         "previewPath": str(destination),
         "bbox": floor_bbox,
     }
-    custom_floor_images.append(image)
-    save_custom_floor_metadata(custom_floor_images)
+    try:
+        save_custom_floor_metadata([*metadata.get("floors", []), image], metadata=metadata, store=store, expected_revision=revision, sources=(source, destination))
+    except Exception:
+        try:
+            if not store.discard(copied):
+                print("The uncommitted custom floor was changed or referenced externally and was retained.", file=sys.stderr)
+        except (OSError, ValueError) as cleanup_error:
+            print(f"Could not remove the uncommitted custom floor: {cleanup_error}", file=sys.stderr)
+        raise
+    if native:
+        image = dict(image, path=str(destination))
     return {"ok": True, "layer": asdict(layer), "image": image}
+
+
+def inspect_import_iff(source: Path, *, target: bool = False, selected: str | None = None) -> dict:
+    return {"ok": True, **inspect_iff(source, target=target, selected=selected)}
+
+
+def import_base_status() -> dict:
+    cached = cached_2k27_base(NBA2K27_EXPORT_BASE)
+    return {"ok": True, "prepared": bool(cached), "base": cached}
+
+
+def prepare_import_base(game_root: Path | None = None) -> dict:
+    base = prepare_2k27_base(NBA2K27_EXPORT_BASE, game_root)
+    return {"ok": True, "prepared": True, "base": base}
+
+
+def _ready_import_base() -> dict:
+    return prepare_2k27_base(NBA2K27_EXPORT_BASE)
+
+
+def _import_arguments(request_path: Path) -> tuple[dict, Path, str, list[int], Path]:
+    request = read_request(request_path)
+    if "sourceRevision" in request and (not isinstance(request["sourceRevision"], str) or re.fullmatch(r"[0-9a-f]{64}", request["sourceRevision"]) is None):
+        raise ValueError("Invalid source court revision.")
+    if "backgroundRevision" in request:
+        from .asset_io import asset_revision
+        asset_revision({"sourceRevision": request["backgroundRevision"]})
+    source = Path(request["sourcePath"])
+    texture = str(request["textureName"])
+    bounds = [int(value) for value in request["bounds"]]
+    if len(bounds) != 4:
+        raise ValueError("Four court edges are required.")
+    background = resolve_asset_path(str(request.get("backgroundPath") or DEFAULT_IMPORT_BACKGROUND))
+    if not background.is_file():
+        raise FileNotFoundError("The selected 2K27 hardwood texture is missing.")
+    if request.get("outputPath"):
+        from .experimental_lines import geometry_path
+        ensure_new_export(Path(request["outputPath"]), source, background, Path(request_path), NBA2K27_EXPORT_BASE,
+                          geometry_path(PROJECT_ROOT), PROJECT_ROOT / "tools" / "texconv.exe")
+    return request, source, texture, bounds, background
+
+
+def _import_geometry(request: dict) -> dict | None:
+    from .experimental_lines import load_geometry, request_geometry
+    return request_geometry(PROJECT_ROOT, request) if "geometryRevision" in request else load_geometry(PROJECT_ROOT)
+
+
+def _import_export_sources(request_path: Path) -> tuple[Path, ...]:
+    from .experimental_lines import geometry_path
+    return (Path(request_path), NBA2K27_EXPORT_BASE, geometry_path(PROJECT_ROOT), PROJECT_ROOT / "tools" / "texconv.exe")
+
+
+def preview_import(request_path: Path) -> dict:
+    request, source, texture, bounds, background = _import_arguments(request_path)
+    geometry = _import_geometry(request)
+    output = Path(request.get("outputPath") or IMPORT_PREVIEW)
+    receipt = {}
+    render_texture(source, texture, bounds, background, output, preview=True, geometry=geometry,
+                   protected_sources=_import_export_sources(request_path), source_revision=request.get("sourceRevision"),
+                   background_revision=request.get("backgroundRevision"), publication_receipt=receipt)
+    return {"ok": True, "previewPath": str(output), "previewReceipt": receipt}
+
+
+def export_import_png(request_path: Path) -> dict:
+    request, source, texture, bounds, background = _import_arguments(request_path)
+    geometry = _import_geometry(request)
+    output = render_texture(source, texture, bounds, background, Path(request["outputPath"]), geometry=geometry,
+                            protected_sources=_import_export_sources(request_path), source_revision=request.get("sourceRevision"),
+                            background_revision=request.get("backgroundRevision"))
+    return {"ok": True, "outputPath": str(output)}
+
+
+def export_import_iff(request_path: Path) -> dict:
+    request, source, texture, bounds, background = _import_arguments(request_path)
+    geometry = _import_geometry(request)
+    texconv = PROJECT_ROOT / "tools" / "texconv.exe"
+    base = _ready_import_base()
+    from .experimental_lines import native_export_scene
+    with open_iff(NBA2K27_EXPORT_BASE) as archive:
+        scene_override = native_export_scene(read_iff_scene(archive))
+    output = build_iff(
+        source,
+        texture,
+        bounds,
+        background,
+        NBA2K27_EXPORT_BASE,
+        base["selected"],
+        Path(request["outputPath"]),
+        texconv,
+        scene_override=scene_override,
+        native_layout=True,
+        geometry=geometry,
+        protected_sources=_import_export_sources(request_path),
+        source_revision=request.get("sourceRevision"),
+        background_revision=request.get("backgroundRevision"),
+    )
+    return {"ok": True, "outputPath": str(output)}
+
+
+def export_current_iff(request_path: Path) -> dict:
+    request = read_request(request_path)
+    from .experimental_lines import request_geometry
+    geometry = request_geometry(PROJECT_ROOT, request) if request.get("experimental") or request.get("buildMode") == "game-uv" else None
+    output_path = Path(request["outputPath"])
+    protected_sources = _export_sources(request)
+    ensure_new_export(output_path, Path(request_path), *protected_sources)
+    base = _ready_import_base()
+    texconv = PROJECT_ROOT / "tools" / "texconv.exe"
+    scene_override = None
+    if (request.get("experimental") or request.get("buildMode") == "game-uv") and request.get("mappingMode", "game-uv") == "game-uv":
+        from .experimental_lines import native_export_scene
+        with open_iff(NBA2K27_EXPORT_BASE) as archive:
+            scene_override = native_export_scene(read_iff_scene(archive))
+    with tempfile.TemporaryDirectory(prefix="court-export-") as folder:
+        png_path = Path(folder) / "court.png"
+        render_request = {**request, "outputPath": str(png_path), "exportFullResolution": True}
+        render_preview(render_request, geometry=geometry)
+        output = package_png_into_iff(
+            png_path,
+            NBA2K27_EXPORT_BASE,
+            base["selected"],
+            output_path,
+            texconv,
+            scene_override=scene_override,
+            native_layout=scene_override is not None,
+            geometry=geometry,
+            protected_sources=protected_sources,
+        )
+    return {"ok": True, "outputPath": str(output)}
 
 
 def default_template_path() -> Path:
@@ -409,17 +673,43 @@ def ensure_preview(template_path: Path) -> None:
 
 def load_team_palettes() -> list:
     data = read_json(TEAM_PALETTES_PATH, {})
-    if isinstance(data, list):
-        return data
-    return data.get("palettes", []) if isinstance(data, dict) else []
+    entries = data if isinstance(data, list) else data.get("palettes", []) if isinstance(data, dict) else []
+    if not isinstance(entries, list):
+        return []
+    palettes = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        palette = dict(entry)
+        for key in ("league", "team", "source", "paletteNote"):
+            if key in palette and not isinstance(palette[key], str):
+                palette.pop(key)
+        colors = entry.get("colors", [])
+        palette["colors"] = []
+        for color in colors if isinstance(colors, list) else []:
+            if not isinstance(color, dict) or not isinstance(color.get("hex"), str) or re.fullmatch(r"#?[0-9a-fA-F]{6}", color["hex"].strip()) is None:
+                continue
+            value = dict(color)
+            if "name" in value and not isinstance(value["name"], str):
+                value.pop("name")
+            palette["colors"].append(value)
+        palettes.append(palette)
+    return palettes
 
 
 def load_presets() -> list:
     data = read_json(PRESETS_PATH, {})
     presets = data.get("presets", []) if isinstance(data, dict) else []
+    presets = [item if isinstance(item, dict) else None for item in presets[:5]] if isinstance(presets, list) else []
     while len(presets) < 5:
         presets.append(None)
     return presets[:5]
+
+
+def _floor_entries(data, key):
+    entries = data.get(key, []) if isinstance(data, dict) else []
+    return [item for item in entries if isinstance(item, dict) and isinstance(item.get("path"), str)
+            and item["path"] and "\0" not in item["path"]] if isinstance(entries, list) else []
 
 
 def load_custom_floor_layers(document) -> tuple[list[CourtLayer], list[dict]]:
@@ -432,12 +722,16 @@ def load_custom_floor_layers(document) -> tuple[list[CourtLayer], list[dict]]:
     data = read_json(CUSTOM_FLOORS_META, {})
     if not isinstance(data, dict):
         return layers, images
-    for index, item in enumerate(data.get("floors", [])):
-        path = resolve_asset_path(str(item.get("path", "")))
-        if not path.exists():
+    for index, item in enumerate(_floor_entries(data, "floors")):
+        path = resolve_asset_path(item["path"])
+        if not path.is_file():
             continue
-        bbox = tuple(item.get("bbox", fallback_bbox))
-        if len(bbox) != 4:
+        bbox = item.get("bbox", fallback_bbox)
+        try:
+            bbox = tuple(int(value) for value in bbox) if isinstance(bbox, (list, tuple)) and len(bbox) == 4 else fallback_bbox
+            if bbox[2] <= 0 or bbox[3] <= 0:
+                bbox = fallback_bbox
+        except (TypeError, ValueError, OverflowError):
             bbox = fallback_bbox
         layer = CourtLayer(
             id=str(item.get("id") or f"custom_floor_{path.stem}"),
@@ -493,8 +787,9 @@ def load_floor_template_layers(
             if library_version(meta_path) != version:
                 continue
             data = read_json(meta_path, {})
-            if isinstance(data, dict) and isinstance(data.get("templates"), list) and data["templates"]:
-                candidates.append(data)
+            entries = _floor_entries(data, "templates")
+            if entries:
+                candidates.append({**data, "templates": entries})
         if candidates:
             newest_version = version
             library_data = candidates
@@ -502,11 +797,11 @@ def load_floor_template_layers(
     library_name = f"NBA 2K{newest_version} Courts" if newest_version else "No game court library"
     for data in library_data:
         library_name = str(data.get("name") or library_name).replace(" Floor Templates", " Courts")
-        for item in data.get("templates", []):
+        for item in data["templates"]:
             if str(item.get("id") or "") in BROKEN_FLOOR_TEMPLATE_IDS:
                 continue
-            path = resolve_asset_path(str(item.get("path", "")))
-            if not path.exists():
+            path = resolve_asset_path(item["path"])
+            if not path.is_file():
                 continue
             category = category_for_floor_template(item)
             default_visible = template_index == 0
@@ -539,8 +834,9 @@ def load_floor_template_layers(
                 bbox=fallback_bbox,
             )
             layers.append(layer)
-            thumbnail_path = resolve_asset_path(str(item.get("thumbnailPath", "")))
-            preview_path = thumbnail_path if item.get("thumbnailPath") and thumbnail_path.exists() else path
+            thumbnail = item.get("thumbnailPath")
+            thumbnail_path = resolve_asset_path(thumbnail) if isinstance(thumbnail, str) and "\0" not in thumbnail else path
+            preview_path = thumbnail_path if thumbnail and thumbnail_path.is_file() else path
             images.append(
                 {
                     "id": layer.id,
@@ -562,8 +858,8 @@ def load_floor_template_layers(
 
 def read_json(path: Path, fallback):
     try:
-        return json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeError):
+        return read_document(path)
+    except (OSError, ValueError):
         return fallback
 
 
@@ -643,9 +939,18 @@ def category_rank(category: str) -> int:
     return order.get(category, 999)
 
 
-def save_custom_floor_metadata(images: list[dict]) -> None:
-    CUSTOM_FLOORS_DIR.mkdir(parents=True, exist_ok=True)
-    CUSTOM_FLOORS_META.write_text(json.dumps({"floors": images}, indent=2), encoding="utf-8")
+def save_custom_floor_metadata(images: list, *, metadata: dict | None = None, store=None, expected_revision=None, sources=()) -> None:
+    payload = json.dumps({**(metadata or {}), "floors": images}, indent=2, ensure_ascii=False, allow_nan=False).encode("utf-8")
+    if len(payload) > MAX_METADATA_BYTES:
+        raise ValueError("The updated custom-floor catalog exceeds the 8 MiB size limit. Its file was left unchanged.")
+    if store is not None:
+        store.publish(payload, expected_revision, sources=sources)
+    else:
+        store = CustomFloorStore(PROJECT_ROOT, CUSTOM_FLOORS_DIR, CUSTOM_FLOORS_META)
+        store.snapshot()
+        with store.locked():
+            _metadata, revision = store.snapshot()
+            store.publish(payload, revision, sources=sources)
 
 
 def court_floor_group(layers) -> CourtLayer | None:

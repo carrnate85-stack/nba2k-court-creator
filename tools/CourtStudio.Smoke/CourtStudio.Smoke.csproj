@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <PropertyGroup><ApplicationManifest>../../src/NBA2KCourtCreator/app.manifest</ApplicationManifest></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/NBA2KCourtCreator/NBA2KCourtCreator.csproj"/></ItemGroup>
+</Project>

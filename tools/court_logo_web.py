@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -13,16 +14,18 @@ HTML = r"""<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>NBA 2K Court Logo Editor</title>
+  <script src="/studio-theme.js"></script>
   <style>
-    :root{color-scheme:dark;font-family:"Segoe UI",Arial,sans-serif;--bg:#171a20;--work:#11141a;--surface:#20242b;--header:#222833;--inspector:#1d222c;--panel:#202632;--button:#303746;--border:#343b49;--strong:#475064;--text:#edf1f7;--heading:#f8fafc;--muted:#aab3c2;--subtle:#99a5b8;--primary:#f0b429;--primaryText:#171a20;--return:#168579;--danger:#6a2f35}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);overflow:hidden}
+    :root{font-family:"Segoe UI",Arial,sans-serif;--bg:var(--WindowBrush);--work:var(--WorkspaceBrush);--surface:var(--PanelRaisedBrush);--header:var(--PanelBrush);--inspector:var(--PanelBrush);--panel:var(--PanelRaisedBrush);--button:var(--PanelRaisedBrush);--border:var(--BorderBrush);--strong:var(--StrongBorderBrush);--text:var(--TextBrush);--heading:var(--TextBrush);--muted:var(--MutedTextBrush);--subtle:var(--MutedTextBrush);--primary:var(--AccentBrightBrush);--primaryText:var(--ActionTextBrush);--return:var(--ActionBrush);--danger:#8f3c42}
+    *{box-sizing:border-box;scrollbar-color:var(--ScrollThumbBrush) var(--ScrollTrackBrush);scrollbar-width:thin}body{margin:0;background:var(--bg);color:var(--text);font-size:13px;letter-spacing:0;overflow:hidden}
     header{height:48px;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--header);border-bottom:1px solid var(--border)}
-    header strong{color:var(--heading);font-size:16px}.spacer{flex:1}.hint{color:var(--muted);font-size:12px}
-    button,input{font:inherit}button{border:1px solid transparent;border-radius:6px;padding:7px 10px;background:var(--button);color:var(--text);font-weight:600;cursor:pointer}button:hover{border-color:var(--strong)}button.primary{background:var(--primary);color:var(--primaryText)}button.return{background:var(--return);color:#fff}button.danger{background:var(--danger);color:#fff}
+    header strong{color:var(--heading);font-size:15px;font-weight:600}.spacer{flex:1}.hint{display:none}
+    button,input{font:inherit}button{border:1px solid var(--border);border-radius:6px;padding:7px 10px;background:var(--button);color:var(--text);font-weight:600;cursor:pointer}button:hover{border-color:var(--strong);background:var(--PanelHoverBrush)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--primary);outline-offset:2px}button.primary,button.return{background:var(--ActionBrush);border-color:var(--ActionBrush);color:var(--ActionTextBrush)}button.danger{border-color:var(--danger);color:var(--danger)}
     #layout{height:calc(100vh - 48px);display:grid;grid-template-columns:minmax(0,1fr) 330px}#stage{position:relative;min-width:0;min-height:0;background:var(--work)}canvas{width:100%;height:100%;display:block;outline:none}
-    aside{background:var(--inspector);border-left:1px solid var(--border);padding:12px;overflow:auto}h2{font-size:13px;margin:0 0 8px;color:var(--heading)}.section{border:1px solid var(--border);background:var(--panel);border-radius:6px;padding:10px;margin-bottom:10px}
-    #layers{display:flex;flex-direction:column;gap:6px;max-height:270px;overflow:auto}.layer{width:100%;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;text-align:left;align-items:center;border-color:var(--border);background:#252b37}.layer.active{border-color:var(--primary);background:#343b49}.layer .eye{color:var(--muted);font-weight:700}.layer b,.layer span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.layer span{font-size:11px;color:var(--muted);font-weight:400}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;gap:8px;align-items:center;margin-top:8px}.row>*{flex:1}label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}input[type=number]{width:100%;border:1px solid var(--strong);border-radius:6px;background:#11161d;color:var(--text);padding:7px}input[type=range]{width:100%;accent-color:var(--primary)}.empty{padding:10px 2px;color:var(--muted);font-size:12px;line-height:1.35}.status{min-height:34px;color:var(--muted);font-size:12px;line-height:1.35}
+    aside{background:var(--inspector);border-left:1px solid var(--border);padding:12px;overflow:auto}h2{font-size:13px;margin:0 0 8px;color:var(--heading)}.section{border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:10px}
+    #layers{display:flex;flex-direction:column;gap:4px;max-height:270px;overflow:auto}.layer{width:100%;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;text-align:left;align-items:center;border-color:var(--border);background:var(--panel)}.layer.active{border-color:var(--primary);background:var(--AccentDarkBrush)}.layer .eye{color:var(--muted);font-weight:700}.layer b,.layer span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.layer span{font-size:11px;color:var(--muted);font-weight:400}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;gap:8px;align-items:center;margin-top:8px}.row>*{flex:1}label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}input[type=number]{width:100%;border:1px solid var(--border);border-radius:6px;background:var(--InputBrush);color:var(--text);padding:7px}input[type=range]{width:100%;accent-color:var(--primary)}.empty{padding:10px 2px;color:var(--muted);font-size:12px;line-height:1.35}.status{min-height:34px;color:var(--muted);font-size:12px;line-height:1.35}
+    .check{display:flex;align-items:center;gap:7px;margin:8px 0}.check input{accent-color:var(--primary)}select{width:100%;min-width:0;background:var(--InputBrush);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px;font:inherit}button:disabled,input:disabled,select:disabled{opacity:.45;cursor:default}.alignment-status{font-size:11px;color:var(--muted);margin:0 0 8px}
     @media(max-width:900px){#layout{grid-template-columns:minmax(0,1fr) 300px}.hint{display:none}}
   </style>
 </head>
@@ -37,6 +40,7 @@ HTML = r"""<!doctype html>
     <main id="stage"><canvas id="canvas" tabindex="0"></canvas></main>
     <aside>
       <section class="section"><h2>Logos</h2><div id="layers"></div></section>
+      <section class="section"><h2>Court Alignment</h2><div id="guideAlignmentStatus" class="alignment-status"></div><div class="grid"><label class="check"><input id="showGuides" type="checkbox">Guides</label><label class="check"><input id="snapGuides" type="checkbox">Snap</label></div><select id="anchor" aria-label="Court anchor"></select><div class="row"><button id="placeAnchor">Center at Anchor</button></div></section>
       <section class="section" id="inspector" hidden>
         <h2>Selected</h2>
         <div class="grid">
@@ -58,16 +62,21 @@ HTML = r"""<!doctype html>
   </div>
   <script>
     const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d'),stage=$('stage');
-    let state,project,items=[],selectedId=null,bg=new Image(),images=new Map(),scale=1,minScale=1,panX=0,panY=0,drag=null,dirty=false,saving=false;
+    const studioColors=StudioTheme.colors(document.documentElement.dataset.theme);
+    let state,project,items=[],selectedId=null,bg=new Image(),images=new Map(),scale=1,minScale=1,panX=0,panY=0,drag=null,dirty=false,savePromise=null,savePending=false,activeSnap=null;
+    const guideOptions={visible:false,snap:false};
     const alphaCanvas=document.createElement('canvas'),alphaCtx=alphaCanvas.getContext('2d',{willReadFrequently:true});alphaCanvas.width=1;alphaCanvas.height=1;
     async function api(path,payload){const options=payload===undefined?{cache:'no-store'}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};const res=await fetch(path,options);const data=await res.json();if(!res.ok)throw new Error(data.error||`Request failed ${res.status}`);return data}
     function status(text){$('status').textContent=text}
-    async function load(){state=await api('/api/project');project=state.project;items=(project.items||[]).map(normalizeItem);selectedId=project.selectedId||items[0]?.id||null;bg.onload=()=>{loadLogoImages();fit();status(items.length?'Select, drag, and resize logos on the court.':'Import logos in the desktop app, then reopen this editor.');};bg.src='/api/court?v='+state.revision;renderLayers();renderInspector();resize()}
+    async function load(){state=await api('/api/project');project=state.project;items=(project.items||[]).map(normalizeItem);selectedId=project.selectedId||items[0]?.id||null;bg.onload=()=>{loadLogoImages();fit();status(items.length?'Ready':'No logos');};bg.src='/api/court?v='+state.revision;renderGuides();renderLayers();renderInspector();resize()}
     function loadLogoImages(){images.clear();for(const item of items){const image=new Image();image.onload=draw;image.src=`/api/logo/${encodeURIComponent(item.id)}?v=${state.revision}`;images.set(item.id,image)}draw()}
     function normalizeItem(item){if(item.scaleLocked===undefined)item.scaleLocked=true;return item}
     function selected(){return items.find(x=>x.id===selectedId)||null}
-    function renderLayers(){const host=$('layers');host.innerHTML='';if(!items.length){host.innerHTML='<div class="empty">No logos yet. Use Import Logo in the desktop app first.</div>';return}items.slice().reverse().forEach((item,index)=>{const b=document.createElement('button');b.className='layer'+(item.id===selectedId?' active':'');b.innerHTML=`<span class="eye">${item.visible?'On':'Off'}</span><div><b>${item.name||'Logo'}</b><span>${items.length-index} of ${items.length}</span></div>`;b.onclick=()=>{selectedId=item.id;renderLayers();renderInspector();draw();};b.ondblclick=()=>{selectedId=item.id;const renamed=prompt('Logo name',item.name||'Logo');if(!renamed||!renamed.trim())return;item.name=renamed.trim();renderLayers();renderInspector();draw();save()};host.append(b)})}
-    function renderInspector(){const item=selected(),show=!!item;$('inspector').hidden=!show;if(!show)return;if(item.scaleLocked===undefined)item.scaleLocked=true;$('x').value=Math.round(item.x||0);$('y').value=Math.round(item.y||0);$('w').value=Math.round(item.width||1);$('h').value=Math.round(item.height||1);$('r').value=Math.round(item.rotation||0);$('o').value=Math.round(item.opacity??100);$('visible').textContent=item.visible?'Hide':'Show';$('lockScale').textContent=item.scaleLocked?'Unlock Scale':'Lock Scale'}
+    function renderLayers(){const host=$('layers');host.innerHTML='';if(!items.length){host.innerHTML='<div class="empty">No logos yet</div>';return}items.slice().reverse().forEach((item,index)=>{const b=document.createElement('button');b.className='layer'+(item.id===selectedId?' active':'');const eye=document.createElement('span');eye.className='eye';eye.textContent=item.visible?'On':'Off';const text=document.createElement('div'),name=document.createElement('b'),order=document.createElement('span');name.textContent=item.name||'Logo';order.textContent=`${items.length-index} of ${items.length}`;text.append(name,order);b.append(eye,text);b.onclick=()=>{selectedId=item.id;renderLayers();renderInspector();draw();};b.ondblclick=()=>{selectedId=item.id;const renamed=prompt('Logo name',item.name||'Logo');if(!renamed||!renamed.trim())return;item.name=renamed.trim();renderLayers();renderInspector();draw();save()};host.append(b)})}
+    function renderInspector(){const item=selected(),show=!!item;$('placeAnchor').disabled=!show||!project?.guides;$('inspector').hidden=!show;if(!show)return;if(item.scaleLocked===undefined)item.scaleLocked=true;$('x').value=Math.round(item.x||0);$('y').value=Math.round(item.y||0);$('w').value=Math.round(item.width||1);$('h').value=Math.round(item.height||1);$('r').value=Math.round(item.rotation||0);$('o').value=Math.round(item.opacity??100);$('visible').textContent=item.visible?'Hide':'Show';$('lockScale').textContent=item.scaleLocked?'Unlock Scale':'Lock Scale'}
+    function renderGuides(){const guides=project.guides;$('guideAlignmentStatus').textContent=project.guideStatus||'Stock guides unavailable';for(const id of ['showGuides','snapGuides','anchor'])$(id).disabled=!guides;$('anchor').replaceChildren(...(guides?.anchors||[]).map(anchor=>new Option(anchor.name,anchor.id)))}
+    function snapPosition(item,x,y,bypass=false){activeSnap=null;if(!guideOptions.snap||bypass||!project.guides)return{x,y};const tolerance=8/scale,cx=x+item.width/2,cy=y+item.height/2;const nearest=(values,target)=>values.reduce((best,value)=>Math.abs(value-target)<Math.abs(best-target)?value:best,Infinity);const sx=nearest(project.guides.axes.x,cx),sy=nearest(project.guides.axes.y,cy);activeSnap={};if(Math.abs(sx-cx)<=tolerance){x=sx-item.width/2;activeSnap.x=sx}if(Math.abs(sy-cy)<=tolerance){y=sy-item.height/2;activeSnap.y=sy}return{x,y}}
+    function drawGuides(){const guides=project?.guides;if(!guides)return;ctx.save();ctx.beginPath();ctx.rect(panX,panY,project.width*scale,project.height*scale);ctx.clip();const axis=(direction,value,color)=>{ctx.strokeStyle=color;ctx.beginPath();const start=direction==='x'?toScreen(value,0):toScreen(0,value),end=direction==='x'?toScreen(value,project.height):toScreen(project.width,value);ctx.moveTo(start.x,start.y);ctx.lineTo(end.x,end.y);ctx.stroke()};ctx.lineWidth=1;ctx.setLineDash([5,5]);if(guideOptions.visible){for(const x of guides.axes.x)axis('x',x,studioColors.TealBrush);for(const y of guides.axes.y)axis('y',y,studioColors.TealBrush);ctx.setLineDash([]);ctx.strokeStyle=studioColors.TealBrush;for(const anchor of guides.anchors){const p=toScreen(anchor.x,anchor.y);ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.stroke()}}if(activeSnap){ctx.lineWidth=2;for(const direction of ['x','y'])if(Number.isFinite(activeSnap[direction]))axis(direction,activeSnap[direction],studioColors.AccentBrightBrush)}ctx.restore()}
     function resize(){const ratio=devicePixelRatio||1;canvas.width=Math.max(1,stage.clientWidth*ratio);canvas.height=Math.max(1,stage.clientHeight*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);draw()}
     function fit(){minScale=Math.max(.03,Math.min(1,(stage.clientWidth-40)/project.width,(stage.clientHeight-40)/project.height));scale=minScale;panX=(stage.clientWidth-project.width*scale)/2;panY=(stage.clientHeight-project.height*scale)/2;draw()}
     function schedule(){if(dirty)return;dirty=true;requestAnimationFrame(()=>{dirty=false;draw()})}
@@ -76,27 +85,30 @@ HTML = r"""<!doctype html>
     function itemPath(item){const pts=corners(item).map(p=>toScreen(p.x,p.y));ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();return pts}
     function drawItem(item,outline=false){const image=images.get(item.id);if(!image||!image.complete||!item.visible)return;const center=toScreen((item.x||0)+(item.width||1)/2,(item.y||0)+(item.height||1)/2);ctx.save();ctx.translate(center.x,center.y);ctx.rotate((item.rotation||0)*Math.PI/180);ctx.globalAlpha=Math.max(0,Math.min(1,(item.opacity??100)/100));ctx.scale(item.flipX?-1:1,item.flipY?-1:1);ctx.drawImage(image,-item.width*scale/2,-item.height*scale/2,item.width*scale,item.height*scale);ctx.restore();if(outline)drawSelection(item)}
     function rotateHandle(item){const cx=item.x+item.width/2,cy=item.y+item.height/2,dist=item.height/2+56/scale,rad=((item.rotation||0)-90)*Math.PI/180;return toScreen(cx+Math.cos(rad)*dist,cy+Math.sin(rad)*dist)}
-    function drawSelection(item){const pts=itemPath(item),handle=rotateHandle(item),topMid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};ctx.strokeStyle='#f0b429';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.moveTo(topMid.x,topMid.y);ctx.lineTo(handle.x,handle.y);ctx.stroke();ctx.fillStyle='#f0b429';for(const p of pts){ctx.fillRect(p.x-5,p.y-5,10,10)}ctx.beginPath();ctx.arc(handle.x,handle.y,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#171a20';ctx.lineWidth=2;ctx.stroke()}
-    function draw(){ctx.clearRect(0,0,stage.clientWidth,stage.clientHeight);ctx.fillStyle='#11141a';ctx.fillRect(0,0,stage.clientWidth,stage.clientHeight);if(project&&bg.complete)ctx.drawImage(bg,panX,panY,project.width*scale,project.height*scale);for(const item of items)drawItem(item,false);const item=selected();if(item)drawSelection(item)}
+    function drawSelection(item){const pts=itemPath(item),handle=rotateHandle(item),topMid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};ctx.strokeStyle=studioColors.AccentBrightBrush;ctx.lineWidth=1.5;ctx.stroke();ctx.beginPath();ctx.moveTo(topMid.x,topMid.y);ctx.lineTo(handle.x,handle.y);ctx.stroke();ctx.fillStyle=studioColors.SliderThumbBrush;for(const p of pts){ctx.fillRect(p.x-4,p.y-4,8,8);ctx.strokeRect(p.x-4,p.y-4,8,8)}ctx.beginPath();ctx.arc(handle.x,handle.y,7,0,Math.PI*2);ctx.fill();ctx.stroke()}
+    function draw(){ctx.clearRect(0,0,stage.clientWidth,stage.clientHeight);ctx.fillStyle=studioColors.WorkspaceBrush;ctx.fillRect(0,0,stage.clientWidth,stage.clientHeight);if(project&&bg.complete)ctx.drawImage(bg,panX,panY,project.width*scale,project.height*scale);for(const item of items)drawItem(item,false);drawGuides();const item=selected();if(item)drawSelection(item)}
     function canvasPoint(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
     function alphaHit(item,screenPoint){const image=images.get(item.id);if(!image||!image.complete)return true;const doc=toDoc(screenPoint.x,screenPoint.y),cx=item.x+item.width/2,cy=item.y+item.height/2,rad=-(item.rotation||0)*Math.PI/180,cs=Math.cos(rad),sn=Math.sin(rad),dx=doc.x-cx,dy=doc.y-cy;let lx=dx*cs-dy*sn+item.width/2,ly=dx*sn+dy*cs+item.height/2;if(item.flipX)lx=item.width-lx;if(item.flipY)ly=item.height-ly;if(lx<0||ly<0||lx>item.width||ly>item.height)return false;const sx=Math.max(0,Math.min(image.naturalWidth-1,Math.floor(lx/item.width*image.naturalWidth))),sy=Math.max(0,Math.min(image.naturalHeight-1,Math.floor(ly/item.height*image.naturalHeight)));alphaCtx.clearRect(0,0,1,1);alphaCtx.drawImage(image,sx,sy,1,1,0,0,1,1);return alphaCtx.getImageData(0,0,1,1).data[3]>12}
     function hit(e){const p=canvasPoint(e);const item=selected();if(item){const rotate=rotateHandle(item);if(Math.hypot(p.x-rotate.x,p.y-rotate.y)<16)return{item,handle:'rotate',p};const pts=corners(item).map(v=>toScreen(v.x,v.y));for(let i=pts.length-1;i>=0;i--){if(Math.hypot(p.x-pts[i].x,p.y-pts[i].y)<12)return{item,handle:i,p}}}for(let i=items.length-1;i>=0;i--){const candidate=items[i];if(!candidate.visible)continue;ctx.save();itemPath(candidate);const inside=ctx.isPointInPath(p.x,p.y);ctx.restore();if(inside&&alphaHit(candidate,p))return{item:candidate,handle:null,p}}return{item:null,handle:null,p}}
     function zoom(factor,center){const before=toDoc(center.x,center.y);scale=Math.max(minScale*.5,Math.min(12,scale*factor));panX=center.x-before.x*scale;panY=center.y-before.y*scale;schedule()}
     function pointerAngle(p,item){const c=toScreen(item.x+item.width/2,item.y+item.height/2);return Math.atan2(p.y-c.y,p.x-c.x)*180/Math.PI}
-    canvas.onpointerdown=e=>{canvas.focus();const p=canvasPoint(e);if(e.shiftKey||e.button===1){drag={mode:'pan',p,panX,panY};return}const found=hit(e);if(!found.item){selectedId=null;renderLayers();renderInspector();draw();return}selectedId=found.item.id;renderLayers();renderInspector();const mode=found.handle==='rotate'?'rotate':found.handle===null?'move':'resize';drag={mode,handle:found.handle,start:p,startAngle:pointerAngle(p,found.item),item:{...found.item}};schedule()};
-    canvas.onpointermove=e=>{if(!drag)return;const p=canvasPoint(e),item=selected();if(drag.mode==='pan'){panX=drag.panX+p.x-drag.p.x;panY=drag.panY+p.y-drag.p.y;schedule();return}if(!item)return;const dx=(p.x-drag.start.x)/scale,dy=(p.y-drag.start.y)/scale;if(drag.mode==='move'){item.x=drag.item.x+dx;item.y=drag.item.y+dy}else if(drag.mode==='rotate'){item.rotation=(drag.item.rotation||0)+pointerAngle(p,drag.item)-drag.startAngle}else{const local=toLocalDelta(dx,dy,drag.item.rotation||0);const signX=drag.handle===0||drag.handle===3?-1:1,signY=drag.handle<2?-1:1;const nextW=Math.max(8,drag.item.width+local.x*signX),nextH=Math.max(8,drag.item.height+local.y*signY);if(item.scaleLocked!==false){const ratio=drag.item.height/Math.max(1,drag.item.width);if(Math.abs(local.x/Math.max(1,drag.item.width))>=Math.abs(local.y/Math.max(1,drag.item.height))){item.width=nextW;item.height=Math.max(8,item.width*ratio)}else{item.height=nextH;item.width=Math.max(8,item.height/ratio)}}else{item.width=nextW;item.height=nextH}if(signX<0)item.x=drag.item.x+drag.item.width-item.width;if(signY<0)item.y=drag.item.y+drag.item.height-item.height}renderInspector();schedule()};
-    canvas.onpointerup=async()=>{if(!drag)return;drag=null;await save()};
+    canvas.onpointerdown=e=>{if(e.button!==0&&e.button!==1)return;canvas.focus();canvas.setPointerCapture(e.pointerId);const p=canvasPoint(e);if(e.shiftKey||e.button===1){drag={mode:'pan',p,panX,panY};return}const found=hit(e);if(!found.item){selectedId=null;renderLayers();renderInspector();draw();return}selectedId=found.item.id;renderLayers();renderInspector();const mode=found.handle==='rotate'?'rotate':found.handle===null?'move':'resize';drag={mode,handle:found.handle,start:p,startAngle:pointerAngle(p,found.item),item:{...found.item}};schedule()};
+    canvas.onpointermove=e=>{if(!drag)return;const p=canvasPoint(e),item=selected();if(drag.mode==='pan'){panX=drag.panX+p.x-drag.p.x;panY=drag.panY+p.y-drag.p.y;schedule();return}if(!item)return;const dx=(p.x-drag.start.x)/scale,dy=(p.y-drag.start.y)/scale;if(drag.mode==='move'){const next=snapPosition(item,drag.item.x+dx,drag.item.y+dy,e.altKey);item.x=next.x;item.y=next.y}else if(drag.mode==='rotate'){item.rotation=(drag.item.rotation||0)+pointerAngle(p,drag.item)-drag.startAngle}else{const local=toLocalDelta(dx,dy,drag.item.rotation||0);const signX=drag.handle===0||drag.handle===3?-1:1,signY=drag.handle<2?-1:1;const nextW=Math.max(8,drag.item.width+local.x*signX),nextH=Math.max(8,drag.item.height+local.y*signY);if(item.scaleLocked!==false){const ratio=drag.item.height/Math.max(1,drag.item.width);if(Math.abs(local.x/Math.max(1,drag.item.width))>=Math.abs(local.y/Math.max(1,drag.item.height))){item.width=nextW;item.height=Math.max(8,item.width*ratio)}else{item.height=nextH;item.width=Math.max(8,item.height/ratio)}}else{item.width=nextW;item.height=nextH}if(signX<0)item.x=drag.item.x+drag.item.width-item.width;if(signY<0)item.y=drag.item.y+drag.item.height-item.height}renderInspector();schedule()};
+    canvas.onpointerup=async e=>{if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(!drag)return;const moved=drag.mode!=='pan';drag=null;activeSnap=null;schedule();if(moved)await save()};
+    canvas.onpointercancel=canvas.onpointerup;
     canvas.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.15:1/1.15,canvasPoint(e))};canvas.oncontextmenu=e=>e.preventDefault();
     function toLocalDelta(dx,dy,deg){const r=-deg*Math.PI/180,cs=Math.cos(r),sn=Math.sin(r);return{x:dx*cs-dy*sn,y:dx*sn+dy*cs}}
-    async function save(){if(saving)return;saving=true;try{state=await api('/api/save',{selectedId,items});status('Saved to desktop preview.')}catch(e){status(e.message)}finally{saving=false}}
-    function updateFields(changed){const item=selected();if(!item)return;const oldW=Math.max(1,item.width),oldH=Math.max(1,item.height);item.x=+$('x').value||0;item.y=+$('y').value||0;item.width=Math.max(1,+$('w').value||1);item.height=Math.max(1,+$('h').value||1);if(item.scaleLocked!==false&&changed==='w')item.height=Math.max(1,item.width*oldH/oldW);if(item.scaleLocked!==false&&changed==='h')item.width=Math.max(1,item.height*oldW/oldH);item.rotation=+$('r').value||0;item.opacity=Math.max(0,Math.min(100,+$('o').value||100));renderInspector();draw();save()}
+    async function save(){savePending=true;if(savePromise)return savePromise;savePromise=(async()=>{try{while(savePending){savePending=false;state=await api('/api/save',{selectedId,items});status('Saved')}return true}catch(e){status(e.message);return false}})();try{return await savePromise}finally{savePromise=null}}
+    function updateFields(changed){const item=selected();if(!item)return;const oldW=Math.max(1,item.width),oldH=Math.max(1,item.height);item.x=+$('x').value||0;item.y=+$('y').value||0;item.width=Math.max(1,+$('w').value||1);item.height=Math.max(1,+$('h').value||1);if(item.scaleLocked!==false&&changed==='w')item.height=Math.max(1,item.width*oldH/oldW);if(item.scaleLocked!==false&&changed==='h')item.width=Math.max(1,item.height*oldW/oldH);item.rotation=+$('r').value||0;const opacity=Number($('o').value);item.opacity=Math.max(0,Math.min(100,Number.isFinite(opacity)?opacity:100));renderInspector();draw();save()}
     for(const id of ['x','y','w','h','r','o'])$(id).onchange=()=>updateFields(id);
-    function duplicateAcross(axis){const item=selected();if(!item)return;const copy={...item,id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),name:`${item.name||'Logo'} copy`};if(axis==='x')copy.x=project.width-item.x-item.width;if(axis==='y')copy.y=project.height-item.y-item.height;items.push(copy);images.set(copy.id,images.get(item.id));selectedId=copy.id;renderLayers();renderInspector();draw();save()}
+    function duplicateAcross(axis){const item=selected();if(!item)return;const center=project.guides?.center||{x:project.width/2,y:project.height/2};const copy={...item,id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),name:`${item.name||'Logo'} copy`};if(axis==='x')copy.x=2*center.x-item.x-item.width;if(axis==='y')copy.y=2*center.y-item.y-item.height;items.push(copy);images.set(copy.id,images.get(item.id));selectedId=copy.id;renderLayers();renderInspector();draw();save()}
+    $('showGuides').onchange=()=>{guideOptions.visible=$('showGuides').checked;schedule()};$('snapGuides').onchange=()=>{guideOptions.snap=$('snapGuides').checked;activeSnap=null;schedule()};
+    $('placeAnchor').onclick=()=>{const item=selected(),anchor=project.guides?.anchors.find(anchor=>anchor.id===$('anchor').value);if(!item||!anchor)return;item.x=anchor.x-item.width/2;item.y=anchor.y-item.height/2;renderInspector();draw();save()};
     $('visible').onclick=()=>{const item=selected();if(!item)return;item.visible=!item.visible;renderLayers();renderInspector();draw();save()};$('lockScale').onclick=()=>{const item=selected();if(!item)return;item.scaleLocked=item.scaleLocked===false;renderInspector();draw();save()};$('copyX').onclick=()=>duplicateAcross('x');$('copyY').onclick=()=>duplicateAcross('y');$('flipX').onclick=()=>{const item=selected();if(!item)return;item.flipX=!item.flipX;draw();save()};$('flipY').onclick=()=>{const item=selected();if(!item)return;item.flipY=!item.flipY;draw();save()};
     $('front').onclick=()=>{const i=items.findIndex(x=>x.id===selectedId);if(i>=0&&i<items.length-1){[items[i],items[i+1]]=[items[i+1],items[i]];renderLayers();draw();save()}};$('back').onclick=()=>{const i=items.findIndex(x=>x.id===selectedId);if(i>0){[items[i],items[i-1]]=[items[i-1],items[i]];renderLayers();draw();save()}};
     $('remove').onclick=()=>{const i=items.findIndex(x=>x.id===selectedId);if(i<0)return;items.splice(i,1);selectedId=items.at(-1)?.id||null;renderLayers();renderInspector();draw();save()};
     canvas.onkeydown=e=>{const item=selected();if(!item)return;const amount=e.shiftKey?10:1;if(e.key==='ArrowLeft')item.x-=amount;else if(e.key==='ArrowRight')item.x+=amount;else if(e.key==='ArrowUp')item.y-=amount;else if(e.key==='ArrowDown')item.y+=amount;else return;e.preventDefault();renderInspector();draw();save()};
-    $('fit').onclick=fit;$('zoomIn').onclick=()=>zoom(1.25,{x:stage.clientWidth/2,y:stage.clientHeight/2});$('zoomOut').onclick=()=>zoom(1/1.25,{x:stage.clientWidth/2,y:stage.clientHeight/2});$('done').onclick=async()=>{await api('/api/return',{});$('done').textContent='Returned';status('Returned changes to the desktop app. Closing...');setTimeout(()=>window.close(),250)};
+    $('fit').onclick=fit;$('zoomIn').onclick=()=>zoom(1.25,{x:stage.clientWidth/2,y:stage.clientHeight/2});$('zoomOut').onclick=()=>zoom(1/1.25,{x:stage.clientWidth/2,y:stage.clientHeight/2});$('done').onclick=async()=>{try{if(!await save())return;await api('/api/return',{});$('done').textContent='Returned';status('Returned');setTimeout(()=>window.close(),250)}catch(e){status(e.message)}};
     window.onresize=resize;load().catch(e=>status(e.message));
   </script>
 </body>
@@ -115,11 +127,12 @@ def write_state(path: Path, value: dict) -> dict:
     return value
 
 
-def logo_path(project_root: Path, item: dict) -> Path:
+def logo_path(project_root: Path, item: dict, allowed_paths=None) -> Path:
     raw = Path(str(item.get("path") or ""))
     resolved = raw if raw.is_absolute() else project_root / raw
     resolved = resolved.resolve()
-    if not str(resolved).lower().startswith(str(project_root.resolve()).lower()):
+    allowed = {Path(value).resolve() for value in allowed_paths or []}
+    if resolved not in allowed and not resolved.is_relative_to(project_root.resolve()):
         raise ValueError("That logo is outside this project.")
     return resolved
 
@@ -136,6 +149,9 @@ def handler_class(state_path: Path):
                 project = state["project"]
                 if path == "/":
                     self._send(HTML.encode("utf-8"), "text/html; charset=utf-8")
+                elif path == "/studio-theme.js":
+                    theme_path = Path(__file__).resolve().parents[1] / "electron" / "studio-theme.js"
+                    self._send(theme_path.read_bytes(), "text/javascript; charset=utf-8")
                 elif path == "/api/project":
                     self._json(state)
                 elif path == "/api/court":
@@ -143,7 +159,7 @@ def handler_class(state_path: Path):
                 elif path.startswith("/api/logo/"):
                     item_id = unquote(path.rsplit("/", 1)[1])
                     item = next(item for item in project.get("items", []) if item.get("id") == item_id)
-                    self._file(logo_path(Path(project["projectRoot"]), item))
+                    self._file(logo_path(Path(project["projectRoot"]), item, project.get("allowedLogoPaths")))
                 else:
                     self.send_error(404)
             except Exception as exc:  # noqa: BLE001
@@ -152,13 +168,24 @@ def handler_class(state_path: Path):
         def do_POST(self):  # noqa: N802
             try:
                 length = int(self.headers.get("Content-Length", "0"))
+                if length < 0 or length > 1024 * 1024:
+                    raise ValueError("Logo editor request is too large.")
+                origin = self.headers.get("Origin")
+                if origin and urlparse(origin).netloc != self.headers.get("Host"):
+                    raise ValueError("Cross-origin logo editor requests are not allowed.")
                 payload = json.loads(self.rfile.read(length) or b"{}")
                 path = urlparse(self.path).path
                 state = read_state(state_path)
                 if path == "/api/save":
                     state["returnRequested"] = False
                     state["project"]["selectedId"] = payload.get("selectedId")
-                    state["project"]["items"] = clean_items(payload.get("items", []))
+                    items = clean_items(payload.get("items", []))
+                    allowed = state["project"].get("allowedLogoPaths")
+                    for item in items:
+                        resolved = logo_path(Path(state["project"]["projectRoot"]), item, allowed)
+                        if allowed is not None and resolved not in {Path(value).resolve() for value in allowed}:
+                            raise ValueError("Choose logos through the desktop import dialog.")
+                    state["project"]["items"] = items
                     self._json(write_state(state_path, state))
                 elif path == "/api/return":
                     state["returnRequested"] = True
@@ -190,8 +217,7 @@ def clean_items(raw_items) -> list[dict]:
     items = []
     for item in raw_items:
         try:
-            items.append(
-                {
+            clean = {
                     "id": str(item.get("id") or ""),
                     "name": str(item.get("name") or "Logo"),
                     "path": str(item.get("path") or ""),
@@ -206,7 +232,8 @@ def clean_items(raw_items) -> list[dict]:
                     "flipX": bool(item.get("flipX", False)),
                     "flipY": bool(item.get("flipY", False)),
                 }
-            )
+            if all(math.isfinite(clean[key]) for key in ("x", "y", "width", "height", "rotation", "opacity")):
+                items.append(clean)
         except (TypeError, ValueError):
             continue
     return [item for item in items if item["id"] and item["path"]]

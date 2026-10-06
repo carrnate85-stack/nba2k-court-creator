@@ -1,4 +1,5 @@
 import tempfile
+import json
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,6 +11,46 @@ from court_creator.court_template import CourtLayer
 import updater
 
 class UpgradeTests(unittest.TestCase):
+    def test_native_update_rejects_legacy_release_before_replacing_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "studio-build.json").write_text(json.dumps({"runtime": "wpf-net8"}))
+            pending = root / "updates/pending"
+            pending.mkdir(parents=True)
+            (pending / "Launch NBA 2K Court Creator.bat").write_text("legacy electron launcher")
+            with patch.object(updater, "ROOT", root), patch.object(updater, "UPDATES", root / "updates"):
+                with self.assertRaisesRegex(ValueError, "different desktop runtime"):
+                    updater.apply()
+            self.assertFalse((root / "Launch NBA 2K Court Creator.bat").exists())
+
+    def test_native_update_accepts_matching_runtime_and_preserves_assets(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            marker = json.dumps({"runtime": "wpf-net8"})
+            (root / "studio-build.json").write_text(marker)
+            (root / "requirements.txt").write_text("Pillow")
+            (root / "desktop").mkdir()
+            (root / "desktop/NBA2KCourtCreator.exe").write_text("old")
+            (root / "logos").mkdir()
+            (root / "logos/personal.png").write_text("personal")
+            pending = root / "updates/pending"
+            (pending / "desktop").mkdir(parents=True)
+            (pending / "studio-build.json").write_text(marker)
+            (pending / "requirements.txt").write_text("Pillow")
+            (pending / "desktop/NBA2KCourtCreator.exe").write_text("new")
+            for name in updater.NATIVE_FILES[1:]:
+                (pending / "desktop" / name).write_text("native update sentinel")
+            (pending / "desktop/NBA2KCourtCreator.runtimeconfig.json").write_text(json.dumps({"runtimeOptions": {"frameworks": [
+                {"name": name, "version": "8.0.0"} for name in ("Microsoft.NETCore.App", "Microsoft.WindowsDesktop.App")
+            ]}}))
+            (root / "package.json").write_text(json.dumps({"version": "1.0.0"}))
+            (pending / "package.json").write_text(json.dumps({"version": "1.1.0"}))
+            with patch.object(updater, "ROOT", root), patch.object(updater, "UPDATES", root / "updates"):
+                updater.seal_inventory(pending)
+                updater.apply()
+            self.assertEqual((root / "desktop/NBA2KCourtCreator.exe").read_text(), "new")
+            self.assertEqual((root / "logos/personal.png").read_text(), "personal")
+
     def test_legacy_asset_paths_resolve_to_local_project(self):
         with tempfile.TemporaryDirectory() as temporary:
             local_assets = Path(temporary)
@@ -38,7 +79,12 @@ class UpgradeTests(unittest.TestCase):
                 (pending.parent / "personal.json").write_text("excluded")
                 with patch.object(updater, "ROOT", root), patch.object(updater, "UPDATES", root / "updates"):
                     if fail:
-                        with patch.object(updater.os, "replace", side_effect=OSError("busy")):
+                        replace = updater.os.replace
+                        def fail_target(source, target):
+                            if Path(target) == root / "electron/main.js":
+                                raise OSError("busy")
+                            return replace(source, target)
+                        with patch.object(updater.os, "replace", side_effect=fail_target):
                             with self.assertRaises(OSError):
                                 updater.apply()
                     else:

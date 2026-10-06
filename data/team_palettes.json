@@ -2,7 +2,9 @@
   "source": "https://teamcolorcodes.com",
   "generated_from": {
     "NBA": "https://teamcolorcodes.com/nba-team-color-codes/",
-    "NCAA D1": "https://teamcolorcodes.com/ncaa-color-codes/"
+    "NCAA D1": "https://teamcolorcodes.com/ncaa-color-codes/",
+    "WNBA": "https://www.wnba.com/teams",
+    "EuroLeague": "https://mediacentre.euroleague.net/en/app/2/communication/communication/preview/24407"
   },
   "palettes": [
     {
@@ -6676,6 +6678,996 @@
         {
           "name": "PENGUIN YELLOW",
           "hex": "#F3D54E"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Atlanta Dream",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661330/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#E3173E",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#363B37",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#4891CE",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Chicago Sky",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661329/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#4D90CD",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFD520",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#061922",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Connecticut Sun",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661323/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#F05023",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#0A2240",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Dallas Wings",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661321/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#002B5C",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#C4D600",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#00A8E1",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Golden State Valkyries",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661331/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#B896D4",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#000000",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Indiana Fever",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661325/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#E2293A",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#20305D",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FAD412",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Las Vegas Aces",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661319/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#000000",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#A7A8AA",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Los Angeles Sparks",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661320/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#552583",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FDB927",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#00A997",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Minnesota Lynx",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661324/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#315C98",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#172439",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#6CC32E",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "New York Liberty",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661313/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#87D5B5",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#100F0D",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Phoenix Mercury",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661317/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#3C286E",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FA4B0A",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#6937AF",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Portland Fire",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661327/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#C8102E",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#CEE5EB",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Seattle Storm",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661328/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#2C5235",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FEE11A",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#78BE20",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Toronto Tempo",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661332/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#441E36",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#B3C7E7",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "WNBA",
+      "team": "Washington Mystics",
+      "source": "https://cdn.wnba.com/logos/wnba/1611661322/primary/L/logo.svg",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/wnba-2026.json",
+      "season": "2026",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#E03A3E",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#002B5C",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#C4CED4",
+          "evidenceStatus": "official_logo_artwork_and_metadata"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Anadolu Efes Istanbul",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27172?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Documented HEX; court roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Guide color 1",
+          "hex": "#234678",
+          "evidenceStatus": "official_documented_hex"
+        },
+        {
+          "name": "Guide color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_documented_hex"
+        },
+        {
+          "name": "Guide color 3",
+          "hex": "#E12319",
+          "evidenceStatus": "official_documented_hex"
+        },
+        {
+          "name": "Guide color 4",
+          "hex": "#00A9E0",
+          "evidenceStatus": "official_documented_hex"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Armani Olimpia Milan",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35587?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#AB1C2E",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#000000",
+          "evidenceStatus": "official_svg_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Besiktas Istanbul",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35618?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#000000",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#E30A17",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#292929",
+          "evidenceStatus": "official_svg_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Crvena Zvezda Meridianbet Belgrade",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26859?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#EB1C27",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#D0AE6E",
+          "evidenceStatus": "official_png_sample"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Dubai Basketball",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26860?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#101820",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#916637",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#707479",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "FC Barcelona",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26861?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#002596",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#8B2346",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFD200",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#CC092F",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#DEB500",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 6",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 7",
+          "hex": "#000000",
+          "evidenceStatus": "official_ai_rgb_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "FC Bayern Munich",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26913?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#ED0037",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#286CFC",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#1D1D1B",
+          "evidenceStatus": "official_svg_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Fenerbahce Tarfin Istanbul",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35570?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#F3E63C",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#21314F",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#8D734B",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#FFED00",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        },
+        {
+          "name": "Logo color 6",
+          "hex": "#12326E",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        },
+        {
+          "name": "Logo color 7",
+          "hex": "#292F4B",
+          "evidenceStatus": "official_pdf_rgb_and_spot_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Hapoel IBI Tel Aviv",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35591?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#D10E09",
+          "evidenceStatus": "official_ai_rgb_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_ai_rgb_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Kosner Baskonia Vitoria-Gasteiz",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/30348?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#0E2240",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#CE162D",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#AB132D",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#D9D9D7",
+          "evidenceStatus": "official_pdf_color_converted"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "LDLC ASVEL Villeurbanne",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26886?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated. White is a neutral fallback.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#222222",
+          "evidenceStatus": "official_png_sample_with_neutral"
+        },
+        {
+          "name": "Neutral court white (not sampled)",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "neutral_fallback"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#333333",
+          "evidenceStatus": "official_png_sample_with_neutral"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Maccabi Rapyd Tel Aviv",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/29956?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#FED233",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#233A78",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#3866B0",
+          "evidenceStatus": "official_png_sample"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Olympiacos Piraeus",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27189?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Documented HEX; court roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Guide color 1",
+          "hex": "#C8102E",
+          "evidenceStatus": "official_documented_hex"
+        },
+        {
+          "name": "Guide color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_documented_hex"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Panathinaikos AKTOR Athens",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27143?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#00793B",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FF8E00",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#FFE500",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#000000",
+          "evidenceStatus": "official_png_sample"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Paris Basketball",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26903?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#000000",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#004CFF",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#FF0000",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#0050FF",
+          "evidenceStatus": "official_pdf_rgb_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Partizan Mozzart Bet Belgrade",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26906?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#000000",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#EC2128",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#C2922F",
+          "evidenceStatus": "official_pdf_color_converted"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#B2B6BA",
+          "evidenceStatus": "official_pdf_color_converted"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Real Madrid",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/27125?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#004C9A",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FBC200",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#E22148",
+          "evidenceStatus": "official_png_sample"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Valencia Basket",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35606?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#FF6C0E",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#000000",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#009FE3",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 5",
+          "hex": "#E4032C",
+          "evidenceStatus": "official_svg_fill"
+        },
+        {
+          "name": "Logo color 6",
+          "hex": "#FDD700",
+          "evidenceStatus": "official_svg_fill"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Virtus Bologna",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/35868?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#000000",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#938C6C",
+          "evidenceStatus": "official_png_sample"
+        }
+      ]
+    },
+    {
+      "league": "EuroLeague",
+      "team": "Zalgiris Kaunas",
+      "source": "https://hub.euroleague.tech/en/app/17/files/file/publicsharedownload/26876?token=3a3fbbf414232e31c4fa6abb91182b46be7de45516fb62f11754cc9570254a10c0346f8ff8e0683e9109170dfc8566b45a800651d8d1d44e35660b5287265dd2",
+      "paletteNote": "Official artwork-derived court preset; roles curated.",
+      "provenanceFile": "data/palette_sources/euroleague-2026-27.json",
+      "season": "2026-27",
+      "colors": [
+        {
+          "name": "Logo color 1",
+          "hex": "#00803F",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 2",
+          "hex": "#FFFFFF",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 3",
+          "hex": "#FC8231",
+          "evidenceStatus": "official_png_sample"
+        },
+        {
+          "name": "Logo color 4",
+          "hex": "#000000",
+          "evidenceStatus": "official_png_sample"
         }
       ]
     }

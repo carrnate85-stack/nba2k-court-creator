@@ -1,0 +1,6 @@
+{
+  "runtime": "wpf-net8",
+  "projectSchema": 2,
+  "backend": "python",
+  "exchangeSchema": 1
+}

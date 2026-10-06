@@ -1,0 +1,177 @@
+{
+  "league": "WNBA",
+  "season": "2026",
+  "verifiedAt": "2026-09-30",
+  "membershipVerified": true,
+  "membershipSourceUrls": [
+    "https://www.wnba.com/teams"
+  ],
+  "method": "Practical digital court presets derived from official league-served SVG fills and metadata; not certified brand-guide palette hierarchy. Roles are curated. Exceptions use exact league metadata: Sparks teal, Mercury accent purple, Portland blue, Toronto blue. Portland generic black fallback omitted. Golden State/Toronto neutral white is supported by jersey releases. Aces stale metadata red superseded by current official black/silver/white SVG.",
+  "teams": [
+    {
+      "name": "Atlanta Dream",
+      "primary": "#E3173E",
+      "secondary": "#363B37",
+      "accent": "#4891CE",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661330/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Chicago Sky",
+      "primary": "#4D90CD",
+      "secondary": "#FFD520",
+      "accent": "#061922",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661329/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Connecticut Sun",
+      "primary": "#F05023",
+      "secondary": "#0A2240",
+      "accent": "#FFFFFF",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661323/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Dallas Wings",
+      "primary": "#002B5C",
+      "secondary": "#C4D600",
+      "accent": "#00A8E1",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661321/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Golden State Valkyries",
+      "primary": "#B896D4",
+      "secondary": "#000000",
+      "accent": "#FFFFFF",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661331/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Indiana Fever",
+      "primary": "#E2293A",
+      "secondary": "#20305D",
+      "accent": "#FAD412",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661325/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Las Vegas Aces",
+      "primary": "#000000",
+      "secondary": "#A7A8AA",
+      "accent": "#FFFFFF",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661319/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Los Angeles Sparks",
+      "primary": "#552583",
+      "secondary": "#FDB927",
+      "accent": "#00A997",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661320/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Minnesota Lynx",
+      "primary": "#315C98",
+      "secondary": "#172439",
+      "accent": "#6CC32E",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661324/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "New York Liberty",
+      "primary": "#87D5B5",
+      "secondary": "#100F0D",
+      "accent": "#FFFFFF",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661313/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Phoenix Mercury",
+      "primary": "#3C286E",
+      "secondary": "#FA4B0A",
+      "accent": "#6937AF",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661317/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Portland Fire",
+      "primary": "#C8102E",
+      "secondary": "#CEE5EB",
+      "accent": "#000000",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661327/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": true
+    },
+    {
+      "name": "Seattle Storm",
+      "primary": "#2C5235",
+      "secondary": "#FEE11A",
+      "accent": "#78BE20",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661328/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Toronto Tempo",
+      "primary": "#441E36",
+      "secondary": "#B3C7E7",
+      "accent": "#FFFFFF",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661332/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    },
+    {
+      "name": "Washington Mystics",
+      "primary": "#E03A3E",
+      "secondary": "#002B5C",
+      "accent": "#C4CED4",
+      "sourceUrl": "https://cdn.wnba.com/logos/wnba/1611661322/primary/L/logo.svg",
+      "evidenceStatus": "official_logo_artwork_and_metadata",
+      "paletteRoleStatus": "curated_for_court",
+      "isOfficialHexSpecification": false,
+      "omitAccent": false
+    }
+  ]
+}

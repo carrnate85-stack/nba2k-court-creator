@@ -1,5 +1,20 @@
 const DEFAULT_PAINT_HEX = "#19583F";
 
+function updateStudioTheme(name, persist = false) {
+  name = window.StudioTheme.apply(name, persist);
+  const button = document.getElementById("themeButton");
+  const label = `Switch to ${name === "dark" ? "light" : "dark"} theme`;
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.innerHTML = window.iconMarkup(name === "dark" ? "sun" : "moon", 18);
+  window.courtCreator.setStudioTheme?.(name).catch(error => console.error("Window theme update failed", error));
+}
+
+document.getElementById("themeButton").addEventListener("click", () => {
+  updateStudioTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);
+});
+updateStudioTheme(document.documentElement.dataset.theme);
+
 function storedJson(key, fallback) {
   try {
     const value = JSON.parse(localStorage.getItem(key));
@@ -11,6 +26,8 @@ function storedJson(key, fallback) {
 
 const state = {
   section: "floors",
+  buildMode: "game-uv",
+  geometry: null,
   templatePath: "",
   previewPath: "",
   document: null,
@@ -44,6 +61,27 @@ const state = {
   renderTimer: 0,
 };
 
+const importState = {
+  source: null,
+  target: null,
+  bounds: null,
+  autoBounds: null,
+  previewToken: 0,
+  previewTimer: 0,
+  previewBusy: false,
+  previewPending: false,
+  exporting: false,
+  preparing: false,
+};
+
+const experimentalState = {
+  geometry: null, floors: [], image: null, loading: false, loaded: false,
+  floorToken: 0, drawFrame: 0,
+  settings: storedJson("courtCreator.experimental", { floorId: null, outsideColor: "#19583F", lineSettings: {}, paintSettings: {}, mappingMode: "game-uv" }),
+};
+
+const nativePreview = { image: null, imagePath: "", logoImages: new Map(), token: 0 };
+
 const ui = {
   status: document.getElementById("status"),
   sectionTitle: document.getElementById("sectionTitle"),
@@ -71,9 +109,35 @@ const ui = {
   paletteHost: document.getElementById("paletteHost"),
   layersPanel: document.getElementById("layersPanel"),
   floorBrowser: document.getElementById("floorBrowser"),
+  floorCatalog: document.getElementById("floorCatalog"),
+  browseFloorButton: document.getElementById("browseFloorButton"),
   paintBrowser: document.getElementById("paintBrowser"),
   logosPanel: document.getElementById("logosPanel"),
   exportPanel: document.getElementById("exportPanel"),
+  importPanel: document.getElementById("importPanel"),
+  experimentalPanel: document.getElementById("experimentalPanel"),
+  experimentalCanvas: document.getElementById("experimentalCanvas"),
+  experimentalFloorSearch: document.getElementById("experimentalFloorSearch"),
+  experimentalFloor: document.getElementById("experimentalFloor"),
+  experimentalMapping: document.getElementById("experimentalMapping"),
+  experimentalLines: document.getElementById("experimentalLines"),
+  experimentalStatus: document.getElementById("experimentalStatus"),
+  experimentalPrepare: document.getElementById("experimentalPrepare"),
+  experimentalOutside: document.getElementById("experimentalOutside"),
+  experimentalOutsideHex: document.getElementById("experimentalOutsideHex"),
+  importPreviewStage: document.getElementById("importPreviewStage"),
+  importPreviewImage: document.getElementById("importPreviewImage"),
+  importPreviewEmpty: document.getElementById("importPreviewEmpty"),
+  importSourceName: document.getElementById("importSourceName"),
+  importTexture: document.getElementById("importTexture"),
+  importTextureInfo: document.getElementById("importTextureInfo"),
+  importTargetName: document.getElementById("importTargetName"),
+  importPrepareBase: document.getElementById("importPrepareBase"),
+  importStatus: document.getElementById("importStatus"),
+  importAutoEdges: document.getElementById("importAutoEdges"),
+  importExportPng: document.getElementById("importExportPng"),
+  importExportIff: document.getElementById("importExportIff"),
+  importEdges: ["Left", "Top", "Right", "Bottom"].map((edge) => document.getElementById(`importEdge${edge}`)),
   layersHost: document.getElementById("layersHost"),
   floorSearch: document.getElementById("floorSearch"),
   layerSearch: document.getElementById("layerSearch"),
@@ -245,7 +309,7 @@ function courtSortKey(layer) {
   }
   if (parent && normalizeName(parent.name) === "lines") {
     const name = normalizeName(layer.name);
-    if (name === "3 point lines") return -30;
+    if (name === "3 point lines" || name === "nba three") return -30;
     if (name === "college three") return -20;
     if (name === "high school three") return -10;
   }
@@ -333,9 +397,25 @@ function rememberRecentFloor(layer) {
 }
 
 function selectFloor(layer) {
+  const previousSelection = state.section === "floors" ? null : state.selectedLayerId;
   rememberRecentFloor(layer);
   setLayerVisibility(layer, true);
+  if (previousSelection && !isInsideCourtFloor(state.layersById.get(previousSelection))) {
+    state.selectedLayerId = previousSelection;
+    if (state.section === "paint") renderLayers();
+  }
   if (state.floorFilter === "recent" || state.floorSort === "recent") renderFloorGallery();
+  if (ui.floorCatalog.open) ui.floorCatalog.close();
+}
+
+function openFloorCatalog() {
+  if ((!state.geometry && !state.templatePath) || ui.floorCatalog.open) return;
+  closeColorEditor();
+  ui.floorSort.value = state.floorSort;
+  renderFloorFilters();
+  renderFloorGallery();
+  ui.floorCatalog.showModal();
+  requestAnimationFrame(() => ui.floorSearch.focus());
 }
 
 function renderFloorFilters() {
@@ -424,6 +504,7 @@ function renderFloorGallery(preserveScroll = true) {
     card.append(thumbnail, body);
     card.addEventListener("click", () => selectFloor(layer));
     card.addEventListener("keydown", (event) => {
+      if (event.target !== card) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         selectFloor(layer);
@@ -444,8 +525,9 @@ function renderFloorGallery(preserveScroll = true) {
 }
 
 function syncFloorCardStates() {
+  const floorId = selectedFloorLayer()?.id;
   for (const card of ui.floorGallery.querySelectorAll(".floor-card")) {
-    const selected = card.dataset.id === state.selectedLayerId;
+    const selected = card.dataset.id === floorId;
     card.classList.toggle("selected", selected);
     card.setAttribute("aria-selected", String(selected));
   }
@@ -499,7 +581,7 @@ function rebuildLayerIndex(data) {
     children: [],
     visible: Boolean(data.visibility?.[layer.id] ?? layer.visible),
     originalVisible: Boolean(data.visibility?.[layer.id] ?? layer.visible),
-    activeHex: "",
+    activeHex: normalizeHex(layer.color) || "",
     showInlineColorControls: false,
     isCustomFloor: Boolean(layer.isCustomFloor),
     isTemplateFloor: Boolean(layer.isTemplateFloor || String(layer.id || "").startsWith("floor_template_")),
@@ -509,6 +591,8 @@ function rebuildLayerIndex(data) {
   for (const floor of data.customFloorImages || []) {
     if (floor.isTemplate && state.layersById.has(floor.id)) {
       state.layersById.get(floor.id).isTemplateFloor = true;
+    } else if (state.layersById.has(floor.id)) {
+      state.layersById.get(floor.id).isCustomFloor = true;
     }
   }
   for (const layer of state.layers) {
@@ -1022,12 +1106,12 @@ function renderPaintPalette() {
 function refreshSelectionText() {
   const floor = selectedFloorLayer();
   ui.currentCourtName.textContent = floor?.displayName || "No court selected";
-  if (state.section === "logos") {
-    const logo = selectedLogo();
-    ui.selectedLabel.textContent = "Selected Logo";
-    ui.selectedText.textContent = logo?.name || "No logo selected";
-    ui.selectedCategory.textContent = logo ? "Logo layer" : "Import a logo to begin";
-    if (logo?.path) ui.selectedFloorImage.src = fileUrl(logo.path);
+  if (state.section === "experimental") {
+    const item = experimentalFloor();
+    ui.selectedLabel.textContent = "Experimental Court";
+    ui.selectedText.textContent = item ? experimentalFloorName(item) : "No court selected";
+    ui.selectedCategory.textContent = item?.category || "Stock hardwood";
+    if (item) ui.selectedFloorImage.src = fileUrl(item.previewPath || item.path);
     else ui.selectedFloorImage.removeAttribute("src");
   } else {
     ui.selectedLabel.textContent = "Selected Court";
@@ -1043,7 +1127,7 @@ function refreshSelectionText() {
 }
 
 function setPaintTab(tab) {
-  state.paintTab = tab === "colors" ? "colors" : "layers";
+  state.paintTab = "layers";
   ui.paintLayersView.classList.toggle("hidden", state.paintTab !== "layers");
   ui.paintColorsView.classList.toggle("hidden", state.paintTab !== "colors");
   document.querySelectorAll(".inspector-tab").forEach((button) => {
@@ -1059,30 +1143,414 @@ function renderSection() {
     floors: ["Court Floors", `Choose a court floor from ${state.floorLibraryName} (${state.floorLibraryCount} available), or add your own custom floor.`],
     paint: ["Paint & Lines", "Choose paint and line layers, then apply exact colors or team palette swatches."],
     logos: ["Logos", "Import logo images, then place them on the court preview."],
+    import: ["Import", "Align an older court texture with a 2K27 floor and build a converted file."],
+    experimental: ["Experimental", ""],
     export: ["Export", "Refresh, save, and export the current court preview."],
   };
   document.body.dataset.section = state.section;
   ui.sectionTitle.textContent = copy[state.section][0];
   ui.sectionSubtitle.textContent = copy[state.section][1];
   if (state.section !== "paint") closeColorEditor();
-  ui.layersPanel.classList.toggle("hidden", !["floors", "paint"].includes(state.section));
+  ui.layersPanel.classList.toggle("hidden", state.section !== "paint");
   ui.logosPanel.classList.toggle("hidden", state.section !== "logos");
+  ui.importPanel.classList.toggle("hidden", state.section !== "import");
+  ui.experimentalPanel.classList.toggle("hidden", state.section !== "experimental");
+  ui.experimentalCanvas.classList.toggle("hidden", state.buildMode !== "game-uv" && state.section !== "experimental");
+  ui.previewImage.classList.toggle("hidden", state.buildMode === "game-uv" || state.section === "experimental");
   ui.exportPanel.classList.toggle("hidden", state.section !== "export");
-  ui.floorBrowser.classList.toggle("hidden", state.section !== "floors");
+  ui.previewShell.classList.toggle("hidden", state.section === "import");
+  ui.importPreviewStage.classList.toggle("hidden", state.section !== "import");
   ui.paintBrowser.classList.toggle("hidden", state.section !== "paint");
-  ui.currentCourtButton.classList.toggle("hidden", state.section === "floors");
+  ui.currentCourtButton.classList.toggle("hidden", ["import", "experimental"].includes(state.section));
+  ui.browseFloorButton.classList.toggle("hidden", ["import", "experimental"].includes(state.section));
   document.querySelectorAll(".nav").forEach((button) => button.classList.toggle("active", button.dataset.section === state.section));
-  if (state.section === "floors") {
-    ui.floorSort.value = state.floorSort;
-    renderFloorFilters();
-    renderFloorGallery();
-  }
   if (state.section === "paint") {
     setPaintTab(state.paintTab);
     renderLayers();
   }
+  if (state.section === "experimental") loadExperimental();
   renderLogos();
   refreshSelectionText();
+}
+
+function experimentalFloor() {
+  return experimentalState.floors.find((floor) => floor.id === experimentalState.settings.floorId) || null;
+}
+
+function experimentalFloorName(floor) {
+  return state.layersById.get(floor.id)?.displayName || floor.name;
+}
+
+function saveExperimentalSettings() {
+  localStorage.setItem("courtCreator.experimental", JSON.stringify(experimentalState.settings));
+  scheduleExperimentalDraw();
+}
+
+function renderExperimentalFloors() {
+  const query = ui.experimentalFloorSearch.value.toLowerCase().trim();
+  const floors = experimentalState.floors.filter((floor) => `${experimentalFloorName(floor)} ${floor.category}`.toLowerCase().includes(query));
+  floors.sort((a, b) => experimentalFloorName(a).localeCompare(experimentalFloorName(b)));
+  ui.experimentalFloor.replaceChildren(...floors.map((floor) => new Option(experimentalFloorName(floor), floor.id)));
+  ui.experimentalFloor.value = experimentalState.settings.floorId || "";
+  ui.experimentalFloor.disabled = !floors.length;
+}
+
+function renderExperimentalLines() {
+  ui.experimentalLines.replaceChildren();
+  const geometry = experimentalState.geometry;
+  for (const group of [{ name: "Paint", layers: geometry?.paints || [], settings: "paintSettings" },
+    { name: "Lines", layers: geometry?.layers || [], settings: "lineSettings" }]) {
+    if (!group.layers.length) continue;
+    const heading = document.createElement("strong");
+    heading.className = "experimental-group-heading";
+    heading.textContent = group.name;
+    ui.experimentalLines.append(heading);
+    for (const layer of group.layers) {
+      const setting = experimentalState.settings[group.settings][layer.id] || { visible: layer.visible, color: layer.color };
+      const row = document.createElement("div");
+      row.className = "experimental-line-row";
+      const name = document.createElement("span");
+      name.textContent = layer.name;
+      const visible = document.createElement("input");
+      visible.type = "checkbox";
+      visible.checked = setting.visible;
+      visible.setAttribute("aria-label", `Show ${layer.name}`);
+      const colors = document.createElement("div");
+      colors.className = "experimental-line-colors";
+      const swatch = document.createElement("input");
+      swatch.type = "color";
+      swatch.value = normalizeHex(setting.color) || "#FFFFFF";
+      swatch.setAttribute("aria-label", `${layer.name} color`);
+      const hex = document.createElement("input");
+      hex.type = "text"; hex.maxLength = 7; hex.value = swatch.value.toUpperCase();
+      hex.setAttribute("aria-label", `${layer.name} hex color`);
+      const updateVisibility = () => {
+        experimentalState.settings[group.settings][layer.id] = { visible: visible.checked, color: swatch.value.toUpperCase() };
+        colors.classList.toggle("hidden", !visible.checked);
+        saveExperimentalSettings();
+      };
+      visible.addEventListener("change", updateVisibility);
+      swatch.addEventListener("input", () => { hex.value = swatch.value.toUpperCase(); updateVisibility(); });
+      hex.addEventListener("input", () => {
+        const normalized = normalizeHex(hex.value);
+        hex.setCustomValidity(normalized ? "" : "Enter a valid hex color.");
+        if (normalized) { swatch.value = normalized; updateVisibility(); }
+      });
+      colors.classList.toggle("hidden", !visible.checked);
+      colors.append(swatch, hex); row.append(name, visible, colors); ui.experimentalLines.append(row);
+    }
+  }
+  const ready = Boolean(experimentalState.geometry && experimentalFloor());
+  for (const id of ["experimentalPng", "experimentalIff", "experimentalReset"]) document.getElementById(id).disabled = !ready;
+}
+
+async function loadExperimental(prepare = false) {
+  if (experimentalState.loading) return;
+  if (experimentalState.loaded && !prepare) { scheduleExperimentalDraw(); return; }
+  experimentalState.loading = true;
+  ui.experimentalPrepare.disabled = true;
+  ui.experimentalStatus.textContent = prepare ? "Decoding stock marking geometry..." : "Loading stock geometry...";
+  try {
+    const response = await window.courtCreator.experimental(prepare);
+    experimentalState.geometry = response.geometry;
+    experimentalState.floors = response.floors || [];
+    experimentalState.loaded = true;
+    if (!experimentalFloor()) experimentalState.settings.floorId = experimentalState.floors.find((floor) => floor.id === selectedFloorLayer()?.id)?.id || experimentalState.floors[0]?.id || null;
+    experimentalState.settings.lineSettings ||= {};
+    experimentalState.settings.paintSettings ||= {};
+    experimentalState.settings.mappingMode = experimentalState.settings.mappingMode === "template" ? "template" : "game-uv";
+    ui.experimentalMapping.value = experimentalState.settings.mappingMode;
+    ui.experimentalMapping.disabled = !response.geometry;
+    experimentalState.settings.outsideColor = normalizeHex(experimentalState.settings.outsideColor) || "#19583F";
+    ui.experimentalOutside.value = experimentalState.settings.outsideColor;
+    ui.experimentalOutsideHex.value = experimentalState.settings.outsideColor;
+    renderExperimentalFloors(); renderExperimentalLines();
+    await loadExperimentalFloor();
+    ui.experimentalStatus.textContent = response.geometry ? `${response.geometry.paints.length} paint areas, ${response.geometry.layers.length} marking layers` : "Stock lines not prepared";
+  } catch (error) {
+    ui.experimentalStatus.textContent = `Geometry failed: ${error.message}`;
+  } finally {
+    experimentalState.loading = false;
+    ui.experimentalPrepare.disabled = false;
+  }
+}
+
+async function loadExperimentalFloor() {
+  const token = ++experimentalState.floorToken;
+  experimentalState.image = null;
+  scheduleExperimentalDraw();
+  refreshSelectionText();
+  const floor = experimentalFloor();
+  if (!floor) return;
+  try {
+    const image = new Image(); image.src = fileUrl(floor.path); await image.decode();
+    if (token !== experimentalState.floorToken) return;
+    experimentalState.image = image;
+    saveExperimentalSettings();
+  } catch (error) {
+    if (token === experimentalState.floorToken) ui.experimentalStatus.textContent = `Hardwood failed: ${error.message}`;
+  }
+}
+
+function scheduleExperimentalDraw() {
+  if (experimentalState.drawFrame) return;
+  experimentalState.drawFrame = requestAnimationFrame(() => {
+    experimentalState.drawFrame = 0;
+    const unified = state.buildMode === "game-uv" && state.section !== "experimental";
+    const request = unified ? renderRequest() : experimentalState.settings;
+    const geometry = unified ? state.geometry : experimentalState.geometry;
+    const canvas = ui.experimentalCanvas;
+    const ctx = canvas.getContext("2d");
+    const scale = canvas.width / 8192;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.clearRect(0, 0, 8192, 4096);
+    ctx.fillStyle = request.outsideColor || "#19583F";
+    if (request.outsideVisible !== false) ctx.fillRect(0, 0, 8192, 4096);
+    const floor = unified ? request.floor : experimentalFloor();
+    const image = unified ? nativePreview.image : experimentalState.image;
+    const native = request.mappingMode !== "template" && Boolean(geometry?.gameUv);
+    if (floor && image) {
+      const [left, top, width, height] = native ? geometry.gameUv.hardwoodBounds : floor.bbox;
+      const sourceRatio = image.naturalWidth / image.naturalHeight;
+      const ratio = width / height;
+      const cropWidth = sourceRatio > ratio ? image.naturalHeight * ratio : image.naturalWidth;
+      const cropHeight = sourceRatio > ratio ? image.naturalHeight : image.naturalWidth / ratio;
+      ctx.save();
+      if (native) {
+        ctx.beginPath();
+        for (const polygon of geometry.gameUv.courtSurfacePolygons) {
+          ctx.moveTo(...polygon[0]);
+          for (const point of polygon.slice(1)) ctx.lineTo(...point);
+          ctx.closePath();
+        }
+        ctx.clip();
+      }
+      ctx.drawImage(image, (image.naturalWidth - cropWidth) / 2, (image.naturalHeight - cropHeight) / 2, cropWidth, cropHeight, left, top, width, height);
+      ctx.restore();
+    }
+    const paintIds = new Set((geometry?.paints || []).map(layer => layer.id));
+    for (const layer of [...(geometry?.paints || []), ...(geometry?.layers || [])]) {
+      const settings = paintIds.has(layer.id)
+        ? request.paintSettings : request.lineSettings;
+      const setting = settings[layer.id] || layer;
+      if (!setting.visible) continue;
+      ctx.fillStyle = setting.color;
+      ctx.beginPath();
+      for (const polygon of native ? layer.gameUvPolygons : layer.polygons) {
+        ctx.moveTo(...polygon[0]);
+        for (const point of polygon.slice(1)) ctx.lineTo(...point);
+        ctx.closePath();
+      }
+      ctx.fill();
+    }
+    if (unified) {
+      for (const logo of request.logoImages) {
+        const logoImage = nativePreview.logoImages.get(logo.path);
+        if (!logoImage || logo.visible === false) continue;
+        ctx.save();
+        ctx.translate(logo.x + logo.width / 2, logo.y + logo.height / 2);
+        ctx.rotate((Number(logo.rotation) || 0) * Math.PI / 180);
+        ctx.scale(logo.flipX ? -1 : 1, logo.flipY ? -1 : 1);
+        ctx.globalAlpha = Math.max(0, Math.min(100, Number(logo.opacity ?? 100))) / 100;
+        ctx.drawImage(logoImage, -logo.width / 2, -logo.height / 2, logo.width, logo.height);
+        ctx.restore();
+      }
+    }
+  });
+}
+
+function experimentalRequest(outputPath) {
+  if (!experimentalState.geometry || !experimentalFloor() || !experimentalState.image) throw new Error("Prepare the stock lines and select a loaded hardwood first.");
+  return { experimental: true, floor: { ...experimentalFloor() }, outsideColor: experimentalState.settings.outsideColor,
+    mappingMode: experimentalState.settings.mappingMode,
+    paintSettings: structuredClone(experimentalState.settings.paintSettings),
+    lineSettings: structuredClone(experimentalState.settings.lineSettings), outputPath };
+}
+
+function importFileName(filePath) {
+  return String(filePath || "").split(/[\\/]/).pop();
+}
+
+function setImportStatus(message) {
+  ui.importStatus.textContent = message;
+  setStatus(message);
+}
+
+function fillImportSelect(select, textures, selected) {
+  select.replaceChildren(...textures.map((texture) => {
+    const option = new Option(texture.name, texture.name);
+    return option;
+  }));
+  select.value = selected || "";
+  select.disabled = !textures.length;
+}
+
+function updateImportControls() {
+  const source = importState.source;
+  const target = importState.target;
+  ui.importSourceName.textContent = source ? importFileName(source.path) : "No court selected";
+  ui.importTargetName.textContent = target
+    ? `Ready - ${target.textures[0].width} x ${target.textures[0].height} ${target.textures[0].format}`
+    : "Not prepared";
+  fillImportSelect(ui.importTexture, source?.textures || [], source?.selected);
+  const texture = source?.textures.find((item) => item.name === source.selected);
+  ui.importTextureInfo.textContent = texture ? `${texture.width} x ${texture.height}  |  ${texture.format}` : "";
+  ui.importEdges.forEach((input, index) => {
+    input.disabled = !source || importState.exporting;
+    input.value = importState.bounds?.[index] ?? "";
+    input.max = index % 2 === 0 ? texture?.width || "" : texture?.height || "";
+  });
+  ui.importTexture.disabled = !source || importState.exporting;
+  document.getElementById("importSourceButton").disabled = importState.exporting;
+  ui.importAutoEdges.disabled = !source || importState.exporting;
+  ui.importExportPng.disabled = !source || importState.exporting || importState.preparing;
+  ui.importExportIff.disabled = !source || importState.exporting || importState.preparing;
+  ui.importPrepareBase.disabled = Boolean(target) || importState.preparing || importState.exporting;
+}
+
+function currentImportBounds() {
+  const texture = importState.source?.textures.find((item) => item.name === importState.source.selected);
+  if (!texture) throw new Error("Choose an older court texture first.");
+  const bounds = ui.importEdges.map((input) => Number(input.value));
+  if (bounds.some((value) => !Number.isInteger(value)) || bounds[0] < 0 || bounds[1] < 0
+      || bounds[0] >= bounds[2] || bounds[1] >= bounds[3]
+      || bounds[2] > texture.width || bounds[3] > texture.height) {
+    throw new Error("Court edges must be inside the source texture and form a rectangle.");
+  }
+  importState.bounds = [...bounds];
+  return bounds;
+}
+
+function importRequest(outputPath = null) {
+  const floor = floorImageFor(selectedFloorLayer());
+  return {
+    sourcePath: importState.source.path,
+    textureName: importState.source.selected,
+    bounds: currentImportBounds(),
+    backgroundPath: floor?.path || null,
+    outputPath,
+  };
+}
+
+async function refreshImportPreview() {
+  if (!importState.source) return;
+  if (importState.previewBusy) { importState.previewPending = true; return; }
+  const token = ++importState.previewToken;
+  let request;
+  try { request = importRequest(); } catch (error) { setImportStatus(error.message); return; }
+  importState.previewBusy = true;
+  ui.importPreviewStage.setAttribute("aria-busy", "true");
+  setImportStatus("Aligning court...");
+  try {
+    const response = await window.courtCreator.previewImport(request);
+    if (token !== importState.previewToken) return;
+    ui.importPreviewImage.src = `${fileUrl(response.previewPath)}?v=${Date.now()}`;
+    await waitForPreviewImage(ui.importPreviewImage);
+    if (token !== importState.previewToken) return;
+    ui.importPreviewEmpty.classList.add("hidden");
+    setImportStatus("Court aligned to 2K27 texture size.");
+  } catch (error) {
+    if (token === importState.previewToken) setImportStatus(`Import preview failed: ${error.message}`);
+  } finally {
+    if (token === importState.previewToken) ui.importPreviewStage.setAttribute("aria-busy", "false");
+    importState.previewBusy = false;
+    if (importState.previewPending) {
+      importState.previewPending = false;
+      refreshImportPreview();
+    }
+  }
+}
+
+function scheduleImportPreview() {
+  ++importState.previewToken;
+  clearTimeout(importState.previewTimer);
+  importState.previewTimer = setTimeout(refreshImportPreview, 220);
+}
+
+async function openImportSource() {
+  try {
+    const path = await window.courtCreator.chooseImportIff(false);
+    if (!path) return;
+    const source = await window.courtCreator.inspectImportIff(path);
+    importState.source = source;
+    importState.bounds = [...source.sourceBounds];
+    importState.autoBounds = [...source.sourceBounds];
+    updateImportControls();
+    scheduleImportPreview();
+  } catch (error) { setImportStatus(`Import failed: ${error.message}`); }
+}
+
+async function changeImportTexture() {
+  if (!importState.source) return;
+  try {
+    const source = await window.courtCreator.inspectImportIff(importState.source.path, false, ui.importTexture.value);
+    importState.source = source;
+    importState.bounds = [...source.sourceBounds];
+    importState.autoBounds = [...source.sourceBounds];
+    updateImportControls();
+    scheduleImportPreview();
+  } catch (error) { setImportStatus(`Texture failed: ${error.message}`); }
+}
+
+async function loadImportBaseStatus() {
+  try {
+    const result = await window.courtCreator.importBaseStatus();
+    importState.target = result.prepared ? result.base : null;
+    updateImportControls();
+  } catch (error) {
+    importState.target = null;
+    updateImportControls();
+  }
+}
+
+async function prepareImportBase() {
+  if (importState.preparing) return false;
+  try {
+    importState.preparing = true;
+    updateImportControls();
+    setImportStatus("Preparing the stock NBA 2K27 export base...");
+    const result = await window.courtCreator.prepareImportBase();
+    if (!result) {
+      setImportStatus("Export base preparation canceled.");
+      return false;
+    }
+    importState.target = result.base;
+    updateImportControls();
+    setImportStatus("2K27 export base ready. Court exports use one baked texture.");
+    return true;
+  } catch (error) {
+    setImportStatus(`Export base failed: ${error.message}`);
+    return false;
+  } finally {
+    importState.preparing = false;
+    updateImportControls();
+  }
+}
+
+async function exportImportedCourt(asIff) {
+  if (!importState.source || importState.exporting) return;
+  if (asIff && !importState.target && !await prepareImportBase()) return;
+  try {
+    const outputPath = asIff
+      ? await window.courtCreator.chooseImportIffOutput()
+      : await window.courtCreator.chooseImportPngOutput();
+    if (!outputPath) return;
+    const request = importRequest(outputPath);
+    importState.exporting = true;
+    updateImportControls();
+    setImportStatus(asIff ? "Building court IFF..." : "Saving full-size texture...");
+    const result = asIff
+      ? await window.courtCreator.exportImportIff(request)
+      : await window.courtCreator.exportImportPng(request);
+    if (!result) { setImportStatus("Export canceled."); return; }
+    setImportStatus(asIff ? "Converted IFF saved." : "Full-size texture saved.");
+    window.courtCreator.showItem(result.outputPath);
+  } catch (error) {
+    setImportStatus(`Conversion failed: ${error.message}`);
+  } finally {
+    importState.exporting = false;
+    updateImportControls();
+  }
 }
 
 function updatePreviewTransform() {
@@ -1094,6 +1562,8 @@ function updatePreviewTransform() {
     : state.previewView === "right"
       ? "right center"
       : "center";
+  ui.experimentalCanvas.style.transform = ui.previewImage.style.transform;
+  ui.experimentalCanvas.style.transformOrigin = ui.previewImage.style.transformOrigin;
   ui.previewZoomLabel.textContent = `${state.previewZoom}%`;
   document.querySelectorAll(".preview-view").forEach((button) => {
     button.classList.toggle("active", button.dataset.previewView === state.previewView);
@@ -1120,7 +1590,7 @@ async function togglePreviewFullscreen() {
 }
 
 function renderRequest(outputPath = null) {
-  return {
+  const request = {
     templatePath: state.templatePath,
     visibility: state.visibility,
     colorOverrides: state.colorOverrides,
@@ -1134,6 +1604,61 @@ function renderRequest(outputPath = null) {
     })),
     logoImages: state.logos.map((logo) => ({ ...logo })),
   };
+  if (state.buildMode === "game-uv" && state.geometry) {
+    const setting = item => {
+      const layer = state.layersById.get(item.id);
+      return { visible: Boolean(layer?.visible && ancestors(layer).every(parent => parent.visible)),
+        color: state.colorOverrides[item.id] ? rgbToHex(state.colorOverrides[item.id]) : layer?.activeHex || item.color };
+    };
+    const outside = state.layersById.get("stock-outside");
+    Object.assign(request, { buildMode: "game-uv", mappingMode: "game-uv",
+      floor: { ...state.floorImagesById.get(selectedFloorLayer()?.id) },
+      outsideColor: outside?.activeHex || DEFAULT_PAINT_HEX, outsideVisible: Boolean(outside?.visible),
+      paintSettings: Object.fromEntries(state.geometry.paints.map(item => [item.id, setting(item)])),
+      lineSettings: Object.fromEntries(state.geometry.layers.map(item => [item.id, setting(item)])) });
+    delete request.templatePath;
+  }
+  return request;
+}
+
+async function refreshNativePreview() {
+  const token = ++nativePreview.token;
+  const request = renderRequest();
+  const unavailableLogos = [];
+  ui.previewShell.setAttribute("aria-busy", "true");
+  try {
+    if (request.floor.path !== nativePreview.imagePath) {
+      const image = new Image();
+      image.src = fileUrl(request.floor.path);
+      await image.decode();
+      if (token !== nativePreview.token) return;
+      nativePreview.image = image;
+      nativePreview.imagePath = request.floor.path;
+    }
+    const logoPaths = new Set(request.logoImages.map(logo => logo.path));
+    for (const cachedPath of nativePreview.logoImages.keys()) {
+      if (!logoPaths.has(cachedPath)) nativePreview.logoImages.delete(cachedPath);
+    }
+    for (const logoPath of logoPaths) {
+      if (nativePreview.logoImages.has(logoPath)) continue;
+      const image = new Image(); image.src = fileUrl(logoPath);
+      try { await image.decode(); }
+      catch {
+        unavailableLogos.push(request.logoImages.find(logo => logo.path === logoPath)?.name || "Logo");
+        continue;
+      }
+      if (token !== nativePreview.token) return;
+      nativePreview.logoImages.set(logoPath, image);
+    }
+    if (token !== nativePreview.token) return;
+    scheduleExperimentalDraw();
+    ui.previewEmpty.classList.add("hidden");
+    setStatus(unavailableLogos.length ? `Court ready. Missing logo images: ${unavailableLogos.join(", ")}` : "Court ready.");
+  } catch (error) {
+    if (token === nativePreview.token) setStatus(`Preview failed: ${error.message}`);
+  } finally {
+    if (token === nativePreview.token) ui.previewShell.setAttribute("aria-busy", "false");
+  }
 }
 
 let previewBusy = false;
@@ -1159,7 +1684,9 @@ function waitForPreviewImage(image, timeoutMs = 2000) {
 }
 
 async function refreshPreview(outputPath = null) {
-  if (!state.templatePath) return;
+  if (state.buildMode === "game-uv" && state.geometry && !outputPath) return refreshNativePreview();
+  if (state.section === "experimental" && !outputPath) { scheduleExperimentalDraw(); return; }
+  if (!state.templatePath && !state.geometry) return;
   if (previewBusy) { previewPending = true; return; }
   previewBusy = true;
   ui.previewShell.classList.add("rendering");
@@ -1198,6 +1725,22 @@ function schedulePreview() {
 
 function selectedLogo() {
   return state.logos.find((logo) => logo.id === state.selectedLogoId) || null;
+}
+
+async function openLogoEditor() {
+  const button = document.getElementById("openLogoEditorButton");
+  button.disabled = true;
+  try {
+    const floor = state.floorImagesById.get(selectedFloorLayer()?.id);
+    setStatus("Opening logo editor...");
+    await window.courtCreator.openLogoEditor({ ...renderRequest(), selectedId: state.selectedLogoId,
+      guideBounds: floor?.bbox || null });
+    setStatus("Logo editor opened.");
+  } catch (error) {
+    setStatus(`Logo editor failed: ${error.message}`);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function logoPreviewSrc(logo) {
@@ -1349,6 +1892,13 @@ async function addCustomFloor() {
     }
     refreshFriendlyNames();
     renderSection();
+    if (ui.floorCatalog.open) {
+      state.floorFilter = "custom";
+      localStorage.setItem("courtCreator.floorFilter", "custom");
+      ui.floorSearch.value = "";
+      renderFloorFilters();
+      renderFloorGallery(false);
+    }
     setStatus("Custom floor added.");
   } catch (error) {
     setStatus(`Custom floor failed: ${error.message}`);
@@ -1385,7 +1935,7 @@ function nbaPreset() {
 function resetToDefault() {
   state.projectPath = null;
   updateAppChrome();
-  const preset = nbaPreset();
+  const preset = state.buildMode === "game-uv" ? null : nbaPreset();
   if (preset) {
     applyPresetLayout(preset, false);
   } else {
@@ -1417,12 +1967,55 @@ function selectCurrentCourtFloor() {
   state.selectedLayerId = selected?.id || null;
 }
 
+function restoreStockLayout(project) {
+  const applySetting = (id, setting) => {
+    const layer = state.layersById.get(id);
+    if (!layer || !setting) return;
+    if (typeof setting.visible === "boolean") setLayerVisible(layer, setting.visible);
+    const hex = normalizeHex(setting.color);
+    if (hex) { layer.activeHex = hex; state.colorOverrides[id] = hexToRgb(hex); }
+  };
+  // Preserve familiar PSD controls when opening a previous-generation project.
+  const legacyNames = {
+    "paint": ["paint-left", "paint-right"],
+    "secondary paint color": ["secondary-paint-left", "secondary-paint-right"],
+    "outside color": ["stock-outside"],
+    "nba three": ["NBA_line_three_point_lowShape"], "3 point lines": ["NBA_line_three_point_lowShape"],
+    "college three": ["college-three"], "high school three": ["high-school-three"],
+    "center line": ["line_midcourt_side_lowShape", "line_midcourt_center_lowShape"],
+    "out of bound line": ["line_side_base_lowShape"], "media lines": ["line_camera_lowShape"],
+    "hash lines": ["line_tab_low_3Shape", "line_tab_lane_lowShape", "line_tab_lane_inner_lowShape"],
+    "charge circle": ["line_charge_circle_lowShape"], "half court circle": ["line_center_circle_outer_lowShape"],
+  };
+  if (project.version === 1) {
+    for (const [oldId, name] of Object.entries(project.layerNames || {})) {
+      for (const id of legacyNames[normalizeName(name)] || []) {
+        const rgb = project.colorOverrides?.[oldId];
+        applySetting(id, { visible: project.visibility?.[oldId], color: rgb ? rgbToHex(rgb) : null });
+      }
+    }
+  }
+  for (const [id, setting] of Object.entries({ ...project.paintSettings, ...project.lineSettings })) applySetting(id, setting);
+  if (project.outsideColor) applySetting("stock-outside", { color: project.outsideColor, visible: project.outsideVisible });
+  const floorId = project.floorId || project.floor?.id
+    || project.customFloorImages?.find(image => image.visible && state.floorImagesById.has(image.id))?.id
+    || Object.keys(project.visibility || {}).find(id => project.visibility[id] && state.floorImagesById.has(id));
+  const floor = state.layersById.get(floorId);
+  if (floor && isInsideCourtFloor(floor)) showOnlyCourtFloor(floor);
+  else if (!selectedFloorLayer()) {
+    const defaultFloor = state.layers.find(layer => state.floorImagesById.has(layer.id) && layer.originalVisible);
+    if (defaultFloor) showOnlyCourtFloor(defaultFloor);
+  }
+}
+
 async function loadWorkspace(templatePath = null, project = null) {
   document.body.classList.add("workspace-loading");
   try {
-    setStatus("Loading court template...");
+    setStatus("Loading stock court geometry...");
     const data = await window.courtCreator.load(templatePath);
     state.templatePath = data.templatePath;
+    state.buildMode = data.buildMode || "template";
+    state.geometry = data.geometry || null;
     state.previewPath = data.previewPath;
     state.document = data.document;
     state.visibility = { ...(data.visibility || {}) };
@@ -1438,23 +2031,30 @@ async function loadWorkspace(templatePath = null, project = null) {
     state.logos = [];
     state.selectedLogoId = null;
     rebuildLayerIndex(data);
+    for (const layer of state.layers) if (layer.activeHex) state.templateColors[layer.id] = layer.activeHex;
     for (const layer of state.layers) layer.visible = Boolean(state.visibility[layer.id] ?? layer.visible);
-    const preset = nbaPreset();
+    const preset = state.buildMode === "game-uv" ? null : nbaPreset();
     if (preset) applyPresetLayout(preset, true);
     applyDefaultPaintColors();
     if (project) {
       state.visibility = { ...state.visibility, ...project.visibility };
-      state.colorOverrides = project.colorOverrides || {};
+      state.colorOverrides = { ...state.colorOverrides, ...project.colorOverrides };
       state.logos = project.logoImages || [];
       for (const layer of state.layers) {
         layer.visible = Boolean(state.visibility[layer.id]);
         if (state.colorOverrides[layer.id]) layer.activeHex = rgbToHex(state.colorOverrides[layer.id]);
         if (project.layerNames?.[layer.id]) layer.displayName = project.layerNames[layer.id];
       }
+      if (state.buildMode === "game-uv") restoreStockLayout(project);
     }
+    if (state.buildMode === "game-uv" && project?.version !== 2 && !localStorage.getItem("courtCreator.uvPromoted")) restoreStockLayout(experimentalState.settings);
     selectCurrentCourtFloor();
     renderSection();
     await refreshPreview();
+    if (state.buildMode === "game-uv") {
+      localStorage.setItem("courtCreator.uvPromoted", "1");
+      persistRecovery();
+    }
     if (data.templateFallback) setStatus("Project restored with the local court template.");
     else if (project) setStatus("Project restored.");
     else setStatus(preset ? "NBA preset loaded." : "Court workspace ready.");
@@ -1472,7 +2072,7 @@ async function exportPng() {
     document.getElementById("exportButton").disabled = true;
     document.getElementById("exportPanelButton").disabled = true;
     setStatus("Exporting full-resolution PNG...");
-    await window.courtCreator.render({ ...renderRequest(target), exportFullResolution: true });
+    await window.courtCreator.render({ ...(state.section === "experimental" ? experimentalRequest(target) : renderRequest(target)), exportFullResolution: true });
     setStatus("Full-resolution PNG exported.");
     await window.courtCreator.showItem(target);
   } catch (error) {
@@ -1483,18 +2083,44 @@ async function exportPng() {
   }
 }
 
+async function exportCurrentIff() {
+  const target = await window.courtCreator.chooseCurrentIffOutput();
+  if (!target) return;
+  const button = document.getElementById("exportIffButton");
+  const experimentalButton = document.getElementById("experimentalIff");
+  try {
+    button.disabled = true;
+    experimentalButton.disabled = true;
+    setStatus("Baking one full-court texture and building the 2K27 IFF...");
+    const result = await window.courtCreator.exportCurrentIff({
+      ...(state.section === "experimental" ? experimentalRequest(target) : renderRequest(target)),
+      outputPath: target,
+      exportFullResolution: true,
+    });
+    if (!result) { setStatus("Export canceled."); return; }
+    setStatus("NBA 2K27 court IFF exported with one baked texture.");
+    await window.courtCreator.showItem(result.outputPath);
+    await loadImportBaseStatus();
+  } catch (error) {
+    setStatus(`IFF export failed: ${error.message}`);
+  } finally {
+    button.disabled = false;
+    experimentalButton.disabled = !experimentalState.geometry;
+  }
+}
+
 function projectSnapshot() {
   const snapshot = renderRequest();
   snapshot.customFloorImages = snapshot.customFloorImages.filter((image) => !isGameFloorImage(image));
   return {
     ...snapshot,
-    version: 1,
+    version: state.buildMode === "game-uv" ? 2 : 1,
     _projectPath: state.projectPath,
     layerNames: Object.fromEntries(state.layers.map(layer => [layer.id, layer.displayName])),
   };
 }
 function persistRecovery() {
-  if (state.templatePath) window.courtCreator.autosave(projectSnapshot());
+  if (state.geometry || state.templatePath) window.courtCreator.autosave(projectSnapshot());
 }
 async function saveProject() {
   try {
@@ -1517,6 +2143,38 @@ async function restoreStartup() {
 }
 
 function wireEvents() {
+  document.getElementById("openLogoEditorButton").addEventListener("click", openLogoEditor);
+  window.courtCreator.onLogoEditorUpdate?.((project) => {
+    state.logos = project.items || [];
+    state.selectedLogoId = project.selectedId || state.logos[0]?.id || null;
+    renderLogos(); refreshSelectionText(); schedulePreview();
+  });
+  ui.experimentalPrepare.addEventListener("click", () => loadExperimental(true));
+  ui.experimentalMapping.addEventListener("change", () => {
+    experimentalState.settings.mappingMode = ui.experimentalMapping.value;
+    saveExperimentalSettings();
+  });
+  ui.experimentalFloorSearch.addEventListener("input", renderExperimentalFloors);
+  ui.experimentalFloor.addEventListener("change", () => {
+    experimentalState.settings.floorId = ui.experimentalFloor.value;
+    renderExperimentalLines(); loadExperimentalFloor();
+  });
+  ui.experimentalOutside.addEventListener("input", () => {
+    experimentalState.settings.outsideColor = ui.experimentalOutside.value.toUpperCase();
+    ui.experimentalOutsideHex.value = experimentalState.settings.outsideColor;
+    saveExperimentalSettings();
+  });
+  ui.experimentalOutsideHex.addEventListener("input", () => {
+    const hex = normalizeHex(ui.experimentalOutsideHex.value);
+    ui.experimentalOutsideHex.setCustomValidity(hex ? "" : "Enter a valid hex color.");
+    if (hex) { experimentalState.settings.outsideColor = hex; ui.experimentalOutside.value = hex; saveExperimentalSettings(); }
+  });
+  document.getElementById("experimentalReset").addEventListener("click", () => {
+    experimentalState.settings.lineSettings = {}; experimentalState.settings.paintSettings = {};
+    renderExperimentalLines(); saveExperimentalSettings();
+  });
+  document.getElementById("experimentalPng").addEventListener("click", exportPng);
+  document.getElementById("experimentalIff").addEventListener("click", exportCurrentIff);
   document.getElementById("saveProjectButton").addEventListener("click", saveProject);
   document.getElementById("openProjectButton").addEventListener("click", async () => {
     try {
@@ -1536,6 +2194,7 @@ function wireEvents() {
     button.addEventListener("click", () => {
       state.section = button.dataset.section;
       renderSection();
+      if (state.section === "import") loadImportBaseStatus();
     });
   });
   ui.floorSearch.addEventListener("input", () => renderFloorGallery(false));
@@ -1558,9 +2217,19 @@ function wireEvents() {
   document.getElementById("zoomOutButton").addEventListener("click", () => changePreviewZoom(-10));
   document.getElementById("zoomInButton").addEventListener("click", () => changePreviewZoom(10));
   document.getElementById("fullscreenPreviewButton").addEventListener("click", togglePreviewFullscreen);
-  ui.currentCourtButton.addEventListener("click", () => {
-    state.section = "floors";
-    renderSection();
+  ui.currentCourtButton.addEventListener("click", openFloorCatalog);
+  ui.browseFloorButton.addEventListener("click", openFloorCatalog);
+  document.getElementById("closeFloorCatalogButton").addEventListener("click", () => ui.floorCatalog.close());
+  ui.floorCatalog.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    ui.floorCatalog.close();
+  }, true);
+  ui.floorCatalog.addEventListener("click", event => {
+    const bounds = ui.floorCatalog.getBoundingClientRect();
+    if (event.target === ui.floorCatalog && (event.clientX < bounds.left || event.clientX > bounds.right
+        || event.clientY < bounds.top || event.clientY > bounds.bottom)) ui.floorCatalog.close();
   });
   ui.selectedFloorImage.addEventListener("error", () => {
     ui.selectedFloorImage.removeAttribute("src");
@@ -1594,8 +2263,25 @@ function wireEvents() {
   document.getElementById("refreshButton").addEventListener("click", () => refreshPreview());
   document.getElementById("exportButton").addEventListener("click", exportPng);
   document.getElementById("exportPanelButton").addEventListener("click", exportPng);
+  document.getElementById("exportIffButton").addEventListener("click", exportCurrentIff);
   document.getElementById("openPsdButton").addEventListener("click", () => window.courtCreator.openPath(state.templatePath));
   document.getElementById("addFloorButton").addEventListener("click", addCustomFloor);
+  document.getElementById("importSourceButton").addEventListener("click", openImportSource);
+  ui.importPrepareBase.addEventListener("click", prepareImportBase);
+  ui.importTexture.addEventListener("change", changeImportTexture);
+  ui.importEdges.forEach((input) => input.addEventListener("input", () => {
+    try { currentImportBounds(); } catch { return; }
+    scheduleImportPreview();
+  }));
+  ui.importAutoEdges.addEventListener("click", () => {
+    if (!importState.autoBounds) return;
+    importState.bounds = [...importState.autoBounds];
+    updateImportControls();
+    scheduleImportPreview();
+  });
+  ui.importExportPng.addEventListener("click", () => exportImportedCourt(false));
+  ui.importExportIff.addEventListener("click", () => exportImportedCourt(true));
+  ui.importPreviewImage.addEventListener("error", () => ui.importPreviewEmpty.classList.remove("hidden"));
   document.getElementById("openButton").addEventListener("click", async () => {
     const selected = await window.courtCreator.choosePsd();
     if (selected && await window.courtCreator.confirmReplace()) loadWorkspace(selected);

@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from contextlib import closing
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import struct
 import threading
+
+from .export_io import ensure_new_export, staged_export
 
 
 @dataclass(frozen=True)
@@ -38,13 +42,37 @@ class CourtLayerDocument:
 
 _PREVIEW_LAYER_CACHE: OrderedDict[tuple, tuple[object, tuple[int, int]]] = OrderedDict()
 _PREVIEW_LAYER_CACHE_LIMIT = 64
+_PREVIEW_LAYER_CACHE_BYTES = 128 * 1024 * 1024
 _EXTERNAL_IMAGE_CACHE: OrderedDict[tuple, object] = OrderedDict()
 _EXTERNAL_IMAGE_CACHE_LIMIT = 8
 _EXTERNAL_IMAGE_CACHE_MAX_PIXELS = 2_500_000
+_EXTERNAL_IMAGE_CACHE_BYTES = 64 * 1024 * 1024
+_LOGO_INTERMEDIATE_MAX_PIXELS = 16 * 1024 * 1024
 _CHANNEL_OFFSET_CACHE: dict[
     tuple[str, int, int], tuple[list[dict], int, int, int, int]
 ] = {}
 _PREVIEW_CACHE_LOCK = threading.Lock()
+
+
+def _cached_image(entry):
+    return entry[0] if isinstance(entry, tuple) else entry
+
+
+def _remember_image(cache, key, image, *, byte_budget: int, entry_limit: int, position=None) -> None:
+    size = image.width * image.height * 4
+    if size > byte_budget or entry_limit <= 0:
+        return
+    stored = image.copy()
+    previous = cache.pop(key, None)
+    if previous is not None:
+        _cached_image(previous).close()
+    used = sum(_cached_image(item).width * _cached_image(item).height * 4 for item in cache.values())
+    while cache and (len(cache) >= entry_limit or used + size > byte_budget):
+        _, oldest = cache.popitem(last=False)
+        evicted = _cached_image(oldest)
+        used -= evicted.width * evicted.height * 4
+        evicted.close()
+    cache[key] = stored if position is None else (stored, position)
 
 
 def parse_court_psd_layers(path: Path) -> CourtLayerDocument:
@@ -106,7 +134,10 @@ def create_court_preview_png(
     output_path: Path,
     *,
     max_size: tuple[int, int] | None = (2048, 1024),
+    protected_sources=(),
 ) -> None:
+    sources = (psd_path, *protected_sources)
+    ensure_new_export(output_path, *sources)
     try:
         from PIL import Image
     except ImportError as exc:
@@ -116,7 +147,7 @@ def create_court_preview_png(
         preview = image.convert("RGBA")
         if max_size is not None:
             preview.thumbnail(max_size)
-        _save_png_atomic(preview, output_path, fast=max_size is not None)
+        _save_png_atomic(preview, output_path, fast=max_size is not None, sources=sources)
 
 
 def create_visible_court_preview_png(
@@ -129,6 +160,7 @@ def create_visible_court_preview_png(
     custom_floor_images: list[dict] | None = None,
     logo_images: list[dict] | None = None,
     max_size: tuple[int, int] | None = (2048, 1024),
+    protected_sources=(),
 ) -> None:
     try:
         from PIL import Image
@@ -136,12 +168,15 @@ def create_visible_court_preview_png(
         raise RuntimeError("Court preview export requires Pillow.") from exc
 
     psd_path = Path(psd_path)
+    sources = (psd_path, *protected_sources,
+               *(Path(item["path"]) for item in [*(custom_floor_images or []), *(logo_images or [])] if item.get("path")))
+    ensure_new_export(output_path, *sources)
     path_key = _preview_cache_path_key(psd_path)
     raw_layers, width, height, bit_depth, color_mode = _cached_layers_with_channel_offsets(
         psd_path, path_key
     )
     if bit_depth != 8 or color_mode != 3:
-        create_court_preview_png(psd_path, output_path, max_size=max_size)
+        create_court_preview_png(psd_path, output_path, max_size=max_size, protected_sources=sources)
         return
 
     if max_size is None:
@@ -187,12 +222,12 @@ def create_visible_court_preview_png(
         _composite_logo(canvas, logo, scale)
 
     if canvas.getbbox() is None:
-        create_court_preview_png(psd_path, output_path, max_size=max_size)
+        create_court_preview_png(psd_path, output_path, max_size=max_size, protected_sources=sources)
         return
 
     background = Image.new("RGBA", canvas.size, (32, 36, 43, 255))
     image = Image.alpha_composite(background, canvas)
-    _save_png_atomic(image, output_path, fast=max_size is not None)
+    _save_png_atomic(image, output_path, fast=max_size is not None, sources=sources)
 
 
 def warm_visible_preview_layers(
@@ -599,42 +634,90 @@ def _composite_logo(
     except ImportError as exc:
         raise RuntimeError("Court preview export requires Pillow.") from exc
 
+    from .asset_io import asset_revision
+    revision = asset_revision(logo)
     path = Path(str(logo.get("path", "")))
     if not path.exists():
+        if revision is not None:
+            raise ValueError("Artwork used in the preview is missing. Reimport the logo before exporting.")
         return
 
     try:
         x = float(logo.get("x", 0))
         y = float(logo.get("y", 0))
-        width = max(1.0, float(logo.get("width", 100)))
-        height = max(1.0, float(logo.get("height", width)))
+        width = float(logo.get("width", 100))
+        height = float(logo.get("height", width))
         rotation = float(logo.get("rotation", 0))
-        opacity = max(0.0, min(100.0, float(logo.get("opacity", 100)))) / 100.0
+        opacity = float(logo.get("opacity", 100))
     except (TypeError, ValueError):
         return
+    if not all(math.isfinite(value) for value in (x, y, width, height, rotation, opacity, scale)) or scale <= 0:
+        raise ValueError("Logo placement and scale must be finite numbers with a positive scale.")
+    width, height = max(1.0, width), max(1.0, height)
+    opacity = max(0.0, min(100.0, opacity)) / 100.0
 
     target_width = max(1, round(width * scale))
     target_height = max(1, round(height * scale))
-    image = _cached_external_image(path, (target_width, target_height), fit=False)
-
-    if bool(logo.get("flipX", False)):
-        image = ImageOps.mirror(image)
-    if bool(logo.get("flipY", False)):
-        image = ImageOps.flip(image)
-
-    if abs(rotation) > 0.001:
-        image = image.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
-
-    if opacity < 0.999:
-        alpha = image.getchannel("A").point(lambda value: round(value * opacity))
-        image.putalpha(alpha)
-
+    angle = math.radians(rotation % 360)
+    cosine, sine = math.cos(angle), math.sin(angle)
+    rotated_width = math.ceil(abs(cosine) * target_width + abs(sine) * target_height) + 2
+    rotated_height = math.ceil(abs(sine) * target_width + abs(cosine) * target_height) + 2
     center_x = (x + width / 2) * scale
     center_y = (y + height / 2) * scale
-    canvas.alpha_composite(
-        image,
-        (round(center_x - image.width / 2), round(center_y - image.height / 2)),
-    )
+    clip = (max(0, math.floor(center_x - rotated_width / 2)),
+            max(0, math.floor(center_y - rotated_height / 2)),
+            min(canvas.width, math.ceil(center_x + rotated_width / 2)),
+            min(canvas.height, math.ceil(center_y + rotated_height / 2)))
+    if clip[0] >= clip[2] or clip[1] >= clip[3]:
+        if revision is not None:
+            from .asset_io import verified_asset_stream
+            with verified_asset_stream(path, revision):
+                pass
+        return
+    if max(target_width * target_height, rotated_width * rotated_height) > _LOGO_INTERMEDIATE_MAX_PIXELS:
+        _composite_large_logo(canvas, path, revision, clip, (target_width, target_height),
+                              (center_x, center_y), cosine, sine, bool(logo.get("flipX", False)),
+                              bool(logo.get("flipY", False)), opacity)
+        return
+    image = _cached_external_image(path, (target_width, target_height), fit=False, source_revision=revision)
+    try:
+        if bool(logo.get("flipX", False)):
+            transformed = ImageOps.mirror(image); image.close(); image = transformed
+        if bool(logo.get("flipY", False)):
+            transformed = ImageOps.flip(image); image.close(); image = transformed
+        if abs(rotation) > 0.001:
+            transformed = image.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
+            image.close(); image = transformed
+        if opacity < 0.999:
+            with closing(image.getchannel("A")) as channel:
+                with closing(channel.point(lambda value: round(value * opacity))) as alpha:
+                    image.putalpha(alpha)
+        canvas.alpha_composite(image, (round(center_x - image.width / 2), round(center_y - image.height / 2)))
+    finally:
+        image.close()
+
+
+def _composite_large_logo(canvas, path, revision, clip, target_size, center, cosine, sine, flip_x, flip_y, opacity):
+    from PIL import Image
+    from .asset_io import validate_asset_image, verified_asset_stream
+
+    left, top, right, bottom = clip
+    with verified_asset_stream(path, revision) as stream, Image.open(stream) as opened:
+        validate_asset_image(opened)
+        with closing(opened.convert("RGBA")) as source:
+            # Invert the centered display transform and sample only visible court pixels.
+            sx = source.width / target_size[0] * (-1 if flip_x else 1)
+            sy = source.height / target_size[1] * (-1 if flip_y else 1)
+            a, b, d, e = sx * cosine, sx * sine, -sy * sine, sy * cosine
+            c = source.width / 2 + a * (left - center[0]) + b * (top - center[1])
+            f = source.height / 2 + d * (left - center[0]) + e * (top - center[1])
+            with closing(source.transform((right - left, bottom - top), Image.Transform.AFFINE, (a, b, c, d, e, f),
+                                          resample=Image.Resampling.BICUBIC, fillcolor=(0, 0, 0, 0))) as overlay:
+                if opacity < 0.999:
+                    with closing(overlay.getchannel("A")) as channel:
+                        with closing(channel.point(lambda value: round(value * opacity))) as alpha:
+                            overlay.putalpha(alpha)
+                canvas.alpha_composite(overlay, (left, top))
 
 
 def _is_court_floor_group_name(name: str) -> bool:
@@ -656,7 +739,7 @@ def _fit_image_to_box(image, size: tuple[int, int]):
     )
 
 
-def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool):
+def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool, source_revision: str | None = None):
     try:
         from PIL import Image
     except ImportError as exc:
@@ -664,29 +747,31 @@ def _cached_external_image(path: Path, size: tuple[int, int], *, fit: bool):
 
     path = Path(path)
     stat = path.stat()
-    signature = _sample_file_signature(path, stat.st_size)
+    signature = source_revision or _sample_file_signature(path, stat.st_size)
     key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size, signature, size, fit)
     cacheable = size[0] * size[1] <= _EXTERNAL_IMAGE_CACHE_MAX_PIXELS
-    if cacheable:
-        with _PREVIEW_CACHE_LOCK:
-            cached = _EXTERNAL_IMAGE_CACHE.get(key)
-            if cached is not None:
-                _EXTERNAL_IMAGE_CACHE.move_to_end(key)
-                return cached.copy()
-
-    with Image.open(path) as opened:
-        image = opened.convert("RGBA")
+    from .asset_io import validate_asset_image, verified_asset_stream
+    with verified_asset_stream(path, source_revision) as stream:
+        if cacheable:
+            with _PREVIEW_CACHE_LOCK:
+                cached = _EXTERNAL_IMAGE_CACHE.get(key)
+                if cached is not None:
+                    _EXTERNAL_IMAGE_CACHE.move_to_end(key)
+                    return cached.copy()
+        with Image.open(stream) as opened:
+            validate_asset_image(opened)
+            image = opened.convert("RGBA")
     if fit:
-        image = _fit_image_to_box(image, size)
+        resized = _fit_image_to_box(image, size)
+        image.close(); image = resized
     elif image.size != size:
-        image = image.resize(size, Image.Resampling.LANCZOS)
+        resized = image.resize(size, Image.Resampling.LANCZOS)
+        image.close(); image = resized
 
     if cacheable:
         with _PREVIEW_CACHE_LOCK:
-            _EXTERNAL_IMAGE_CACHE[key] = image.copy()
-            _EXTERNAL_IMAGE_CACHE.move_to_end(key)
-            while len(_EXTERNAL_IMAGE_CACHE) > _EXTERNAL_IMAGE_CACHE_LIMIT:
-                _EXTERNAL_IMAGE_CACHE.popitem(last=False)
+            _remember_image(_EXTERNAL_IMAGE_CACHE, key, image, byte_budget=_EXTERNAL_IMAGE_CACHE_BYTES,
+                            entry_limit=_EXTERNAL_IMAGE_CACHE_LIMIT)
     return image
 
 
@@ -702,21 +787,13 @@ def _sample_file_signature(path: Path, file_size: int) -> bytes:
     return digest.digest()
 
 
-def _save_png_atomic(image, output_path: Path, *, fast: bool) -> None:
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output_path.with_name(
-        f".{output_path.name}.{os.getpid()}.tmp"
-    )
-    try:
+def _save_png_atomic(image, output_path: Path, *, fast: bool, sources=()) -> None:
+    with staged_export(output_path, sources=sources) as temporary:
         image.save(
             temporary,
             format="PNG",
             compress_level=1 if fast else 6,
         )
-        os.replace(temporary, output_path)
-    finally:
-        temporary.unlink(missing_ok=True)
 
 
 def _average_visible_color(image) -> tuple[int, int, int] | None:
@@ -806,6 +883,7 @@ def _read_preview_layer_image(
         path_key,
         raw["psd_index"],
         round(scale, 8),
+        _line_alpha_treatment(raw),
     )
     with _PREVIEW_CACHE_LOCK:
         cached = _PREVIEW_LAYER_CACHE.get(cache_key)
@@ -814,7 +892,7 @@ def _read_preview_layer_image(
             image, position = cached
             return image.copy(), position
 
-    cache_path = _preview_layer_cache_path(path_key, raw["psd_index"], scale)
+    cache_path = _preview_layer_cache_path(path_key, raw["psd_index"], scale, _line_alpha_treatment(raw))
     if cache_path.exists():
         try:
             with Image.open(cache_path) as cached_image:
@@ -828,6 +906,8 @@ def _read_preview_layer_image(
     image = _read_layer_image(handle, raw)
     if image is None:
         return None
+
+    image = _strengthen_circle_alpha(image, raw)
 
     if scale != 1.0:
         preview_width = max(1, round(width * scale))
@@ -855,23 +935,36 @@ def _remember_preview_layer(
     position: tuple[int, int],
 ) -> None:
     with _PREVIEW_CACHE_LOCK:
-        _PREVIEW_LAYER_CACHE[cache_key] = (image.copy(), position)
-        _PREVIEW_LAYER_CACHE.move_to_end(cache_key)
-        while len(_PREVIEW_LAYER_CACHE) > _PREVIEW_LAYER_CACHE_LIMIT:
-            _PREVIEW_LAYER_CACHE.popitem(last=False)
+        _remember_image(_PREVIEW_LAYER_CACHE, cache_key, image, byte_budget=_PREVIEW_LAYER_CACHE_BYTES,
+                        entry_limit=_PREVIEW_LAYER_CACHE_LIMIT, position=position)
 
 
 def _preview_layer_cache_path(
     path_key: tuple[str, int, int],
     psd_index: int,
     scale: float,
+    treatment: str = "",
 ) -> Path:
     cache_id = hashlib.sha1(
-        f"{path_key[0]}|{path_key[1]}|{path_key[2]}|{psd_index}|{scale:.8f}".encode(
+        f"{path_key[0]}|{path_key[1]}|{path_key[2]}|{psd_index}|{scale:.8f}{treatment}".encode(
             "utf-8"
         )
     ).hexdigest()
     return Path.cwd() / "outputs" / "preview_layer_cache" / f"{cache_id}.png"
+
+
+def _line_alpha_treatment(raw: dict) -> str:
+    name = " ".join(str(raw.get("name", "")).casefold().split())
+    return "|circle-alpha-v1" if name == "half court circles" else ""
+
+
+def _strengthen_circle_alpha(image, raw: dict):
+    if not _line_alpha_treatment(raw):
+        return image
+    # The PSD circle has translucent stroke pixels despite full layer opacity.
+    strengthened = image.copy()
+    strengthened.putalpha(image.getchannel("A").point([min(255, round(value * 2.5)) for value in range(256)]))
+    return strengthened
 
 
 def _decode_channel(data: bytes, width: int, height: int) -> bytes | None:

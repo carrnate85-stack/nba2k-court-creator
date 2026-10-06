@@ -8,9 +8,15 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WPF owns startup/DPI; WinForms is only referenced by legacy color dialogs. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <ProjectReference Include="../TwoK.Studio/TwoK.Studio.csproj" />
     <Resource Include="Assets\app-icon.ico" />
     <Resource Include="Assets\app-icon.png" />
   </ItemGroup>

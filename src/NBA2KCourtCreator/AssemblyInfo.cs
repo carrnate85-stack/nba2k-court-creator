@@ -1,4 +1,5 @@
 using System.Windows;
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CourtStudio.Smoke")]
 
 [assembly:ThemeInfo(
     ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located

@@ -1,0 +1,40 @@
+<Window x:Class="NBA2KCourtCreator.Studio.FloorCatalogWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="Hardwood Catalog" Width="860" Height="690" MinWidth="600" MinHeight="460"
+ WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+ <Window.Resources>
+  <ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="StudioStyles.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary>
+ </Window.Resources>
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <DockPanel Margin="0,0,0,12"><Button DockPanel.Dock="Right" Content="Add Custom Floor" Click="AddClick" HorizontalAlignment="Right"/><TextBlock Text="Hardwood Catalog" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
+  <Grid Grid.Row="1" Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <Grid Margin="0,0,8,0"><TextBox x:Name="SearchInput" ToolTip="Search hardwood" AutomationProperties.Name="Search hardwood" Padding="28,5,7,5" TextChanged="SearchChanged"/><TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" Margin="9,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" IsHitTestVisible="False"/></Grid>
+   <ComboBox x:Name="CategoryInput" Grid.Column="1" MinWidth="130" Margin="0,0,8,0" SelectionChanged="FilterChanged" ToolTip="Court category"/>
+   <ComboBox x:Name="SortInput" Grid.Column="2" MinWidth="100" SelectionChanged="FilterChanged" ToolTip="Court sort order"/>
+  </Grid>
+  <Grid Grid.Row="2">
+   <ListBox x:Name="FloorList" HorizontalContentAlignment="Stretch" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+    VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"
+    SelectionChanged="FloorSelectionChanged" PreviewKeyDown="FloorKeyDown">
+    <ListBox.ItemsPanel><ItemsPanelTemplate><VirtualizingStackPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
+    <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/><Setter Property="Tag" Value="{Binding Floor.Id}"/><Setter Property="ToolTip" Value="{Binding Floor.Name}"/></Style></ListBox.ItemContainerStyle>
+    <ListBox.ItemTemplate><DataTemplate>
+     <Grid Margin="4,3" Height="66" PreviewMouseLeftButtonUp="FloorPointerUp">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="112"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <Border Width="104" Height="52" Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="3">
+       <Grid><TextBlock Text="&#xE91B;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Image Width="102" Height="50" Stretch="Uniform" Loaded="ThumbnailLoaded" Unloaded="ThumbnailUnloaded" DataContextChanged="ThumbnailContextChanged"/>
+       </Grid>
+      </Border>
+      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,8,0"><TextBlock Text="{Binding Floor.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Floor.Category}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}"/></StackPanel>
+      <Button Grid.Column="2" FontFamily="Segoe Fluent Icons" Content="{Binding FavoriteGlyph}" Click="FavoriteClick" ToolTip="Toggle favorite" AutomationProperties.Name="Toggle favorite" Padding="8" VerticalAlignment="Center"/>
+     </Grid>
+    </DataTemplate></ListBox.ItemTemplate>
+   </ListBox>
+   <TextBlock x:Name="EmptyText" Text="No courts found" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False"/>
+  </Grid>
+  <DockPanel Grid.Row="3" Margin="0,12,0,0"><Button x:Name="UseSelectedButton" DockPanel.Dock="Right" Content="Use Selected Court" Click="UseSelectedClick" IsDefault="True" HorizontalAlignment="Right"/><TextBlock x:Name="CountText" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center"/></DockPanel>
+ </Grid>
+</Window>

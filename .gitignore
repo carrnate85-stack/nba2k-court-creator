@@ -22,3 +22,6 @@ templates/*.psd
 # Personal preset slots stay on this computer.
 data/court_presets.json
 data/court_logos.json
+data/generated/
+data/game_installation.json
+desktop/
