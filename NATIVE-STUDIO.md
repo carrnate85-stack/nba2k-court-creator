@@ -19,9 +19,9 @@ the court's lengthwise centerline. Copies retain rotation, flip state,
 appearance and editable artwork metadata. Mirror and Copy share the four-logo
 limit; Flip remains available when all four slots are occupied.
 
-Copy and Delete use compact icon/text buttons. Edit opens the selected logo's
-shared artwork editor directly; empty, foreign and busy selections cannot fall
-back to editing the floor. Up/Down move the selected row in the existing
+Copy and Delete use compact icon/text buttons. The logo action bar contains no
+Edit command; artwork editing belongs in 2K Canvas, while this bar handles court
+placement. Up/Down move the selected row in the existing
 bottom-first list: up toward the back, down toward the front, with disabled end
 buttons and one undo step per reorder.
 
@@ -33,7 +33,7 @@ The existing central Canvas theme remains authoritative in light and dark modes.
 Each edit uses one whole-court undo step and the existing live preview. Menus
 respect selection and document-mutation guards. The focused `--logo-actions`
 check covers both axes, source preservation, exact undo/redo, portable save/reopen,
-capacity, edit/order guards, layer counts, reachable transform boxes and light/dark
+capacity, order guards, absence of an Edit button, layer counts, reachable transform boxes and light/dark
 compact layout; gesture and keyboard checks also cover
 vertical flipping, committed poses and cancellation-time guards. These are
 off-screen checks, not native popup mouse/focus automation.

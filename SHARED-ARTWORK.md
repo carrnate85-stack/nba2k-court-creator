@@ -3,8 +3,9 @@
 ## Workflow
 
 Use Edit > Edit Artwork for the selected logo/graphic on the Logos tab, or the
-selected hardwood elsewhere. The selected-court context menu and logo Edit button
-also provide Edit Artwork. Court geometry, paints, markings and IFF rules stay in
+selected hardwood elsewhere. The selected-court context menu also provides Edit
+Artwork; the logo placement action bar has no Edit button. Court geometry,
+paints, markings and IFF rules stay in
 Court Creator; this popup edits the source artwork, not court placement.
 
 The host-owned popup embeds the released `TwoK.Canvas.Core` and
@@ -154,7 +155,18 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.5, audited 2026-10-06:
+Version 1.6.6 source verification, 2026-10-06:
+
+- Removed Edit from the logo placement action bar and reclaimed its column;
+  Flip, Mirror, Copy/Delete icons and Up/Down order buttons remain.
+- Focused logo actions and panel checks passed against matching Core/WPF 0.7.0:
+  exact undo/redo, portable reopen, capacity/selection/end guards, separate
+  transform boxes, scrolling and compact/full-size light/dark layouts.
+- Evidence is under `outputs/logo-placement-bar-check`. No native windows opened.
+  Desktop publication requires Court Creator to be closed; the updater rejects
+  replacing the running app, preserving the installed 1.6.5 build.
+
+Version 1.6.5, audited 2026-10-06 (installed baseline):
 
 - Logo panel has clearer headings, a live image-layer count, outlined rows,
   Copy/Delete icons, direct Edit and guarded Up/Down order buttons. Position,

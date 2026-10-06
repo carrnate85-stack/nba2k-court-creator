@@ -28,11 +28,6 @@ public partial class StudioWindow
     private async void EditArtworkClick(object sender, RoutedEventArgs e)
         => await Guard(() => EditArtworkAsync(_section == "logos" && CourtCanvas.SelectedLayer is not null));
     private async void EditFloorArtworkClick(object sender, RoutedEventArgs e) => await Guard(() => EditArtworkAsync(false));
-    private async void EditLogoArtworkClick(object sender, RoutedEventArgs e)
-    {
-        if(!CanChangeDocument || _exporting || PendingLogoImports>0 || sender is not Button { IsEnabled: true } || CourtCanvas.SelectedLayer is not { } logo || !CourtCanvas.Layers.Contains(logo))return;
-        await Guard(() => EditArtworkAsync(true));
-    }
 
     internal async Task EditArtworkAsync(bool logoTarget,
         Func<StudioArtworkEditorWindow, Task>? interact = null, string? artworkRoot = null)

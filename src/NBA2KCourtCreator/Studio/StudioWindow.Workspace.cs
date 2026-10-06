@@ -51,7 +51,6 @@ public partial class StudioWindow
         var index = CourtCanvas.SelectedLayer is null ? -1 : CourtCanvas.Layers.IndexOf(CourtCanvas.SelectedLayer);
         MoveLogoDownButton.IsEnabled = index >= 0 && index < CourtCanvas.Layers.Count - 1;
         MoveLogoUpButton.IsEnabled = index > 0;
-        EditLogoButton.IsEnabled = index >= 0 && CanChangeDocument && !_exporting && PendingLogoImports == 0;
         PinnedColorButton.IsEnabled = CanChangeDocument && !_colorPickerOpen && SelectedColorLayer?.Visible == true && _section != "import";
         ActiveToolText.Text = CourtCanvas.Tool == ArtworkTool.Move && _section != "logos" ? _section switch { "paint" => "Colors & Lines", "import" => "Convert Court", "export" => "Export Court", _ => "Hardwood" } : CourtCanvas.Tool switch { ArtworkTool.Transform => "Resize / rotate logo", ArtworkTool.Eyedropper => "Eyedropper: " + (SelectedColorLayer?.Name ?? "selected layer"), ArtworkTool.Hand => "Hand", ArtworkTool.Zoom => "Zoom", _ => "Move logo" };
         CanvasHint.Text = CourtCanvas.Tool switch { ArtworkTool.Transform => "Drag corner handles to resize; top handle to rotate. Hold Shift to temporarily invert aspect lock.", ArtworkTool.Eyedropper => "Click court artwork to apply its color to the selected layer.", ArtworkTool.Hand => "Drag to pan. Scroll to zoom.", ArtworkTool.Zoom => "Click to zoom in; Alt-click to zoom out.", _ when _section == "logos" => "Drag a logo to move it. Corner handles resize; top handle rotates.", _ => "Scroll to zoom. Space + drag to pan." };

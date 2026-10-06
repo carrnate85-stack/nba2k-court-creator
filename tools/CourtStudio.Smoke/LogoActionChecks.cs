@@ -1,5 +1,4 @@
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using NBA2KCourtCreator.Studio;
@@ -78,22 +77,9 @@ internal static partial class Program
             window.Canvas.SelectedLayer=window.Canvas.Layers.Last();var bottom=window.CreateProject().ToJsonString();
             Assert(!((Button)window.FindName("MoveLogoDownButton")).IsEnabled,"Bottom arrow remains available.");ButtonClick("MoveLogoDownButton");
             Assert(window.CreateProject().ToJsonString()==bottom,"Bottom boundary arrow changed the project.");
-            foreach(var (name,blocked) in new[]{("_initialized",false),("_ready",false),("_syncing",true),("_restoring",true),
-                ("_saving",true),("_catalogBusy",true),("_closed",true),("_closePending",true),("_artworkEditorOpen",true),("_exporting",true)})
-            {
-                var field=typeof(StudioWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!;var prior=field.GetValue(window);
-                field.SetValue(window,blocked);
-                try { ButtonClick("EditLogoButton");Assert(window.CreateProject().ToJsonString()==bottom && window.ArtworkEditorOpen==(name=="_artworkEditorOpen"),
-                    "Blocked Edit action mutated the project or opened an editor."); }
-                finally { field.SetValue(window,prior); }
-            }
             window.Canvas.SelectedLayer=null;
-            Assert(new[]{"FlipLogoButton","MirrorLogoButton","EditLogoButton","MoveLogoUpButton","MoveLogoDownButton"}
+            Assert(new[]{"FlipLogoButton","MirrorLogoButton","MoveLogoUpButton","MoveLogoDownButton"}
                 .All(name=>!((Button)window.FindName(name)).IsEnabled),"Empty selection left logo actions enabled.");
-            ButtonClick("EditLogoButton");Assert(window.CreateProject().ToJsonString()==bottom,"Empty Edit fell back to hardwood.");
-            window.Canvas.SelectedLayer=new ArtworkLayer { Path=file };ButtonClick("EditLogoButton");
-            Assert(!((Button)window.FindName("EditLogoButton")).IsEnabled && window.CreateProject().ToJsonString()==bottom,
-                "Edit accepted a foreign logo or changed hardwood.");
             foreach(var dark in new[]{false,true})
             {
                 StudioTheme.Apply(dark);window.Canvas.SelectedLayer=window.Canvas.Layers[0];window.SwitchSection("logos");
@@ -101,8 +87,10 @@ internal static partial class Program
                 {
                     Layout(window,width,680);
                     var actions=(Grid)window.FindName("LogoActions");
-                    Assert(actions.Children.Count==7 && !actions.Children.OfType<Button>().Any(button=>Equals(button.Content,"Center") || Equals(button.Content,"More"))
-                        && Equals(((Button)window.FindName("EditLogoButton")).Content,"Edit"),"Logo action row retained Center/More or omitted direct Edit/arrows.");
+                    Assert(actions.Children.Count==6 && actions.ColumnDefinitions.Count==6
+                        && window.FindName("EditLogoButton") is null
+                        && !actions.Children.OfType<Button>().Any(button=>Equals(button.Content,"Center") || Equals(button.Content,"More") || Equals(button.Content,"Edit")),
+                        "Logo action row retained Center/More/Edit or an unused column.");
                     foreach(var name in new[]{"FlipLogoButton","MirrorLogoButton","DuplicateLogoButton","DeleteLogoButton"})
                     {
                         var button=(Button)window.FindName(name);var content=(FrameworkElement)button.Content;
@@ -117,6 +105,6 @@ internal static partial class Program
             Assert(!window.IsVisible && StudioImages.FileRevision(file)==sourceRevision,"Logo checks opened the app or changed source artwork.");
         }
         finally { StudioTheme.Apply(false);window.Close(); }
-        Console.WriteLine("PASS logo actions: compact Flip/Mirror X/Y dropdowns and direct Edit; no Center/More; in-place flips, opposite-side copies retaining orientation; exact undo/redo and portable reopen; up/down row order, selected artwork and end guards; empty/foreign/busy Edit guards; capacity/selection guards; light/dark layout. No native windows opened.");
+        Console.WriteLine("PASS logo actions: compact Flip/Mirror X/Y dropdowns, Copy/Delete icons and up/down arrows; no Center/More/Edit or unused columns; in-place flips, opposite-side copies retaining orientation; exact undo/redo and portable reopen; row order, selection, capacity and end guards; light/dark layout. No native windows opened.");
     }
 }
