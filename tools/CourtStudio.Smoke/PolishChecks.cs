@@ -81,9 +81,10 @@ internal static partial class Program
             var swatch=Descendants<Button>((DependencyObject)dialog.Content).First(button=>button.Tag is string hex&&hex.StartsWith('#'));
             acceptedHex=(string)swatch.Tag;swatch.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }));
-        EventManager.RegisterClassHandler(typeof(StudioColorWindow),FrameworkElement.LoadedEvent,new RoutedEventHandler((sender,_)=>
+        EventManager.RegisterClassHandler(typeof(TextureStudio.ColorPickerDialog),FrameworkElement.LoadedEvent,new RoutedEventHandler((sender,_)=>
         {
-            if(!paletteActive)return;var picker=(StudioColorWindow)sender;
+            if(!paletteActive)return;var picker=(TextureStudio.ColorPickerDialog)sender;
+            if(!Equals(picker.Tag,nameof(StudioColorWindow)))return;
             Descendants<Button>((DependencyObject)picker.Content).Single(button=>Equals(button.Content,"Team Colors")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Descendants<Button>((DependencyObject)picker.Content).Single(button=>Equals(button.Content,"Apply")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }));

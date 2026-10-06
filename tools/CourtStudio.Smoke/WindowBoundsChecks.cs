@@ -50,21 +50,21 @@ internal static partial class Program
         }
         finally { Marshal.FreeHGlobal(memory); }
         var owner = new Window { Width = 800, Height = 600, Left = -1200, Top = 100 };
-        var picker = new StudioColorWindow(owner, "#19583F", [], testing: true);
+        var picker = StudioColorWindow.Create(owner, "#19583F", [], testing: true);
         try
         {
             var content = (FrameworkElement)picker.Content;
-            picker.Width = 350; picker.Height = 200;
-            content.Measure(new Size(350, 200)); content.Arrange(new Rect(0, 0, 350, 200)); content.UpdateLayout();
+            picker.MinWidth = 600; picker.MinHeight = 330; picker.Width = 600; picker.Height = 330;
+            content.Measure(new Size(600, 330)); content.Arrange(new Rect(0, 0, 600, 330)); content.UpdateLayout();
             var apply = Descendants<Button>(content).Single(button => Equals(button.Content, "Apply"));
             var teamColors = Descendants<Button>(content).Single(button => Equals(button.Content, "Team Colors"));
-            var viewport = new Rect(0, 0, 350, 200);
+            var viewport = new Rect(0, 0, 600, 330);
             Assert(viewport.Contains(apply.TransformToAncestor(content).TransformBounds(new Rect(apply.RenderSize))) && viewport.Contains(teamColors.TransformToAncestor(content).TransformBounds(new Rect(teamColors.RenderSize))), "Compact color picker clipped its Apply or Team Colors action.");
             Assert(StudioWindowBounds.IsAttached(picker), "Color picker did not use shared work-area fitting.");
             StudioWindowBounds.Attach(picker);
-            Assert(Descendants<ScrollViewer>(content).Single(scroll => scroll.Content is StackPanel).ScrollableHeight > 0, "Compact color picker did not make its overflowing body scrollable.");
-            foreach (var scale in new[] { 1d, 1.25, 1.5, 2 }) RenderDpi(picker, Path.Combine(output, $"color-picker-compact-{scale * 100:0}.png"), 350, 200, scale);
-            RenderDpi(picker, Path.Combine(output, "color-picker-normal.png"), 410, 330, 1);
+            Assert(((ScrollViewer)picker.FindName("PickerScroll")).ScrollableHeight > 0, "Compact shared color picker did not make its overflowing body scrollable.");
+            foreach (var scale in new[] { 1d, 1.25, 1.5, 2 }) RenderDpi(picker, Path.Combine(output, $"color-picker-compact-{scale * 100:0}.png"), 600, 330, scale);
+            RenderDpi(picker, Path.Combine(output, "color-picker-normal.png"), 720, 630, 1);
         }
         finally { picker.Close(); owner.Close(); }
         File.WriteAllText(Path.Combine(output, "window-bounds-audit.json"), new JsonObject { ["monitorConfigurations"] = 4, ["dpiScales"] = "100,125,150,200%", ["missingMonitorLeavesMessageUntouched"] = true, ["automaticSizingFinite"] = true, ["physicalPlacementContained"] = true, ["compactColorActionsVisible"] = true, ["compactColorBodyScrollable"] = true, ["nativeWindowsOpened"] = false, ["actualMonitorTransitionTested"] = false }.ToJsonString());

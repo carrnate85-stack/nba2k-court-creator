@@ -64,6 +64,7 @@ internal static partial class Program
                 {
                     output ??= "outputs/color-picker-check";
                     Directory.CreateDirectory(output);
+                    CheckWindowBounds(output);
                     await CheckColorPickers(output);
                 }
                 else if (args.Contains("--paired-images"))

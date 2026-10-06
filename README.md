@@ -8,6 +8,9 @@ resize with scale lock, rotate, reorder, rename, duplicate across court axes,
 and undo/redo directly in the main preview. No separate
 browser editor is required. Paint & Lines retains its row toggles, editable hex
 fields, color swatches, and searchable NBA/college Team Colors.
+Swatch and pinned color actions open Canvas's shared `ColorPickerDialog`, with
+spectrum/hue controls, RGB/HSB inputs, hex entry and standard swatches. Court
+Creator adds Team Colors to that same dialog; Cancel leaves the court untouched.
 
 `src/TwoK.Studio` provides the native artwork canvas, transform model, and semantic
 theme foundation for the suite. Its light/dark palette matches 2K Canvas. Export
@@ -22,8 +25,9 @@ offers Retry in the status bar without requiring an application restart.
 
 Run `Build Court Creator.bat` after code changes. In a source checkout, the desktop
 launcher also adopts newer matching published central Canvas packages automatically
-before opening the app: it tests a candidate build and retains the last working
-build on failure. Unchanged launches do not rebuild. The launcher uses the
+before opening the app: it tests artwork and shared-color integration in a
+candidate build and retains the last working build on failure. Unchanged launches
+do not rebuild. The launcher uses the
 published `desktop` build. `Launch Electron Fallback.bat` preserves access to the
 previous interface; the Electron files have not been removed.
 

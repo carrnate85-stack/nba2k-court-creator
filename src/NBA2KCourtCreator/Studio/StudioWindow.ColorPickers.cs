@@ -12,8 +12,8 @@ public partial class StudioWindow
             var picker = new TeamColorWindow(this, _teams);
             return picker.ShowDialog() == true ? picker.SelectedHex : null;
         }
-        var color = new StudioColorWindow(this, layer.Color, _teams);
-        return color.ShowDialog() == true ? color.SelectedHex : null;
+        var color = StudioColorWindow.Create(this, layer.Color, _teams, layer.Name);
+        return color.ShowDialog() == true ? TextureStudio.Services.RasterPaintService.ToHex(color.SelectedColor) : null;
     }
 
     private void PickLayerColor(StockLayer layer, bool teamColors, Func<bool>? rowCurrent = null)

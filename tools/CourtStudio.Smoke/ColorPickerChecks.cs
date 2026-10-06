@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using NBA2KCourtCreator.Studio;
 using TwoK.Studio;
@@ -13,6 +14,7 @@ internal static partial class Program
 {
     private static async Task CheckColorPickers(string output)
     {
+        CheckSharedCourtColorDialog(output);
         var flags=BindingFlags.Instance|BindingFlags.NonPublic;
         Func<StockLayer,bool,string?> choose=(_,_)=>"#123456";
         var calls=0;
@@ -199,5 +201,89 @@ internal static partial class Program
             Console.WriteLine("PASS color pickers: all 23 inline palette targets; swatch/palette/pinned acceptance, undo/redo and no-ops; hidden/blocked/retired rows; New/Open/Undo/theme/selection/color/busy/closed ownership; nested dialog rejection; name-only left double-click; live-drag no-op preservation and post-cleanup ownership; failure/retry; 1000/1440px layout. Dialog results and click counts injected; no native windows opened.");
         }
         finally{StudioTheme.Apply(false);window.Close();}
+    }
+
+    private static void CheckSharedCourtColorDialog(string output)
+    {
+        static string Hex(TextureStudio.ColorPickerDialog picker) => TextureStudio.Services.RasterPaintService.ToHex(picker.SelectedColor);
+        var previousTheme = StudioTheme.IsDark;
+        var owner = new Window { Width = 1000, Height = 680, Left = 0, Top = 0 };
+        try
+        {
+            foreach (var dark in new[] { false, true })
+            {
+                StudioTheme.Apply(dark);
+                var resources = Application.Current.Resources.Keys.Cast<object>()
+                    .ToDictionary(key => key, key => Application.Current.Resources[key]);
+                string? paletteResult = "#abc"; var paletteCalls = 0; bool reenter = false;
+                TextureStudio.ColorPickerDialog? picker = null;
+                picker = StudioColorWindow.Create(owner, "#19583F", [], testing: true, roleName: "Paint", chooseTeamColor: _ =>
+                {
+                    paletteCalls++;
+                    if (reenter) Descendants<Button>((FrameworkElement)picker!.Content)
+                        .Single(button => Equals(button.Content, "Team Colors")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    return paletteResult;
+                });
+                try
+                {
+                    Assert(picker.GetType() == typeof(TextureStudio.ColorPickerDialog)
+                        && typeof(TextureStudio.ColorPickerDialog).Assembly.GetName().Name == "Canvas.Wpf",
+                        "Court Creator does not use the shared Canvas color picker.");
+                    var input = (TextBox)picker.FindName("HexInput");
+                    var red = (TextBox)picker.FindName("RedInput");
+                    var apply = (Button)picker.FindName("AcceptButton");
+                    var palette = Descendants<Button>((FrameworkElement)picker.Content).Single(button => Equals(button.Content, "Team Colors"));
+                    Assert(picker.FindName("ColorField") is Grid && picker.FindName("HueStrip") is Grid
+                        && picker.FindName("HueInput") is TextBox && picker.FindName("SaturationInput") is TextBox
+                        && picker.FindName("BrightnessInput") is TextBox, "Shared spectrum, hue or numeric controls are missing.");
+                    Assert(Hex(picker) == "#19583F" && picker.SelectedColor.A == 255 && red.Text == "25"
+                        && ((FrameworkElement)picker.FindName("AlphaControls")).Visibility == Visibility.Collapsed,
+                        "Initial court color or RGB-only policy changed.");
+                    Assert(resources.Count == Application.Current.Resources.Count
+                        && resources.All(pair => ReferenceEquals(pair.Value, Application.Current.Resources[pair.Key])),
+                        "Shared court color picker changed application-global resources.");
+                    var expected = dark ? "#0B1119" : "#ECEDEF";
+                    Assert(((SolidColorBrush)picker.FindResource("WindowBrush")).Color.ToString() == "#FF" + expected[1..],
+                        "Shared court picker did not inherit the selected suite theme.");
+                    picker.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+                    Assert(input.SelectionLength == input.Text.Length, "Court picker no longer selects hex first.");
+                    input.Text = "#13579B";
+                    Assert(Hex(picker) == "#13579B" && red.Text == "19" && apply.IsEnabled, "Shared hex entry did not synchronize RGB/validation.");
+                    input.Text = "#12";
+                    Assert(!apply.IsEnabled && Hex(picker) == "#13579B", "Invalid shared hex changed the draft or left Apply enabled.");
+                    palette.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert(paletteCalls == 1 && input.Text == "#AABBCC" && Hex(picker) == "#AABBCC" && apply.IsEnabled,
+                        "Team palette did not update the shared picker or clear invalid hex.");
+                    foreach (var result in new string?[] { null, "invalid" })
+                    {
+                        paletteResult = result; palette.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        Assert(Hex(picker) == "#AABBCC" && input.Text == "#AABBCC", "Canceled/invalid team palette changed the picker.");
+                    }
+                    reenter = true; paletteResult = "#19583F"; var calls = paletteCalls;
+                    palette.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert(paletteCalls == calls + 1 && palette.IsEnabled && Hex(picker) == "#19583F", "Nested palette reentered the shared picker.");
+                    red.Text = "256"; Assert(!apply.IsEnabled && Hex(picker) == "#19583F", "Out-of-range RGB was accepted.");
+                    red.Text = "128"; Assert(apply.IsEnabled && Hex(picker) == "#80583F", "Valid shared RGB entry did not refresh hex.");
+                    var swatches = (WrapPanel)picker.FindName("SwatchesHost");
+                    swatches.Children.OfType<Button>().Single(button => Equals(button.Tag, "#FF0000")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert(Hex(picker) == "#FF0000" && input.Text == "#FF0000", "Shared Canvas swatch did not update the court picker.");
+                    ((Border)picker.FindName("OriginalPreview")).RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                        { RoutedEvent = Mouse.MouseDownEvent });
+                    Assert(Hex(picker) == "#19583F", "Shared current-color preview did not restore the original.");
+                    input.Text = "#01112233";
+                    Assert(Hex(picker) == "#112233" && picker.SelectedColor.A == 255, "Court RGB picker altered alpha.");
+                    RenderDpi(picker, Path.Combine(output, dark ? "shared-color-picker-dark.png" : "shared-color-picker-light.png"), 720, 630, 1);
+                    Assert(!picker.IsVisible && !owner.IsVisible, "Shared picker checks opened a native window.");
+                }
+                finally { picker.Close(); }
+            }
+            TextureStudio.ColorPickerDialog? closed = null;
+            closed = StudioColorWindow.Create(owner, "#19583F", [], testing: true, chooseTeamColor: _ => { closed!.Close(); return "#AABBCC"; });
+            var action = Descendants<Button>((FrameworkElement)closed.Content).Single(button => Equals(button.Content, "Team Colors"));
+            action.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert(Hex(closed) == "#19583F", "A late palette result changed a closed color picker.");
+            Console.WriteLine("PASS shared court color picker: actual Canvas.Wpf dialog; spectrum/hue/RGB/HSB/hex/swatches; RGB-only alpha; palette sync/cancel/invalid/nesting/close; original restore; hex-first selection; isolated light/dark themes. No native windows opened.");
+        }
+        finally { owner.Close(); StudioTheme.Apply(previousTheme); }
     }
 }

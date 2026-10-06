@@ -54,6 +54,22 @@ onto the assembled court's alpha: game-specific output rules remain unchanged.
 DDS block compression is lossy, so decoded exports are compared with codec
 tolerance, not byte-identical recompression.
 
+## Shared Color Picker
+
+Court layer swatches and the pinned color action instantiate the actual
+`TextureStudio.ColorPickerDialog` from `TwoK.Canvas.Wpf`; Court Creator no longer
+implements its own RGB slider dialog. Spectrum, hue, RGB/HSB, hex validation,
+standard swatches and current-color restoration come from the central library.
+The host adds Team Colors, hex-first focus, its layer heading and monitor fitting.
+Theme resources are scoped to the dialog. Court colors remain RGB-only, without
+changing artwork alpha. Inline hex fields and direct Team Colors remain available.
+
+The host applies a valid accepted color as one court undo step. Cancel, invalid
+input, unchanged colors and stale ownership leave the original court untouched.
+The shared-picker gate verifies the real released dialog and its named controls,
+palette integration, light/dark resources, RGB-only alpha and compact scrolling.
+These are off-screen checks, not native mouse/focus acceptance.
+
 ## Build Dependency
 
 A source build needs the x64 .NET 8 SDK, the app-owned Python backend and both
@@ -68,8 +84,9 @@ of unpublished source edits. No scheduled/background task is installed.
 
 The sync checks package identity, stable version, WPF's matching Core dependency
 and package/assembly hashes. It builds a private candidate, verifies both published
-and test assemblies against the packages, then runs the off-screen artwork gate,
-including the real stock 4096 x 2048 Philadelphia 76ers hardwood workflow.
+and test assemblies against the packages, then runs the off-screen artwork and
+shared-color-picker gates, including the real stock 4096 x 2048 Philadelphia
+76ers hardwood workflow and all 23 inline color targets.
 Failed builds/tests leave `desktop` unchanged. Successful swaps use a serialized
 recovery journal; the app must be closed. Source changes during verification,
 same-version package republishing and unintended downgrades are refused.
@@ -114,6 +131,7 @@ this integration does not grant a commercial license or publish a release.
 
 ```powershell
 dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/artwork-editor-check --artwork-editor
+dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/color-picker-check --color-pickers
 dotnet run --project tools/CourtStudio.Smoke -c Release -- outputs/shared-artwork-audit
 runtime\python\python.exe -B -m unittest discover -s tests -p 'test_*.py'
 runtime\python\python.exe -B tests/check_release.py
@@ -133,7 +151,31 @@ No app is automatically opened after builds; no public binary release is created
 
 ## Verified Build
 
-Version 1.6.1, audited 2026-10-06:
+Version 1.6.2, audited 2026-10-06:
+
+- Matching published Core/WPF 0.6.0 installed through the verified sync path;
+  package and assembly hashes checked. A subsequent sync skipped rebuilding.
+- Court color actions use the actual shared Canvas WPF dialog. Shared controls,
+  RGB-only alpha, original restoration, palette acceptance/cancel/invalid/nesting,
+  closed-dialog safety, hex-first selection and isolated light/dark themes passed.
+- All 23 inline targets, one-step undo/redo, stale ownership and compact scrolling
+  passed. Light/dark and compact picker screenshots were inspected. The focused
+  picker gate also passed against the documented minimum 0.4.1 packages.
+- Full native suite passed, including real stock artwork Accept/save/reopen/Cancel
+  and full-resolution PNG/IFF export/conversion. All windows remained invisible.
+- Backend suite: 413 tests run, 412 passed, one platform-specific skip. Sync tests
+  verify artwork then color-picker gates and preservation of the prior build if
+  the second gate fails.
+- Temporary package audit passed: 47 files, 7,329,842 expanded bytes, 3,464,955
+  archive bytes. Tampering rejected, rollback and seven personal files preserved.
+- Runtime/build readiness reported ready. Desktop shortcut still targets the
+  local launcher. No app was started and no public binary release was uploaded.
+
+Current evidence is under `outputs/shared-color-picker-full-audit` and
+`outputs/shared-color-picker-check`; binaries and game assets remain untracked.
+Real native mouse/focus and in-game loading remain manual acceptance checks.
+
+Version 1.6.1, audited 2026-10-06 (historical baseline):
 
 - Matching published Core/WPF 0.4.1 packages and exact assembly hashes verified.
 - Full native suite passed, including actual-size PNG/IFF export/conversion,
@@ -148,7 +190,7 @@ Version 1.6.1, audited 2026-10-06:
   directory publication rollback and interrupted recovery.
 - Launcher and Setup use the verified sync path. No app was opened automatically.
 
-Current native evidence is under `outputs/canvas-041-full-audit`; the source
+Baseline native evidence is under `outputs/canvas-041-full-audit`; the source
 repository includes repeatable checks, not extracted game assets or binaries.
 
 Previous version 1.6.0, audited 2026-10-06 (historical baseline):

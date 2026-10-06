@@ -318,7 +318,13 @@ Colors & Lines and Logos are prominent icon-and-label tabs directly below the
 selected hardwood card. Colors & Lines opens by default and after New. Per-layer
 rows expose a toggle, swatch, editable hex, and direct Team Colors action together.
 Team Colors remains available inside each swatch and pinned color picker;
-duplicate header buttons and the short layer search
+those actions now use the actual central Canvas WPF `ColorPickerDialog`, not a
+separate Court Creator RGB slider implementation. Shared spectrum/hue, RGB/HSB,
+hex validation and swatches are retained; the host adds Team Colors and starts
+with the hex field selected. The dialog uses isolated host-matched theme resources
+and preserves RGB-only court colors. Central package updates must pass both
+artwork and shared-color integration gates before replacing the desktop build.
+Duplicate header buttons and the short layer search
 are removed. Switching tabs preserves the palette target. Save and Export stay in
 the upper right. Fine dividers separate the global document chrome. The entire
 selected hardwood card opens the catalog with All selected and a fresh search,

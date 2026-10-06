@@ -71,11 +71,13 @@ class CanvasSyncTests(unittest.TestCase):
     def test_latest_matching_published_pair_is_installed_and_next_check_is_noop(self):
         self.release("0.4.1"); self.release("0.4.2")
         self.assertIn("0.4.2", sync.sync(self.root, automatic=True, runner=self.runner))
-        self.assertEqual(len(self.calls), 2)
+        self.assertEqual(len(self.calls), 3)
+        self.assertEqual([arguments[-1] for arguments in self.calls[1:]],
+                         ["--artwork-editor", "--color-pickers"])
         self.assertIn("0.4.2", (self.root / "desktop/Canvas.Core.dll").read_text())
         before = self.snapshot()
         self.assertIn("already", sync.sync(self.root, automatic=True, runner=self.runner))
-        self.assertEqual(len(self.calls), 2); self.assertEqual(before, self.snapshot())
+        self.assertEqual(len(self.calls), 3); self.assertEqual(before, self.snapshot())
         self.assertFalse(list(self.updates.glob("canvas-build-*")))
         self.assertFalse(list(self.updates.glob("canvas-backup-*")))
         self.assertEqual((self.root / "logos/personal.png").read_bytes(), b"personal artwork")
@@ -116,6 +118,19 @@ class CanvasSyncTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "stale cached"):
             sync.sync(self.root, runner=stale)
         self.assertEqual(before, self.snapshot()); self.assertEqual(len(self.calls), 1)
+
+    def test_color_picker_gate_failure_preserves_previous_build(self):
+        self.release(); before = self.snapshot()
+        def fail_color(arguments, root):
+            self.runner(arguments, root)
+            if arguments[-1] == "--color-pickers":
+                raise RuntimeError("shared color picker failed")
+        with self.assertRaisesRegex(RuntimeError, "shared color picker failed"):
+            sync.sync(self.root, automatic=True, runner=fail_color)
+        self.assertEqual(len(self.calls), 3)
+        self.assertEqual(before, self.snapshot())
+        self.assertFalse(list(self.updates.glob("canvas-build-*")))
+        self.assertFalse((self.updates / sync.JOURNAL).exists())
 
     def test_same_version_republish_and_automatic_downgrade_are_rejected(self):
         self.release("0.4.2"); sync.sync(self.root, runner=self.runner); before = self.snapshot()
@@ -183,7 +198,7 @@ class CanvasSyncTests(unittest.TestCase):
     def test_source_changes_trigger_reverification_without_package_changes(self):
         self.release(); sync.sync(self.root, runner=self.runner)
         (self.root / "src/NBA2KCourtCreator/new.cs").write_text("new source")
-        sync.sync(self.root, runner=self.runner); self.assertEqual(len(self.calls), 4)
+        sync.sync(self.root, runner=self.runner); self.assertEqual(len(self.calls), 6)
 
     def test_setup_sdk_path_is_used_even_when_dotnet_is_not_on_path(self):
         self.release()

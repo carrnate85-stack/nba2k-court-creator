@@ -229,8 +229,9 @@ def sync(root=ROOT, *, force=False, automatic=False, runner=run, dotnet_path=Non
             for name, assembly in zip(PACKAGES, ASSEMBLIES):
                 if digest(candidate / assembly) != pair[name]["assemblyHash"]:
                     raise ValueError("Candidate used a stale cached Canvas assembly; clear that NuGet version and retry")
-            runner([str(dotnet), "run", "--project", "tools/CourtStudio.Smoke/CourtStudio.Smoke.csproj", "-c", "Release",
-                    *properties, "--", str(stage / "checks"), "--artwork-editor"], root)
+            for gate in ("--artwork-editor", "--color-pickers"):
+                runner([str(dotnet), "run", "--project", "tools/CourtStudio.Smoke/CourtStudio.Smoke.csproj", "-c", "Release",
+                        *properties, "--", str(stage / "checks"), gate], root)
             for name, assembly in zip(PACKAGES, ASSEMBLIES):
                 if digest(root / "tools/CourtStudio.Smoke/bin/Release/net8.0-windows" / assembly) != pair[name]["assemblyHash"]:
                     raise ValueError("Integration checks consumed a different Canvas package")
