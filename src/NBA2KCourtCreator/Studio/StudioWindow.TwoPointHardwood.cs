@@ -10,6 +10,14 @@ public partial class StudioWindow
     private Drawing? _twoPointDrawing;
     private Geometry? _twoPointSurface;
     private string? _twoPointSourceRevision;
+    private bool _twoPointHardwoodEnabled;
+
+    public void SetTwoPointHardwoodEnabled(bool enabled)
+    {
+        CommitHardwoodNumberInputs();
+        if (!CanChangeDocument || PendingLogoImports > 0) throw new InvalidOperationException("Wait for the current court operation before changing two-point hardwood.");
+        Change(() => _twoPointHardwoodEnabled = enabled); RefreshHardwoodValues();
+    }
 
     public async Task SelectTwoPointFloorAsync(StockFloor? floor)
     {
@@ -29,7 +37,7 @@ public partial class StudioWindow
             var prepared = selected is null ? null : await PrepareFloorAsync(selected, cancellation.Token, _twoPointSurface);
             if (revision != _floorRevision || cancellation.IsCancellationRequested || _closed || _closePending) return;
             var before = CreateProject();
-            ApplyTwoPointFloor(prepared);
+            ApplyTwoPointFloor(prepared, selected is not null);
             if (before.ToJsonString() != CreateProject().ToJsonString()) { RecordUndo(before); Changed(); }
             else RebuildBackground();
         }
@@ -37,11 +45,12 @@ public partial class StudioWindow
         finally { if (ReferenceEquals(_floorSelectionCancellation, cancellation)) _floorSelectionCancellation = null; }
     }
 
-    private void ApplyTwoPointFloor(PreparedFloor? prepared)
+    private void ApplyTwoPointFloor(PreparedFloor? prepared, bool enabled)
     {
         _twoPointFloor = prepared?.Floor; _twoPointDrawing = prepared?.Drawing;
         _preparedTwoPointFloor = prepared; _twoPointHardwoodSettings = prepared?.Settings ?? new();
         _twoPointSourceRevision = prepared?.SourceRevision;
+        _twoPointHardwoodEnabled = enabled;
         RefreshHardwoodValues();
     }
 

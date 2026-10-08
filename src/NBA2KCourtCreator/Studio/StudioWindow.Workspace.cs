@@ -30,7 +30,7 @@ public partial class StudioWindow
         CourtCanvas.CancelGesture();
         if (tool is ArtworkTool.Move or ArtworkTool.Transform) SwitchSection("logos");
         if (tool == ArtworkTool.Eyedropper) SwitchSection("paint");
-        if (tool == ArtworkTool.Transform && CourtCanvas.SelectedLayer is null) return;
+        if (tool == ArtworkTool.Transform && CourtCanvas.SelectedLayer is null) { RefreshToolState(); return; }
         CourtCanvas.Tool = tool; RefreshToolState(); CourtCanvas.Focus();
     }
     private void ToolClick(object sender, RoutedEventArgs e)
@@ -129,7 +129,6 @@ public partial class StudioWindow
         menu.PlacementTarget=button;menu.Placement=PlacementMode.Bottom;menu.IsOpen=true;
     }
     private void ExportMenuClick(object sender, RoutedEventArgs e) { ExportTopButton.ContextMenu.PlacementTarget = ExportTopButton; ExportTopButton.ContextMenu.Placement = PlacementMode.Bottom; ExportTopButton.ContextMenu.IsOpen = true; }
-    private void ExportSectionClick(object sender, RoutedEventArgs e) => SwitchSection("export");
     private void TitleBarMouseDown(object sender, MouseButtonEventArgs e)
     {
         for(var source=e.OriginalSource as DependencyObject;source is not null && !ReferenceEquals(source,sender);source=source is Visual ? VisualTreeHelper.GetParent(source) : LogicalTreeHelper.GetParent(source))

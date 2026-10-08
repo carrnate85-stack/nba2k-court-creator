@@ -248,7 +248,7 @@ public partial class StudioWindow
     }
 
     private bool _catalogBusy;
-    private async void CatalogClick(object sender, RoutedEventArgs e) => await Guard(() => OpenFloorCatalogAsync(false));
+    private async void CatalogClick(object sender, RoutedEventArgs e) => await Guard(() => OpenFloorCatalogAsync(_editingTwoPointHardwood));
     private async Task OpenFloorCatalogAsync(bool twoPoint)
     {
         if (!CanChangeDocument || PendingLogoImports > 0) return;

@@ -224,13 +224,13 @@ public partial class StudioWindow : Window
             foreach (var layer in paintGroup) geometry.Children.Add(layer.Geometry);
             geometry.Freeze(); group.Children.Add(new GeometryDrawing(StudioImages.Brush(paintGroup.Key), null, geometry));
         }
-        if (_twoPointDrawing is not null) group.Children.Add(_twoPointDrawing);
+        if (_twoPointHardwoodEnabled && _twoPointDrawing is not null) group.Children.Add(_twoPointDrawing);
         foreach (var layer in _lines.Where(layer => layer.Visible)) group.Children.Add(new GeometryDrawing(StudioImages.Brush(layer.Color), null, layer.Geometry));
         group.Freeze(); CourtCanvas.BackgroundDrawing = group;
     }
     public void SwitchSection(string section)
     {
-        CommitHardwoodGesture(); _hardwoodToolActive = false;
+        CommitHardwoodGesture();
         if (section == "floors") section = "paint";
         CourtCanvas.CancelGesture(); _section = section;
         Inspector.Visibility = Visibility.Visible;
@@ -272,7 +272,7 @@ public partial class StudioWindow : Window
         if (_floorSourceRevision is not null) floorData["sourceRevision"] = _floorSourceRevision;
         floorData["textureSettings"] = _mainHardwoodSettings.ToJson();
         return new JsonObject { ["version"] = 2, ["buildMode"] = "game-uv", ["mappingMode"] = "game-uv",
-            ["floor"] = floorData, ["twoPointFloor"] = TwoPointFloorSnapshot(), ["outsideColor"] = _outside.Color, ["outsideVisible"] = _outside.Visible,
+            ["floor"] = floorData, ["twoPointFloor"] = TwoPointFloorSnapshot(), ["twoPointHardwoodEnabled"] = _twoPointHardwoodEnabled, ["outsideColor"] = _outside.Color, ["outsideVisible"] = _outside.Visible,
             ["visibility"] = visibility, ["colorOverrides"] = colors, ["layerNames"] = names,
             ["paintSettings"] = Settings(_paints), ["lineSettings"] = Settings(_lines),
             ["logoImages"] = new JsonArray(CourtCanvas.Layers.Select(SerializeLogo).Cast<JsonNode?>().ToArray()),
@@ -420,7 +420,7 @@ public partial class StudioWindow : Window
             }
             if (!_floors.Any(f => f.Id == preparedFloor.Floor.Id)) _floors.Add(preparedFloor.Floor);
             _projectPath = projectPath;
-            ApplyFloor(preparedFloor); ApplyTwoPointFloor(preparedTwoPoint); RebuildBackground();
+            ApplyFloor(preparedFloor); ApplyTwoPointFloor(preparedTwoPoint, project["twoPointHardwoodEnabled"]?.GetValue<bool>() ?? preparedTwoPoint is not null); RebuildBackground();
             CourtCanvas.SelectedLayer = CourtCanvas.Layers.FirstOrDefault();
             _projectName = project["projectName"]?.GetValue<string>() is { } savedName && !string.IsNullOrWhiteSpace(savedName) ? savedName : _projectPath is null ? "Untitled court" : Path.GetFileNameWithoutExtension(_projectPath); UpdateProjectLabel();
             _dirty = updatedAssets.Count > 0; RebuildLayerRows();
@@ -460,6 +460,7 @@ public partial class StudioWindow : Window
         reset["outsideColor"] = _outside.DefaultColor; reset["outsideVisible"] = _outside.DefaultVisible;
         reset["floor"] = _floors.First(f => f.Id == _defaultFloorId).Source.DeepClone();
         reset["twoPointFloor"] = null;
+        reset["twoPointHardwoodEnabled"] = false;
         reset["logoImages"] = new JsonArray(); reset["_projectPath"] = null; reset["projectName"] = "Untitled court";
         await RestoreProjectAsync(reset); ResetImportContext(); RecordUndo(before); Changed(); SwitchSection("paint"); CourtCanvas.Fit();
     }

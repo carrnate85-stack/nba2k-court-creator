@@ -15,6 +15,7 @@ public static class StudioProjectValidation
         if (Text(project["assetPathMode"], "assetPathMode") is { } pathMode && pathMode != "project-relative")
             throw Invalid("assetPathMode", "is not supported");
         Color(project["outsideColor"], "outsideColor"); Boolean(project["outsideVisible"], "outsideVisible");
+        Boolean(project["twoPointHardwoodEnabled"], "twoPointHardwoodEnabled");
         foreach (var floorKey in new[] { "floor", "twoPointFloor" })
         if (project[floorKey] is not null)
         {

@@ -58,7 +58,6 @@ public partial class StudioWindow
         _floor = prepared.Floor; _hardwoodDrawing = prepared.Drawing;
         _preparedMainFloor = prepared; _mainHardwoodSettings = prepared.Settings;
         _floorSourceRevision = prepared.SourceRevision;
-        FloorThumbnail.Source = prepared.Thumbnail; SelectedCourtText.Text = prepared.Floor.Name;
         _recent.Remove(prepared.Floor.Id); _recent.Insert(0, prepared.Floor.Id); if (_recent.Count > 20) _recent.RemoveAt(20);
         SavePreferences();
         RefreshImportState();

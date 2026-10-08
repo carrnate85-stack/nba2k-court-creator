@@ -65,6 +65,27 @@ class TwoPointHardwoodTests(unittest.TestCase):
             self.assertEqual(image.getpixel((30, 75))[:3], (0, 0, 255))
             self.assertEqual(image.getpixel((220, 75))[:3], (0, 255, 255))
 
+    def test_checkbox_hides_and_restores_retained_second_texture(self):
+        request = dict(self.request, twoPointHardwoodEnabled=False)
+        retained = dict(request['twoPointFloor'])
+        with self.render(request, preview=False) as image:
+            self.assertEqual(image.getpixel((120, 300))[:3], (255, 0, 255))
+            self.assertEqual(image.getpixel((880, 300))[:3], (255, 0, 255))
+            self.assertEqual(image.getpixel((200, 300))[:3], (0, 128, 0))
+        self.assertEqual(request['twoPointFloor'], retained)
+        request['twoPointHardwoodEnabled'] = True
+        with self.render(request) as image:
+            self.assertEqual(image.getpixel((30, 75))[:3], (0, 0, 255))
+            self.assertEqual(image.getpixel((220, 75))[:3], (0, 0, 255))
+
+    def test_invalid_checkbox_state_preserves_output(self):
+        output = self.root / 'export.png'
+        output.write_bytes(b'previous export')
+        for enabled in ('false', 0, None):
+            with self.subTest(enabled=enabled), self.assertRaisesRegex(ValueError, 'enabled state'):
+                renderer.render_experimental(self.root, dict(self.request, twoPointHardwoodEnabled=enabled), output, preview=True, geometry=self.geometry)
+            self.assertEqual(output.read_bytes(), b'previous export')
+
     def test_missing_stale_or_protected_second_floor_preserves_output(self):
         output = self.root / 'export.png'; output.write_bytes(b'previous export')
         self.request['twoPointFloor']['sourceRevision'] = hashlib.sha256(self.second.read_bytes()).hexdigest()

@@ -57,6 +57,8 @@ internal static partial class Program
         try
         {
             await window.InitializeAsync(); await window.SelectFloorAsync(main);
+            Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Hardwood bar did not open by default.");
+            window.SwitchSection("logos"); Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Inspector tabs closed the hardwood bar."); window.SwitchSection("paint");
             foreach (var layer in window.PaintLayers.Concat(window.LineLayers)) window.SetLayerSettings(layer.Id, visible: false);
             window.SetLayerSettings("paint-left", visible: true, color: "#008000");
             await window.SelectTwoPointFloorAsync(second);
@@ -69,6 +71,27 @@ internal static partial class Program
             }
             Assert(NativePixel(left) == Colors.Blue && NativePixel(right) == Colors.Blue, "Second hardwood is not clipped to both two-point areas.");
             Assert(NativePixel(center) == Colors.Red && NativePixel(key) == Colors.Green, "Second hardwood changed the center or key.");
+            window.ShowHardwoodTools(true);
+            var toggleContent = (FrameworkElement)window.Content; toggleContent.Measure(new Size(1200, 800)); toggleContent.Arrange(new Rect(0, 0, 1200, 800)); toggleContent.UpdateLayout();
+            var toggleBar = (ContextualToolOptionsBar)window.FindName("HardwoodOptions");
+            var enableTwoPoint = Descendants<CheckBox>(toggleBar).Single(input => Equals(input.Tag, "TwoPointHardwoodEnabled"));
+            Assert(enableTwoPoint.IsChecked == true && ((TextBlock)window.FindName("SelectedCourtText")).Text == second.Name && ((TextBlock)window.FindName("SelectedHardwoodLabel")).Text == "2-POINT HARDWOOD", "Secondary choice did not update the preview card/checkbox.");
+            var rememberedSecond = window.CreateProject()["twoPointFloor"]!.ToJsonString(); enableTwoPoint.IsChecked = false;
+            Assert(!window.CreateProject()["twoPointHardwoodEnabled"]!.GetValue<bool>() && window.CreateProject()["twoPointFloor"]!.ToJsonString() == rememberedSecond && NativePixel(left) == Colors.Red && NativePixel(right) == Colors.Red && NativePixel(key) == Colors.Green, "Checkbox did not hide the second texture without forgetting it.");
+            var disabledProject = Path.Combine(output, "disabled-two-point.court.json"); await window.SaveProjectToAsync(disabledProject); await window.OpenProjectFromAsync(disabledProject);
+            Assert(enableTwoPoint.IsChecked == false && window.CreateProject()["twoPointFloor"] is JsonObject && NativePixel(left) == Colors.Red, "Save/reopen lost the disabled second texture.");
+            var disabledSnapshot = window.CreateProject(); var legacySnapshot = (JsonObject)disabledSnapshot.DeepClone(); legacySnapshot.Remove("twoPointHardwoodEnabled");
+            await window.RestoreProjectAsync(legacySnapshot); Assert(enableTwoPoint.IsChecked == true && NativePixel(left) == Colors.Blue, "Legacy second hardwood was disabled."); await window.RestoreProjectAsync(disabledSnapshot);
+            var disabledExport = Path.Combine(output, "two-point-disabled-export.png"); await window.ExportToAsync(disabledExport, false);
+            using (var stream = File.OpenRead(disabledExport))
+            {
+                var frame = BitmapFrame.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                var rgba = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 0); var bytes = new byte[4];
+                rgba.CopyPixels(new Int32Rect((int)left.X, (int)left.Y, 1, 1), bytes, 4, 0); Assert(bytes[2] == 255 && bytes[1] == 0 && bytes[0] == 0, "PNG export ignored the disabled checkbox.");
+            }
+            enableTwoPoint.IsChecked = true; await window.UndoAsync(); Assert(enableTwoPoint.IsChecked == false && NativePixel(left) == Colors.Red, "Checkbox undo failed."); await window.UndoAsync(true); Assert(enableTwoPoint.IsChecked == true && NativePixel(left) == Colors.Blue, "Checkbox redo failed.");
+            window.ShowHardwoodTools(); Assert(((TextBlock)window.FindName("SelectedCourtText")).Text == main.Name, "Main target did not update the preview card.");
+            window.ShowHardwoodTools(true);
             var mainDefault = window.CreateProject()["floor"]!["textureSettings"]!.ToJsonString();
             await window.SetHardwoodTextureAsync(new(20, 10, -30, 150, 45), true);
             Assert(window.CreateProject()["floor"]!["textureSettings"]!.ToJsonString() == mainDefault, "Secondary adjustments changed the main hardwood.");
@@ -137,6 +160,8 @@ internal static partial class Program
             var screenshot = new RenderTargetBitmap(1200, 800, 96, 96, PixelFormats.Pbgra32); screenshot.Render((Visual)window.Content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(screenshot)); using (var stream = File.Create(Path.Combine(output, "hardwood-controls.png"))) encoder.Save(stream);
             window.SelectCanvasTool(ArtworkTool.Hand); Assert(bar.Visibility == Visibility.Collapsed, "Hardwood bar remained active after choosing another tool.");
+            window.SwitchSection("paint"); Assert(bar.Visibility == Visibility.Collapsed, "Changing inspector tabs reactivated hardwood over another tool.");
+            ((Button)window.FindName("HardwoodToolButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert(bar.Visibility == Visibility.Visible, "Hardwood tool did not reopen the bar.");
             await window.SetHardwoodTextureAsync(new()); await window.SetHardwoodTextureAsync(new(), true);
             await window.ExportToAsync(Path.Combine(output, "two-point-export.png"), false);
             await window.ExportToAsync(Path.Combine(output, "two-point-export.iff"), true);

@@ -17,7 +17,8 @@ public partial class StudioWindow
 {
     private PreparedFloor? _preparedMainFloor, _preparedTwoPointFloor;
     private HardwoodTextureSettings _mainHardwoodSettings = new(), _twoPointHardwoodSettings = new();
-    private bool _hardwoodToolActive, _editingTwoPointHardwood, _writingHardwoodValues;
+    private bool _hardwoodToolActive = true;
+    private bool _editingTwoPointHardwood, _writingHardwoodValues;
     private readonly List<Action> _hardwoodPeers = [];
     private readonly Dictionary<TextBox, Func<bool>> _hardwoodNumberCommits = [];
     private readonly List<Action> _cancelHardwoodNumbers = [];
@@ -34,6 +35,7 @@ public partial class StudioWindow
     {
         HardwoodOptions.Host = new HardwoodOptionsHost(new(ToolMode.Move, "Hardwood", [
             new("target", "", CreateHardwoodTarget),
+            new("two-point-enabled", "", CreateTwoPointHardwoodToggle),
             new("choose", "", CreateHardwoodChooser),
             new("brightness", "Brightness", () => CreateHardwoodSlider("brightness", -100, 100)),
             new("contrast", "Contrast", () => CreateHardwoodSlider("contrast", -100, 100)),
@@ -75,6 +77,26 @@ public partial class StudioWindow
             clear.IsEnabled = CanChangeDocument && PendingLogoImports == 0;
         }
         _hardwoodPeers.Add(Update); Update(); row.Children.Add(choose); row.Children.Add(clear); return row;
+    }
+
+    private FrameworkElement CreateTwoPointHardwoodToggle()
+    {
+        var input = new CheckBox { Content = "2-point hardwood", Tag = "TwoPointHardwoodEnabled", Height = 28, Margin = new Thickness(0), FontSize = 11,
+            VerticalAlignment = VerticalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
+            ToolTip = "Show or hide the second hardwood in both two-point areas. Its texture and adjustments are remembered." };
+        _hardwoodPeers.Add(() => { input.IsChecked = _twoPointHardwoodEnabled; input.IsEnabled = CanChangeDocument && PendingLogoImports == 0; });
+        void Toggle()
+        {
+            if (_writingHardwoodValues) return;
+            try
+            {
+                SetTwoPointHardwoodEnabled(input.IsChecked == true);
+                if (_twoPointHardwoodEnabled && _twoPointFloor is null)
+                { _editingTwoPointHardwood = true; RefreshHardwoodValues(); SetStatus("Choose a hardwood for the left and right two-point areas."); }
+            }
+            catch (InvalidOperationException error) { SetStatus(error.Message); RefreshHardwoodValues(); }
+        }
+        input.Checked += (_, _) => Toggle(); input.Unchecked += (_, _) => Toggle(); return input;
     }
 
     private FrameworkElement CreateHardwoodSlider(string key, int minimum, int maximum)
@@ -177,6 +199,17 @@ public partial class StudioWindow
         try { foreach (var update in _hardwoodPeers) update(); }
         finally { _writingHardwoodValues = false; }
         HardwoodResetButton.IsEnabled = CanChangeDocument && (_editingTwoPointHardwood ? _twoPointFloor : _floor) is not null;
+        RefreshHardwoodSelectionCard();
+    }
+
+    private void RefreshHardwoodSelectionCard()
+    {
+        var prepared = _editingTwoPointHardwood ? _preparedTwoPointFloor : _preparedMainFloor;
+        FloorThumbnail.Source = prepared?.Thumbnail ?? (_editingTwoPointHardwood ? _preparedMainFloor?.Thumbnail : null);
+        SelectedCourtText.Text = prepared?.Floor.Name ?? (_editingTwoPointHardwood ? "Use main hardwood" : "Loading court library...");
+        SelectedHardwoodLabel.Text = _editingTwoPointHardwood ? "2-POINT HARDWOOD" : "SELECTED HARDWOOD";
+        SelectedCourtCard.ToolTip = (_editingTwoPointHardwood ? "Two-point hardwood" + (_twoPointHardwoodEnabled ? "" : " (off)") : "Main hardwood") + ": " + SelectedCourtText.Text + "\nBrowse and change this texture.";
+        AutomationProperties.SetName(SelectedCourtCard, (_editingTwoPointHardwood ? "Two-point" : "Main") + " hardwood: open catalog");
     }
 
     public void ShowHardwoodTools(bool twoPoint = false)
@@ -189,7 +222,7 @@ public partial class StudioWindow
     private void RefreshHardwoodBar()
     {
         if (HardwoodOptions is null) return;
-        var visible = _hardwoodToolActive && _section == "paint";
+        var visible = _hardwoodToolActive;
         if (visible && HardwoodOptionsPanel.Visibility != Visibility.Visible && PresentationSource.FromVisual(this) is not null)
         {
             var drop = new TranslateTransform(0, -40); HardwoodOptionsPanel.RenderTransform = drop;

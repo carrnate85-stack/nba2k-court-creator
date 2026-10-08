@@ -11,14 +11,22 @@
 
 ## Hardwood Textures
 
-The main hardwood card fills the court surface. The optional second hardwood is
+The main hardwood fills the court surface. The optional second hardwood is
 managed entirely in the hardwood tool's top bar, leaving the right inspector
-available for colors, lines and logos. Select Two-point hardwood in the target
+available for colors, lines and logos. The bar opens by default and stays open
+through inspector-tab and appearance changes until another canvas tool is selected.
+Select Two-point hardwood in the target
 dropdown, then Choose a catalog/custom texture for both left and right two-point
 areas, using the stock NBA three-point enclosure with both outer keys excluded.
 Use main appears beside Choose only when editing an assigned second texture;
 it removes that texture and restores the main hardwood and any two-point colors.
 The target and Choose tooltips identify the currently selected texture.
+The 2-point hardwood checkbox enables or hides the secondary texture while
+retaining its selection and adjustments. The enabled state survives recovery,
+undo/redo and portable save/reopen, and both native previews and PNG/IFF exports
+honor it. Older projects with a secondary texture keep it enabled. Choosing a
+new secondary texture enables it; Use main removes it. The top-right hardwood
+card follows the bar's editing target and opens the matching catalog.
 Paint in the keys, court markings and logos keep their existing drawing order.
 
 The hardwood tool opens the actual `TextureStudio.ContextualToolOptionsBar` from

@@ -690,6 +690,9 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
     two_point_floor = request.get("twoPointFloor")
     if two_point_floor is not None and not isinstance(two_point_floor, dict):
         raise ValueError("Invalid two-point hardwood selection.")
+    two_point_enabled = request.get("twoPointHardwoodEnabled", True)
+    if not isinstance(two_point_enabled, bool):
+        raise ValueError("Invalid two-point hardwood enabled state.")
     secondary_settings = texture_settings(two_point_floor) if two_point_floor is not None else None
     two_point_path = Path(str(two_point_floor.get("path", ""))) if two_point_floor is not None else None
     if two_point_path is not None and not two_point_path.is_file():
@@ -737,7 +740,7 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
                 draw.polygon([(point[0] * scale, point[1] * scale) for point in polygon], fill=color)
     for layer in geometry["paints"]:
         draw_layer(layer, paint_settings)
-    if two_point_path is not None:
+    if two_point_enabled and two_point_path is not None:
         from PIL import ImageChops
         with verified_asset_stream(two_point_path, asset_revision(two_point_floor)) as stream, Image.open(stream) as source:
             validate_asset_image(source)
