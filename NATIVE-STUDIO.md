@@ -11,33 +11,29 @@
 
 ## Hardwood Textures
 
-The main hardwood fills the court surface. The optional second hardwood is
-managed entirely in the hardwood tool's top bar, leaving the right inspector
-available for colors, lines and logos. The bar opens by default and stays open
-through inspector-tab and appearance changes until another canvas tool is selected.
-Select Two-point hardwood in the target
-dropdown, then Choose a catalog/custom texture for both left and right two-point
-areas, using the stock NBA three-point enclosure with both outer keys excluded.
-Use main appears beside Choose only when editing an assigned second texture;
-it removes that texture and restores the main hardwood and any two-point colors.
-The target and Choose tooltips identify the currently selected texture.
-The 2-point hardwood checkbox enables or hides the secondary texture while
-retaining its selection and adjustments. The enabled state survives recovery,
-undo/redo and portable save/reopen, and both native previews and PNG/IFF exports
-honor it. Older projects with a secondary texture keep it enabled. Choosing a
-new secondary texture enables it; Use main removes it. The top-right hardwood
-card follows the bar's editing target and opens the matching catalog.
+The main hardwood fills the court surface. Hardwood selection lives in a strip
+along the bottom of the workspace, leaving the right inspector for colors, lines
+and logos. The main selector stays visible. Checking 2-point hardwood replaces
+the checkbox with a second selector for the left and right two-point areas,
+using the stock NBA three-point enclosure with both outer keys excluded.
+Its close button disables the second texture and restores the checkbox while
+retaining the texture and its adjustments. Clicking either selector opens its
+catalog and selects that texture for adjustment; the active selector has an accent
+border. Both selectors show their own thumbnail and selected texture name.
+The enabled state survives recovery, undo/redo and portable save/reopen, and
+native previews and PNG/IFF exports honor it. Older projects with a secondary
+texture keep it enabled. Choosing a new secondary texture enables it.
 Paint in the keys, court markings and logos keep their existing drawing order.
 
-The hardwood tool opens the actual `TextureStudio.ContextualToolOptionsBar` from
-the released Canvas toolkit above the preview. The fixed 40-DIP row drops into
-view without the redundant tool caption. A horizontal scrollbar keeps all options
-accessible in narrower windows; the reset icon stays at the right instead of an
-overflow menu. Choosing another tool hides it. Main/Two-point target selection
-controls independent Brightness, Contrast, Saturation, Grain scale and Rotation
-sliders. Clicking a percentage or degree value opens integer entry; Enter or
-leaving the field applies it, Escape cancels, and out-of-range values block save
-until corrected. The reset icon restores only the selected hardwood's defaults.
+The hardwood adjustment bar opens by default and stays open through inspector-tab
+and appearance changes until another canvas tool is selected. Five equal-width
+groups use the released Canvas toolkit's slider and button styles, with labels
+above their controls so Brightness, Contrast, Saturation, Grain scale and Rotation
+remain visible at the minimum window width without scrolling or an overflow menu.
+The reset icon stays at the right. Clicking a percentage or degree value opens
+integer entry; Enter or leaving the field applies it, Escape cancels, and
+out-of-range values block save until corrected. Reset affects only the hardwood
+selected for editing.
 Colors use Canvas's adjustment service; scale/rotation repeat the full-court
 texture around its center before clipping, keeping the texture inside its area.
 Original image files and alpha are preserved. Live native previews are debounced

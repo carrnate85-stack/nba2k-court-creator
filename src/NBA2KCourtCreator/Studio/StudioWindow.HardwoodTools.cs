@@ -8,8 +8,6 @@ using System.Globalization;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using TextureStudio;
-using TextureStudio.Models;
 
 namespace NBA2KCourtCreator.Studio;
 
@@ -25,92 +23,51 @@ public partial class StudioWindow
     private readonly DispatcherTimer _hardwoodPreviewTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
     private JsonObject? _hardwoodUndoBefore;
     private long _hardwoodPreviewRevision;
-    private sealed class HardwoodOptionsHost(ToolOptionsContext context) : IContextualToolOptionsHost
-    {
-        public ToolOptionsContext Context { get; } = context;
-        public event EventHandler? ContextChanged { add { } remove { } }
-    }
-
     private void ConfigureHardwoodTools()
     {
-        HardwoodOptions.Host = new HardwoodOptionsHost(new(ToolMode.Move, "Hardwood", [
-            new("target", "", CreateHardwoodTarget),
-            new("two-point-enabled", "", CreateTwoPointHardwoodToggle),
-            new("choose", "", CreateHardwoodChooser),
-            new("brightness", "Brightness", () => CreateHardwoodSlider("brightness", -100, 100)),
-            new("contrast", "Contrast", () => CreateHardwoodSlider("contrast", -100, 100)),
-            new("saturation", "Saturation", () => CreateHardwoodSlider("saturation", -100, 100)),
-            new("scale", "Grain scale", () => CreateHardwoodSlider("scale", 50, 200)),
-            new("rotation", "Rotation", () => CreateHardwoodSlider("rotation", -180, 180))
-        ]));
-        // The host uses a scrollable row and a persistent reset action instead of the toolkit's overflow menu.
-        foreach (var button in ((DockPanel)HardwoodOptions.Content).Children.OfType<Button>()) button.Visibility = Visibility.Collapsed;
-        foreach (var caption in ((DockPanel)HardwoodOptions.Content).Children.OfType<StackPanel>()) caption.Visibility = Visibility.Collapsed;
+        foreach (var (label, key, minimum, maximum) in new[] {
+            ("Brightness", "brightness", -100, 100), ("Contrast", "contrast", -100, 100),
+            ("Saturation", "saturation", -100, 100), ("Grain scale", "scale", 50, 200), ("Rotation", "rotation", -180, 180) })
+        {
+            var column = HardwoodOptions.ColumnDefinitions.Count;
+            HardwoodOptions.ColumnDefinitions.Add(new ColumnDefinition());
+            var control = CreateHardwoodSlider(label, key, minimum, maximum);
+            Grid.SetColumn(control, column); HardwoodOptions.Children.Add(control);
+        }
         _hardwoodPreviewTimer.Tick += async (_, _) => { _hardwoodPreviewTimer.Stop(); await Guard(RefreshHardwoodPreviewAsync); };
-        Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); HardwoodOptions.Dispose(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
+        Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
     }
 
-    private FrameworkElement CreateHardwoodTarget()
+    private void EnableTwoPointHardwoodChecked(object sender, RoutedEventArgs e)
     {
-        var input = new ComboBox { ItemsSource = new[] { "Main hardwood", "Two-point hardwood" }, Width = 155, Height = 28, MinHeight = 28, Padding = new Thickness(5, 2, 5, 2) };
-        _hardwoodPeers.Add(() => { input.SelectedIndex = _editingTwoPointHardwood ? 1 : 0; input.ToolTip = _editingTwoPointHardwood ? "Left and right two-point areas: " + (_twoPointFloor?.Name ?? "Use main hardwood") : "Main hardwood: " + (_floor?.Name ?? "Choose a hardwood"); });
-        input.SelectedIndex = _editingTwoPointHardwood ? 1 : 0;
-        input.SelectionChanged += (_, _) => { if (_writingHardwoodValues) return; CommitHardwoodGesture(); _editingTwoPointHardwood = input.SelectedIndex == 1; RefreshHardwoodValues(); };
-        return input;
+        if (_writingHardwoodValues) return;
+        try { SetTwoPointHardwoodEnabled(true); ShowHardwoodTools(true); }
+        catch (InvalidOperationException error) { SetStatus(error.Message); RefreshHardwoodValues(); }
     }
-
-    private FrameworkElement CreateHardwoodChooser()
+    private void DisableTwoPointHardwoodClick(object sender, RoutedEventArgs e)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal };
-        var choose = new Button { Content = "Choose", Height = 28, Margin = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 2, 8, 2) };
-        AutomationProperties.SetName(choose, "Choose hardwood");
-        choose.Click += async (_, _) => await Guard(() => OpenFloorCatalogAsync(_editingTwoPointHardwood));
-        var clear = new Button { Content = "Use main", Height = 28, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 2, 8, 2),
-            ToolTip = "Remove the second hardwood and restore the main hardwood / two-point colors" };
-        AutomationProperties.SetName(clear, "Remove two-point hardwood"); clear.Click += ClearTwoPointFloorClick;
-        void Update()
-        {
-            var floor = _editingTwoPointHardwood ? _twoPointFloor : _floor;
-            choose.ToolTip = (_editingTwoPointHardwood ? "Two-point hardwood: " : "Main hardwood: ") + (floor?.Name ?? (_editingTwoPointHardwood ? "Use main hardwood" : "Choose a hardwood")) + "\nChoose a texture from the catalog or add an image.";
-            choose.IsEnabled = CanChangeDocument && PendingLogoImports == 0;
-            clear.Visibility = _editingTwoPointHardwood && _twoPointFloor is not null ? Visibility.Visible : Visibility.Collapsed;
-            clear.IsEnabled = CanChangeDocument && PendingLogoImports == 0;
-        }
-        _hardwoodPeers.Add(Update); Update(); row.Children.Add(choose); row.Children.Add(clear); return row;
+        try { SetTwoPointHardwoodEnabled(false); ShowHardwoodTools(); }
+        catch (InvalidOperationException error) { SetStatus(error.Message); RefreshHardwoodValues(); }
     }
+    private async void TwoPointCatalogClick(object sender, RoutedEventArgs e) => await Guard(() => OpenFloorCatalogAsync(true));
 
-    private FrameworkElement CreateTwoPointHardwoodToggle()
+    private FrameworkElement CreateHardwoodSlider(string label, string key, int minimum, int maximum)
     {
-        var input = new CheckBox { Content = "2-point hardwood", Tag = "TwoPointHardwoodEnabled", Height = 28, Margin = new Thickness(0), FontSize = 11,
-            VerticalAlignment = VerticalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
-            ToolTip = "Show or hide the second hardwood in both two-point areas. Its texture and adjustments are remembered." };
-        _hardwoodPeers.Add(() => { input.IsChecked = _twoPointHardwoodEnabled; input.IsEnabled = CanChangeDocument && PendingLogoImports == 0; });
-        void Toggle()
-        {
-            if (_writingHardwoodValues) return;
-            try
-            {
-                SetTwoPointHardwoodEnabled(input.IsChecked == true);
-                if (_twoPointHardwoodEnabled && _twoPointFloor is null)
-                { _editingTwoPointHardwood = true; RefreshHardwoodValues(); SetStatus("Choose a hardwood for the left and right two-point areas."); }
-            }
-            catch (InvalidOperationException error) { SetStatus(error.Message); RefreshHardwoodValues(); }
-        }
-        input.Checked += (_, _) => Toggle(); input.Unchecked += (_, _) => Toggle(); return input;
-    }
-
-    private FrameworkElement CreateHardwoodSlider(string key, int minimum, int maximum)
-    {
-        var row = new StackPanel { Orientation = Orientation.Horizontal };
-        var slider = new Slider { Minimum = minimum, Maximum = maximum, Width = 90, TickFrequency = 1, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center, Tag = key };
+        var group = new Grid { Margin = new Thickness(5, 4, 5, 4) };
+        group.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); group.RowDefinitions.Add(new RowDefinition());
+        var caption = new TextBlock { Text = label, FontSize = 11, Margin = new Thickness(2, 0, 0, 2) };
+        caption.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush"); group.Children.Add(caption);
+        var row = new Grid(); row.ColumnDefinitions.Add(new ColumnDefinition()); row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetRow(row, 1); group.Children.Add(row);
+        var slider = new Slider { Minimum = minimum, Maximum = maximum, MinWidth = 18, TickFrequency = 1, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center, Tag = key };
         slider.SetResourceReference(StyleProperty, "CanvasLayerSlider");
         AutomationProperties.SetName(slider, "Hardwood " + key);
-        var value = new Button { Width = 48, Height = 24, Margin = new Thickness(0), Padding = new Thickness(2, 0, 2, 0), FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
+        var value = new Button { Width = 40, Height = 24, Margin = new Thickness(0), Padding = new Thickness(2, 0, 2, 0), FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
             ToolTip = $"Click to enter {key} ({minimum} to {maximum})" };
         value.SetResourceReference(StyleProperty, "CanvasActionButton");
         value.SetResourceReference(Control.ForegroundProperty, "MutedTextBrush");
         AutomationProperties.SetName(value, "Enter hardwood " + key);
-        var input = new TextBox { Width = 48, Height = 24, MinHeight = 24, Margin = new Thickness(0), Padding = new Thickness(3, 0, 3, 0), FontSize = 11,
+        var input = new TextBox { Width = 40, Height = 24, MinHeight = 24, Margin = new Thickness(0), Padding = new Thickness(3, 0, 3, 0), FontSize = 11,
             VerticalContentAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed, Tag = "HardwoodNumber:" + key };
         AutomationProperties.SetName(input, "Hardwood " + key + " exact value");
         var numberHost = new Grid { VerticalAlignment = VerticalAlignment.Center }; numberHost.Children.Add(value); numberHost.Children.Add(input);
@@ -166,7 +123,7 @@ public partial class StudioWindow
         };
         slider.AddHandler(Thumb.DragCompletedEvent, new DragCompletedEventHandler((_, _) => CommitHardwoodGesture()));
         slider.LostKeyboardFocus += (_, _) => CommitHardwoodGesture();
-        row.Children.Add(slider); row.Children.Add(numberHost); return row;
+        Grid.SetColumn(numberHost, 1); row.Children.Add(slider); row.Children.Add(numberHost); return group;
     }
 
     private void CommitHardwoodNumberInputs()
@@ -195,21 +152,28 @@ public partial class StudioWindow
 
     private void RefreshHardwoodValues()
     {
+        if (!_twoPointHardwoodEnabled) _editingTwoPointHardwood = false;
         _writingHardwoodValues = true;
-        try { foreach (var update in _hardwoodPeers) update(); }
+        try { foreach (var update in _hardwoodPeers) update(); RefreshHardwoodSelectionCard(); }
         finally { _writingHardwoodValues = false; }
         HardwoodResetButton.IsEnabled = CanChangeDocument && (_editingTwoPointHardwood ? _twoPointFloor : _floor) is not null;
-        RefreshHardwoodSelectionCard();
     }
 
     private void RefreshHardwoodSelectionCard()
     {
-        var prepared = _editingTwoPointHardwood ? _preparedTwoPointFloor : _preparedMainFloor;
-        FloorThumbnail.Source = prepared?.Thumbnail ?? (_editingTwoPointHardwood ? _preparedMainFloor?.Thumbnail : null);
-        SelectedCourtText.Text = prepared?.Floor.Name ?? (_editingTwoPointHardwood ? "Use main hardwood" : "Loading court library...");
-        SelectedHardwoodLabel.Text = _editingTwoPointHardwood ? "2-POINT HARDWOOD" : "SELECTED HARDWOOD";
-        SelectedCourtCard.ToolTip = (_editingTwoPointHardwood ? "Two-point hardwood" + (_twoPointHardwoodEnabled ? "" : " (off)") : "Main hardwood") + ": " + SelectedCourtText.Text + "\nBrowse and change this texture.";
-        AutomationProperties.SetName(SelectedCourtCard, (_editingTwoPointHardwood ? "Two-point" : "Main") + " hardwood: open catalog");
+        FloorThumbnail.Source = _preparedMainFloor?.Thumbnail;
+        SelectedCourtText.Text = _floor?.Name ?? "Loading court library...";
+        SelectedCourtCard.ToolTip = "Main hardwood: " + SelectedCourtText.Text + "\nBrowse and adjust this texture.";
+        TwoPointThumbnail.Source = _preparedTwoPointFloor?.Thumbnail;
+        TwoPointCourtText.Text = _twoPointFloor?.Name ?? "Choose 2-point hardwood";
+        TwoPointCourtCard.ToolTip = "Left and right two-point areas: " + TwoPointCourtText.Text + "\nBrowse and adjust this texture.";
+        TwoPointHardwoodCheckBox.IsChecked = _twoPointHardwoodEnabled;
+        TwoPointHardwoodCheckBox.Visibility = _twoPointHardwoodEnabled ? Visibility.Collapsed : Visibility.Visible;
+        TwoPointSelector.Visibility = _twoPointHardwoodEnabled ? Visibility.Visible : Visibility.Collapsed;
+        var enabled = CanChangeDocument && PendingLogoImports == 0;
+        SelectedCourtCard.IsEnabled = TwoPointCourtCard.IsEnabled = TwoPointHardwoodCheckBox.IsEnabled = DisableTwoPointHardwoodButton.IsEnabled = enabled;
+        SelectedCourtCard.SetResourceReference(Control.BorderBrushProperty, _hardwoodToolActive && !_editingTwoPointHardwood ? "AccentBrightBrush" : "BorderBrush");
+        TwoPointCourtCard.SetResourceReference(Control.BorderBrushProperty, _hardwoodToolActive && _editingTwoPointHardwood ? "AccentBrightBrush" : "BorderBrush");
     }
 
     public void ShowHardwoodTools(bool twoPoint = false)
@@ -230,7 +194,7 @@ public partial class StudioWindow
         }
         HardwoodOptions.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         HardwoodOptionsPanel.Visibility = HardwoodOptions.Visibility;
-        if (!visible) { HardwoodOptions.CloseOverflow(); foreach (var cancel in _cancelHardwoodNumbers) cancel(); }
+        if (!visible) { foreach (var cancel in _cancelHardwoodNumbers) cancel(); }
         HardwoodOptions.IsEnabled = CanChangeDocument;
         if (visible) { TransformOptionsBar.Visibility = Visibility.Collapsed; PreviewContextLabel.Visibility = Visibility.Collapsed; }
         HardwoodToolButton.SetResourceReference(Control.BackgroundProperty, visible ? "AccentDarkBrush" : "PanelBrush");

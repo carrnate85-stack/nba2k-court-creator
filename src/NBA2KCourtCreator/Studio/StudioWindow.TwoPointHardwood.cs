@@ -64,5 +64,4 @@ public partial class StudioWindow
         return result;
     }
 
-    private async void ClearTwoPointFloorClick(object sender, RoutedEventArgs e) => await Guard(() => SelectTwoPointFloorAsync(null));
 }

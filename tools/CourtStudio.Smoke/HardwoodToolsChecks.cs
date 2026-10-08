@@ -73,10 +73,11 @@ internal static partial class Program
             Assert(NativePixel(center) == Colors.Red && NativePixel(key) == Colors.Green, "Second hardwood changed the center or key.");
             window.ShowHardwoodTools(true);
             var toggleContent = (FrameworkElement)window.Content; toggleContent.Measure(new Size(1200, 800)); toggleContent.Arrange(new Rect(0, 0, 1200, 800)); toggleContent.UpdateLayout();
-            var toggleBar = (ContextualToolOptionsBar)window.FindName("HardwoodOptions");
-            var enableTwoPoint = Descendants<CheckBox>(toggleBar).Single(input => Equals(input.Tag, "TwoPointHardwoodEnabled"));
-            Assert(enableTwoPoint.IsChecked == true && ((TextBlock)window.FindName("SelectedCourtText")).Text == second.Name && ((TextBlock)window.FindName("SelectedHardwoodLabel")).Text == "2-POINT HARDWOOD", "Secondary choice did not update the preview card/checkbox.");
-            var rememberedSecond = window.CreateProject()["twoPointFloor"]!.ToJsonString(); enableTwoPoint.IsChecked = false;
+            var toggleBar = (Grid)window.FindName("HardwoodOptions");
+            var enableTwoPoint = (CheckBox)window.FindName("TwoPointHardwoodCheckBox");
+            var disableTwoPoint = (Button)window.FindName("DisableTwoPointHardwoodButton");
+            Assert(enableTwoPoint.IsChecked == true && ((TextBlock)window.FindName("TwoPointCourtText")).Text == second.Name && ((TextBlock)window.FindName("SelectedCourtText")).Text == main.Name && enableTwoPoint.Visibility == Visibility.Collapsed && ((FrameworkElement)window.FindName("TwoPointSelector")).Visibility == Visibility.Visible, "Secondary choice did not update the preview card/checkbox.");
+            var rememberedSecond = window.CreateProject()["twoPointFloor"]!.ToJsonString(); disableTwoPoint.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert(!window.CreateProject()["twoPointHardwoodEnabled"]!.GetValue<bool>() && window.CreateProject()["twoPointFloor"]!.ToJsonString() == rememberedSecond && NativePixel(left) == Colors.Red && NativePixel(right) == Colors.Red && NativePixel(key) == Colors.Green, "Checkbox did not hide the second texture without forgetting it.");
             var disabledProject = Path.Combine(output, "disabled-two-point.court.json"); await window.SaveProjectToAsync(disabledProject); await window.OpenProjectFromAsync(disabledProject);
             Assert(enableTwoPoint.IsChecked == false && window.CreateProject()["twoPointFloor"] is JsonObject && NativePixel(left) == Colors.Red, "Save/reopen lost the disabled second texture.");
@@ -109,21 +110,28 @@ internal static partial class Program
             var reopened = window.CreateProject()["twoPointFloor"]!.ToJsonString();
             window.ShowHardwoodTools(true);
             var initialContent = (FrameworkElement)window.Content; initialContent.Measure(new Size(1200, 800)); initialContent.Arrange(new Rect(0, 0, 1200, 800)); initialContent.UpdateLayout();
-            var hardwoodBar = (ContextualToolOptionsBar)window.FindName("HardwoodOptions");
-            var useMain = Descendants<Button>(hardwoodBar).Single(button => AutomationProperties.GetName(button) == "Remove two-point hardwood");
-            Assert(useMain.Visibility == Visibility.Visible && useMain.IsEnabled, "Use main is unavailable in the two-point tool controls.");
-            window.ShowHardwoodTools(); Assert(useMain.Visibility == Visibility.Collapsed, "Use main takes space while editing the main hardwood.");
-            window.ShowHardwoodTools(true); useMain.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            Assert(window.CreateProject()["twoPointFloor"] is null && useMain.Visibility == Visibility.Collapsed, "Use main did not clear secondary hardwood and hide itself.");
+            await window.SelectTwoPointFloorAsync(null);
+            Assert(window.CreateProject()["twoPointFloor"] is null && enableTwoPoint.Visibility == Visibility.Visible, "Removing the second hardwood did not restore the checkbox.");
             await window.UndoAsync(); Assert(window.CreateProject()["twoPointFloor"]!.ToJsonString() == reopened, "Undo did not restore the bundled secondary hardwood.");
             await window.NewProjectAsync(); Assert(window.CreateProject()["twoPointFloor"] is null, "New project retained the secondary hardwood."); await window.UndoAsync();
             Layout(window, 1200, 800); window.ShowHardwoodTools(true);
             var content = (FrameworkElement)window.Content; content.Measure(new Size(1200, 800)); content.Arrange(new Rect(0, 0, 1200, 800)); content.UpdateLayout();
-            var bar = (ContextualToolOptionsBar)window.FindName("HardwoodOptions");
-            var scroll = (ScrollViewer)window.FindName("HardwoodOptionsScroll");
+            var bar = (Grid)window.FindName("HardwoodOptions");
             var reset = (Button)window.FindName("HardwoodResetButton");
-            Assert(bar.Visibility == Visibility.Visible && bar.Height == 40 && !bar.HasOverflow && scroll.ScrollableWidth > 0 && reset.Visibility == Visibility.Visible, "Scrollable shared bar or persistent reset icon is missing.");
-            Assert(((DockPanel)bar.Content).Children.OfType<StackPanel>().All(caption => caption.Visibility == Visibility.Collapsed) && ((DockPanel)bar.Content).Children.OfType<Button>().All(button => button.Visibility == Visibility.Collapsed), "Redundant caption or overflow button is still visible.");
+            Assert(bar.Visibility == Visibility.Visible && reset.Visibility == Visibility.Visible && !Descendants<ScrollViewer>(bar).Any(), "Adjustment bar has scrolling or its reset action is missing.");
+            foreach (var width in new[] { 1000, 1200, 1440, 1920 })
+            {
+                Layout(window, width, 800); content.UpdateLayout();
+                var panel = (FrameworkElement)window.FindName("HardwoodOptionsPanel");
+                var bounds = new Rect(0, 0, panel.ActualWidth, panel.ActualHeight); bounds.Inflate(.1, .1);
+                var sliders = Descendants<Slider>(bar).ToArray(); Assert(sliders.Length == 5, "An adjustment slider is missing.");
+                foreach (var control in sliders.Cast<FrameworkElement>().Concat(Descendants<Button>(bar)))
+                    Assert(control.ActualWidth >= 18 && bounds.Contains(control.TransformToAncestor(panel).TransformBounds(new Rect(control.RenderSize))), "An adjustment is clipped at width " + width);
+                var strip = (FrameworkElement)window.FindName("HardwoodSelectionStrip");
+                Assert(strip.TransformToAncestor(content).TransformBounds(new Rect(strip.RenderSize)).Top >= ((FrameworkElement)window.FindName("ViewportCard")).TransformToAncestor(content).TransformBounds(new Rect(((FrameworkElement)window.FindName("ViewportCard")).RenderSize)).Bottom, "Hardwood selectors are not below the workspace.");
+                Snapshot(window, Path.Combine(output, "hardwood-bottom-" + width + ".png"), width, 800);
+            }
+            Layout(window, 1200, 800);
             var brightness = Descendants<Slider>(bar).Single(slider => Equals(slider.Tag, "brightness"));
             brightness.Value = 15; await window.FlushHardwoodPreviewAsync();
             Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 15, "Slider did not edit the selected hardwood.");
@@ -167,7 +175,7 @@ internal static partial class Program
             await window.ExportToAsync(Path.Combine(output, "two-point-export.iff"), true);
             Assert(originals == (AssetHash(mainPath), AssetHash(secondaryPath)), "Hardwood controls modified an original source.");
             File.WriteAllText(Path.Combine(output, "samples.json"), new JsonObject { ["left"] = new JsonArray(left.X, left.Y), ["right"] = new JsonArray(right.X, right.Y), ["key"] = new JsonArray(key.X, key.Y), ["center"] = new JsonArray(center.X, center.Y), ["fixture"] = fixture }.ToJsonString());
-            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, scrollable Canvas 40px bar without caption/ellipsis, reset icon and undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
+            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, bottom main/optional secondary selectors, responsive Canvas-styled adjustments without scrolling, reset icon and undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
         }
         finally { window.Close(); }
     }
