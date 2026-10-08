@@ -2,7 +2,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NBA2KCourtCreator.Studio;
@@ -88,11 +90,42 @@ internal static partial class Program
             Layout(window, 1200, 800); window.ShowHardwoodTools(true);
             var content = (FrameworkElement)window.Content; content.Measure(new Size(1200, 800)); content.Arrange(new Rect(0, 0, 1200, 800)); content.UpdateLayout();
             var bar = (ContextualToolOptionsBar)window.FindName("HardwoodOptions");
-            Assert(bar.Visibility == Visibility.Visible && bar.Height == 40 && bar.HasOverflow, "The real shared contextual bar/overflow is missing.");
+            var scroll = (ScrollViewer)window.FindName("HardwoodOptionsScroll");
+            var reset = (Button)window.FindName("HardwoodResetButton");
+            Assert(bar.Visibility == Visibility.Visible && bar.Height == 40 && !bar.HasOverflow && scroll.ScrollableWidth > 0 && reset.Visibility == Visibility.Visible, "Scrollable shared bar or persistent reset icon is missing.");
+            Assert(((DockPanel)bar.Content).Children.OfType<StackPanel>().All(caption => caption.Visibility == Visibility.Collapsed) && ((DockPanel)bar.Content).Children.OfType<Button>().All(button => button.Visibility == Visibility.Collapsed), "Redundant caption or overflow button is still visible.");
             var brightness = Descendants<Slider>(bar).Single(slider => Equals(slider.Tag, "brightness"));
             brightness.Value = 15; await window.FlushHardwoodPreviewAsync();
             Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 15, "Slider did not edit the selected hardwood.");
             await window.UndoAsync(); Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 20, "Slider undo did not restore the previous settings.");
+            window.ShowHardwoodTools(true); content.UpdateLayout();
+            TextBox EditNumber(string setting, string text)
+            {
+                Descendants<Button>(bar).Single(button => AutomationProperties.GetName(button) == "Enter hardwood " + setting).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var input = Descendants<TextBox>(bar).Single(box => Equals(box.Tag, "HardwoodNumber:" + setting));
+                Assert(input.Visibility == Visibility.Visible, "Clicking the value did not open number entry."); input.Text = text; return input;
+            }
+            void NumberKey(TextBox input, Key key) => input.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, new OffscreenKeySource(), Environment.TickCount, key) { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+            foreach (var (setting, number) in new[] { ("brightness", 17), ("contrast", -13), ("saturation", 24), ("scale", 125), ("rotation", -90) })
+            {
+                var input = EditNumber(setting, number + (setting == "rotation" ? "°" : "%")); NumberKey(input, Key.Enter);
+                Assert(input.Visibility == Visibility.Collapsed && window.CreateProject()["twoPointFloor"]!["textureSettings"]![setting]!.GetValue<int>() == number, "Exact number did not apply to " + setting);
+            }
+            Assert(window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == -20, "Exact entry changed the other hardwood.");
+            var draft = EditNumber("brightness", "91"); NumberKey(draft, Key.Escape);
+            Assert(draft.Visibility == Visibility.Collapsed && window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 17, "Escape applied a draft.");
+            draft = EditNumber("brightness", "101"); NumberKey(draft, Key.Enter);
+            Assert(draft.Visibility == Visibility.Visible && window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 17, "Out-of-range entry was accepted.");
+            await Expect<InvalidOperationException>(() => window.SaveProjectToAsync(Path.Combine(output, "invalid-number.court.json")));
+            draft.Text = "18"; await window.SaveProjectToAsync(Path.Combine(output, "exact-number.court.json"));
+            Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 18, "Save missed an active number draft.");
+            draft = EditNumber("brightness", "19"); draft.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, Environment.TickCount, draft, reset) { RoutedEvent = Keyboard.LostKeyboardFocusEvent });
+            Assert(draft.Visibility == Visibility.Collapsed && window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 19, "Leaving number entry did not apply it.");
+            reset.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var resetDeadline = DateTime.UtcNow.AddSeconds(10);
+            while (window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() != 0 && DateTime.UtcNow < resetDeadline) await Task.Delay(25);
+            Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!.ToJsonString() == new HardwoodTextureSettings().ToJson().ToJsonString() && window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == -20, "Reset icon did not reset only the selected hardwood.");
+            await window.UndoAsync(); Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 19, "Reset icon undo failed.");
             window.ShowHardwoodTools(true); content.UpdateLayout();
             var screenshot = new RenderTargetBitmap(1200, 800, 96, 96, PixelFormats.Pbgra32); screenshot.Render((Visual)window.Content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(screenshot)); using (var stream = File.Create(Path.Combine(output, "hardwood-controls.png"))) encoder.Save(stream);
@@ -102,7 +135,7 @@ internal static partial class Program
             await window.ExportToAsync(Path.Combine(output, "two-point-export.iff"), true);
             Assert(originals == (AssetHash(mainPath), AssetHash(secondaryPath)), "Hardwood controls modified an original source.");
             File.WriteAllText(Path.Combine(output, "samples.json"), new JsonObject { ["left"] = new JsonArray(left.X, left.Y), ["right"] = new JsonArray(right.X, right.Y), ["key"] = new JsonArray(key.X, key.Y), ["center"] = new JsonArray(center.X, center.Y), ["fixture"] = fixture }.ToJsonString());
-            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders, shared Canvas 40px bar/overflow, reset, undo/redo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
+            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, scrollable Canvas 40px bar without caption/ellipsis, reset icon and undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
         }
         finally { window.Close(); }
     }

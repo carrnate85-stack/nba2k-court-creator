@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Globalization;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -17,6 +19,8 @@ public partial class StudioWindow
     private HardwoodTextureSettings _mainHardwoodSettings = new(), _twoPointHardwoodSettings = new();
     private bool _hardwoodToolActive, _editingTwoPointHardwood, _writingHardwoodValues;
     private readonly List<Action> _hardwoodPeers = [];
+    private readonly Dictionary<TextBox, Func<bool>> _hardwoodNumberCommits = [];
+    private readonly List<Action> _cancelHardwoodNumbers = [];
     private readonly DispatcherTimer _hardwoodPreviewTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
     private JsonObject? _hardwoodUndoBefore;
     private long _hardwoodPreviewRevision;
@@ -30,16 +34,18 @@ public partial class StudioWindow
     {
         HardwoodOptions.Host = new HardwoodOptionsHost(new(ToolMode.Move, "Hardwood", [
             new("target", "", CreateHardwoodTarget),
-            new("choose", "", () => { var button = new Button { Content = "Choose", Height = 28, Padding = new Thickness(8, 2, 8, 2) }; button.Click += async (_, _) => await Guard(() => OpenFloorCatalogAsync(_editingTwoPointHardwood)); return button; }),
+            new("choose", "", () => { var button = new Button { Content = "Choose", Height = 28, Margin = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 2, 8, 2) }; button.Click += async (_, _) => await Guard(() => OpenFloorCatalogAsync(_editingTwoPointHardwood)); return button; }),
             new("brightness", "Brightness", () => CreateHardwoodSlider("brightness", -100, 100)),
             new("contrast", "Contrast", () => CreateHardwoodSlider("contrast", -100, 100)),
             new("saturation", "Saturation", () => CreateHardwoodSlider("saturation", -100, 100)),
             new("scale", "Grain scale", () => CreateHardwoodSlider("scale", 50, 200)),
-            new("rotation", "Rotation", () => CreateHardwoodSlider("rotation", -180, 180)),
-            new("reset", "", () => { var button = new Button { Content = "Reset", Height = 28, Padding = new Thickness(8, 2, 8, 2) }; button.Click += async (_, _) => await Guard(() => SetHardwoodTextureAsync(new(), _editingTwoPointHardwood)); return button; })
+            new("rotation", "Rotation", () => CreateHardwoodSlider("rotation", -180, 180))
         ]));
+        // The host uses a scrollable row and a persistent reset action instead of the toolkit's overflow menu.
+        foreach (var button in ((DockPanel)HardwoodOptions.Content).Children.OfType<Button>()) button.Visibility = Visibility.Collapsed;
+        foreach (var caption in ((DockPanel)HardwoodOptions.Content).Children.OfType<StackPanel>()) caption.Visibility = Visibility.Collapsed;
         _hardwoodPreviewTimer.Tick += async (_, _) => { _hardwoodPreviewTimer.Stop(); await Guard(RefreshHardwoodPreviewAsync); };
-        Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); HardwoodOptions.Dispose(); _hardwoodPeers.Clear(); };
+        Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); HardwoodOptions.Dispose(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
     }
 
     private FrameworkElement CreateHardwoodTarget()
@@ -57,13 +63,51 @@ public partial class StudioWindow
         var slider = new Slider { Minimum = minimum, Maximum = maximum, Width = 90, TickFrequency = 1, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center, Tag = key };
         slider.SetResourceReference(StyleProperty, "CanvasLayerSlider");
         AutomationProperties.SetName(slider, "Hardwood " + key);
-        var value = new TextBlock { Width = 40, FontSize = 11, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-        value.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
+        var value = new Button { Width = 48, Height = 24, Margin = new Thickness(0), Padding = new Thickness(2, 0, 2, 0), FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = $"Click to enter {key} ({minimum} to {maximum})" };
+        value.SetResourceReference(StyleProperty, "CanvasActionButton");
+        value.SetResourceReference(Control.ForegroundProperty, "MutedTextBrush");
+        AutomationProperties.SetName(value, "Enter hardwood " + key);
+        var input = new TextBox { Width = 48, Height = 24, MinHeight = 24, Margin = new Thickness(0), Padding = new Thickness(3, 0, 3, 0), FontSize = 11,
+            VerticalContentAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed, Tag = "HardwoodNumber:" + key };
+        AutomationProperties.SetName(input, "Hardwood " + key + " exact value");
+        var numberHost = new Grid { VerticalAlignment = VerticalAlignment.Center }; numberHost.Children.Add(value); numberHost.Children.Add(input);
+        var editing = false; var second = false; long version = 0; PreparedFloor? owner = null;
+        bool Current() => second == _editingTwoPointHardwood && version == _documentVersion && ReferenceEquals(owner, second ? _preparedTwoPointFloor : _preparedMainFloor);
+        void Cancel() { editing = false; input.Visibility = Visibility.Collapsed; value.Visibility = Visibility.Visible; input.ClearValue(Control.BorderBrushProperty); }
+        bool Commit()
+        {
+            if (!editing) return true;
+            if (!Current()) { Cancel(); return true; }
+            if (!CanChangeDocument) return false;
+            if (!int.TryParse(input.Text.Trim().TrimEnd('%', '°'), NumberStyles.Integer, CultureInfo.CurrentCulture, out var number) || number < minimum || number > maximum)
+            { input.SetResourceReference(Control.BorderBrushProperty, "WarningTextBrush"); SetStatus($"Enter {key} from {minimum} to {maximum}."); return false; }
+            slider.Value = number; CommitHardwoodGesture(); Cancel(); return true;
+        }
+        _hardwoodNumberCommits.Add(input, Commit); _cancelHardwoodNumbers.Add(Cancel);
+        value.Click += (_, _) =>
+        {
+            if (!CanChangeDocument || !slider.IsEnabled) return;
+            try { CommitHardwoodNumberInputs(); }
+            catch (InvalidOperationException error) { SetStatus(error.Message); return; }
+            CommitHardwoodGesture();
+            second = _editingTwoPointHardwood; version = _documentVersion; owner = second ? _preparedTwoPointFloor : _preparedMainFloor;
+            editing = true; input.Text = slider.Value.ToString("0", CultureInfo.CurrentCulture);
+            value.Visibility = Visibility.Collapsed; input.Visibility = Visibility.Visible; input.Focus(); input.SelectAll();
+        };
+        input.LostKeyboardFocus += (_, _) => Commit();
+        input.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter) { if (Commit()) value.Focus(); e.Handled = true; }
+            else if (e.Key == Key.Escape) { Cancel(); value.Focus(); e.Handled = true; }
+        };
         void Update()
         {
+            if (editing && !Current()) Cancel();
             var settings = _editingTwoPointHardwood ? _twoPointHardwoodSettings : _mainHardwoodSettings;
-            slider.Value = ReadSetting(settings, key); value.Text = slider.Value.ToString("0") + (key == "rotation" ? "°" : "%");
+            slider.Value = ReadSetting(settings, key); value.Content = slider.Value.ToString("0") + (key == "rotation" ? "°" : "%");
             slider.IsEnabled = CanChangeDocument && (_editingTwoPointHardwood ? _twoPointFloor : _floor) is not null;
+            value.IsEnabled = input.IsEnabled = slider.IsEnabled;
         }
         _hardwoodPeers.Add(Update); Update();
         slider.ValueChanged += (_, _) =>
@@ -80,7 +124,18 @@ public partial class StudioWindow
         };
         slider.AddHandler(Thumb.DragCompletedEvent, new DragCompletedEventHandler((_, _) => CommitHardwoodGesture()));
         slider.LostKeyboardFocus += (_, _) => CommitHardwoodGesture();
-        row.Children.Add(slider); row.Children.Add(value); return row;
+        row.Children.Add(slider); row.Children.Add(numberHost); return row;
+    }
+
+    private void CommitHardwoodNumberInputs()
+    {
+        foreach (var commit in _hardwoodNumberCommits.Values)
+            if (!commit()) throw new InvalidOperationException("Correct the hardwood number or press Escape before continuing.");
+    }
+    private async void ResetHardwoodTextureClick(object sender, RoutedEventArgs e)
+    {
+        foreach (var cancel in _cancelHardwoodNumbers) cancel();
+        await Guard(() => SetHardwoodTextureAsync(new(), _editingTwoPointHardwood));
     }
 
     private static int ReadSetting(HardwoodTextureSettings settings, string key) => key switch
@@ -101,6 +156,7 @@ public partial class StudioWindow
         _writingHardwoodValues = true;
         try { foreach (var update in _hardwoodPeers) update(); }
         finally { _writingHardwoodValues = false; }
+        HardwoodResetButton.IsEnabled = CanChangeDocument && (_editingTwoPointHardwood ? _twoPointFloor : _floor) is not null;
     }
 
     public void ShowHardwoodTools(bool twoPoint = false)
@@ -114,13 +170,14 @@ public partial class StudioWindow
     {
         if (HardwoodOptions is null) return;
         var visible = _hardwoodToolActive && _section == "paint";
-        if (visible && HardwoodOptions.Visibility != Visibility.Visible && PresentationSource.FromVisual(this) is not null)
+        if (visible && HardwoodOptionsPanel.Visibility != Visibility.Visible && PresentationSource.FromVisual(this) is not null)
         {
-            var drop = new TranslateTransform(0, -40); HardwoodOptions.RenderTransform = drop;
+            var drop = new TranslateTransform(0, -40); HardwoodOptionsPanel.RenderTransform = drop;
             drop.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-40, 0, TimeSpan.FromMilliseconds(150)));
         }
         HardwoodOptions.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        if (!visible) HardwoodOptions.CloseOverflow();
+        HardwoodOptionsPanel.Visibility = HardwoodOptions.Visibility;
+        if (!visible) { HardwoodOptions.CloseOverflow(); foreach (var cancel in _cancelHardwoodNumbers) cancel(); }
         HardwoodOptions.IsEnabled = CanChangeDocument;
         if (visible) { TransformOptionsBar.Visibility = Visibility.Collapsed; PreviewContextLabel.Visibility = Visibility.Collapsed; }
         HardwoodToolButton.SetResourceReference(Control.BackgroundProperty, visible ? "AccentDarkBrush" : "PanelBrush");

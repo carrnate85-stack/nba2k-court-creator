@@ -19,9 +19,13 @@ Paint in the keys, court markings and logos keep their existing drawing order.
 
 The hardwood tool opens the actual `TextureStudio.ContextualToolOptionsBar` from
 the released Canvas toolkit above the preview. The fixed 40-DIP row drops into
-view and sends options that do not fit into the shared overflow menu. Choosing
-another tool hides it. Main/Two-point target selection controls independent
-Brightness, Contrast, Saturation, Grain scale and Rotation sliders, plus Reset.
+view without the redundant tool caption. A horizontal scrollbar keeps all options
+accessible in narrower windows; the reset icon stays at the right instead of an
+overflow menu. Choosing another tool hides it. Main/Two-point target selection
+controls independent Brightness, Contrast, Saturation, Grain scale and Rotation
+sliders. Clicking a percentage or degree value opens integer entry; Enter or
+leaving the field applies it, Escape cancels, and out-of-range values block save
+until corrected. The reset icon restores only the selected hardwood's defaults.
 Colors use Canvas's adjustment service; scale/rotation repeat the full-court
 texture around its center before clipping, keeping the texture inside its area.
 Original image files and alpha are preserved. Live native previews are debounced

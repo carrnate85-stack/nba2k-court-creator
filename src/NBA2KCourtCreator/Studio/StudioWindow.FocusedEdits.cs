@@ -8,6 +8,7 @@ public partial class StudioWindow
 {
     private void CommitPendingDocumentInput(bool allowPendingImports=false)
     {
+        CommitHardwoodNumberInputs();
         CommitHardwoodGesture();
         if(!CanChangeDocument || !allowPendingImports && PendingLogoImports>0)throw new InvalidOperationException("Wait for the current court operation and logo imports to finish before continuing.");
         var input=_focusedInput();if(input is null)return;
