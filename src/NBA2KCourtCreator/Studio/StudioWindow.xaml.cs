@@ -59,7 +59,7 @@ public partial class StudioWindow : Window
         _preferences = preferences ?? (testing ? null : new StudioPreferenceStore(StudioProjectStore.SettingsDirectory));
         InitializeComponent(); Style = (Style)FindResource(typeof(Window));
         ConfigureArtworkActions();
-        if (!testing) { StudioWindowBounds.Attach(this); Loaded += async (_, _) => await Guard(InitializeAsync); }
+        if (!testing) { StudioWindowBounds.Attach(this); ContentRendered += async (_, _) => await Guard(InitializePortableAsync); }
         CourtCanvas.ShowGuides=false;CourtCanvas.SnapEnabled=false;
         CourtCanvas.TransformPreviewChanged+=(_,_)=>QueueLiveLogoFields();
         CourtCanvas.TransformPreviewEnded+=(_,_)=>FlushLiveLogoFields();
@@ -87,7 +87,7 @@ public partial class StudioWindow : Window
         LogoList.ItemsSource = CourtCanvas.Layers;
         _recoveryTimer.Tick += (_, _) => { _recoveryTimer.Stop(); WriteRecovery(); };
         Closing += StudioClosing;
-        Closed += (_, _) => { _closed = true; CancelProjectRestore(); InvalidateFloorRequests(); InvalidateDocumentOperations(); CourtCanvas.CancelGesture(); _recoveryTimer.Stop(); _engine.Dispose(); _exports.Dispose(); };
+        Closed += (_, _) => { _closed = true; _floorPreparation?.Dispose(); CancelProjectRestore(); InvalidateFloorRequests(); InvalidateDocumentOperations(); CourtCanvas.CancelGesture(); _recoveryTimer.Stop(); _engine.Dispose(); _exports.Dispose(); };
         PreviewKeyDown += WindowKeyDown;
         SizeChanged += (_, _) => InspectorWidth.Width = new GridLength(400);
         var names = new[] { "Left", "Top", "Right", "Bottom" };

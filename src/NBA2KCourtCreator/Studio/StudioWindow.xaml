@@ -104,6 +104,17 @@
       </Border>
    </Grid>
   </Grid>
-  <Border Grid.Row="3" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="12,0"><DockPanel><TextBlock DockPanel.Dock="Right" Text="8192 x 4096 &#x2022; NBA 2K27" Foreground="{DynamicResource MutedTextBrush}" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Right"/><Button x:Name="StartupRetryButton" DockPanel.Dock="Right" Content="Retry" Visibility="Collapsed" Height="22" MinWidth="48" Padding="6,0" FontSize="11" Margin="8,0" ToolTip="Retry loading the court library" AutomationProperties.Name="Retry loading the court library" Click="StartupRetryClick"/><TextBlock x:Name="StatusText" Text="Starting studio..." Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/></DockPanel></Border>
+  <Border Grid.Row="3" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="12,0"><DockPanel>
+   <TextBlock DockPanel.Dock="Right" Text="8192 x 4096 &#x2022; NBA 2K27" Foreground="{DynamicResource MutedTextBrush}" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+   <StackPanel x:Name="FloorPreparationStatus" DockPanel.Dock="Right" Orientation="Horizontal" Visibility="Collapsed" Margin="12,0" VerticalAlignment="Center">
+    <Path x:Name="FloorPreparationSpinner" Width="14" Height="14" Margin="0,0,6,0" Stretch="Uniform" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M7,1 A6,6 0 1 1 1,7" RenderTransformOrigin="0.5,0.5" AutomationProperties.Name="Preparing court floors">
+     <Path.RenderTransform><RotateTransform/></Path.RenderTransform><Path.Triggers><EventTrigger RoutedEvent="Loaded"><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)" From="0" To="360" Duration="0:0:0.9" RepeatBehavior="Forever"/></Storyboard></BeginStoryboard></EventTrigger></Path.Triggers>
+    </Path>
+    <TextBlock x:Name="FloorPreparationText" MaxWidth="440" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <Button x:Name="FloorPreparationRetry" Content="Retry" Click="FloorPreparationRetryClick" Visibility="Collapsed" Margin="6,0,0,0" Height="22" Padding="6,0" FontSize="11"/>
+   </StackPanel>
+   <Button x:Name="StartupRetryButton" DockPanel.Dock="Right" Content="Retry" Visibility="Collapsed" Height="22" MinWidth="48" Padding="6,0" FontSize="11" Margin="8,0" ToolTip="Retry loading the court library" AutomationProperties.Name="Retry loading the court library" Click="StartupRetryClick"/>
+   <TextBlock x:Name="StatusText" Text="Starting studio..." Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+  </DockPanel></Border>
  </Grid></Border>
 </Window>

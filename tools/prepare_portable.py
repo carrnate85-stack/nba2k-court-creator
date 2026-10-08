@@ -25,7 +25,7 @@ INDEX = CATALOG / "nba2k27_floor_templates.json"
 def ready():
     try:
         data = json.loads(INDEX.read_text(encoding="utf-8"))
-        return bool(data["templates"]) and load_geometry(ROOT) is not None and all(
+        return data.get('preparationComplete', True) is True and bool(data["templates"]) and load_geometry(ROOT) is not None and all(
             (ROOT / "assets" / item["path"]).is_file() and (ROOT / "assets" / item["thumbnailPath"]).is_file()
             for item in data["templates"])
     except (OSError, ValueError, KeyError, TypeError):
@@ -57,6 +57,12 @@ def prepare_image(candidate, game):
                 thumbnailPath=library.relative_to_asset_root(thumbnail), texturePath=None,
                 width=width, height=height // 2, format=fourcc, cleaned=True,
                 category=library.category_for_name(name))
+
+def publish_catalog(templates, complete):
+    temporary = INDEX.with_suffix('.tmp')
+    temporary.write_text(json.dumps(dict(name='NBA 2K27 Floor Templates', gameVersion='2k27',
+                                        preparationComplete=complete, templates=templates), indent=2), encoding='utf-8')
+    temporary.replace(INDEX)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -111,18 +117,20 @@ def main():
             extract(game, scratch, wanted)
             candidates = [path for path in library.find_candidates(scratch)
                           if library.surface_key(path) not in library.BROKEN_SOURCE_TEXTURES]
-            result = []
+            if not candidates: raise ValueError('No supported floors were found.')
+            print('Preparing the first court floor…', flush=True)
+            result = [prepare_image(candidates[0], game)]
+            publish_catalog(result, False)
+            print('FIRST_FLOOR_READY', flush=True)
             workers = min(4, max(1, os.cpu_count() or 1))
             with ProcessPoolExecutor(max_workers=workers) as pool:
-                futures = [pool.submit(prepare_image, path, game) for path in candidates]
+                futures = [pool.submit(prepare_image, path, game) for path in candidates[1:]]
                 for future in as_completed(futures):
                     result.append(future.result())
                     print(f'Preparing floors: {len(result)}/{len(candidates)}', flush=True)
             if not result: raise ValueError('No supported floors were prepared.')
             result.sort(key=lambda item: item['id'])
-            temporary = INDEX.with_suffix('.tmp')
-            temporary.write_text(json.dumps(dict(name='NBA 2K27 Floor Templates', gameVersion='2k27', templates=result), indent=2), encoding='utf-8')
-            temporary.replace(INDEX)
+            publish_catalog(result, True)
         state = load_stock_state()
         if state['floorLibraryCount'] != len(result): raise ValueError('The new floor catalog failed its load check.')
         print(f'Court library ready: {len(result)} floors.', flush=True)

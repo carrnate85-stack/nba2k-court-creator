@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+import struct
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -83,7 +84,14 @@ def build(args):
         executable = launcher / 'NBA 2K Court Creator Portable.exe'
         if not executable.is_file(): raise ValueError('The single EXE was not produced')
         temporary = output.with_suffix('.exe.tmp')
-        shutil.copyfile(executable, temporary)
+        with executable.open('rb') as source, temporary.open('wb') as destination:
+            shutil.copyfileobj(source, destination)
+            payload_offset = destination.tell()
+            with payload.open('rb') as source:
+                shutil.copyfileobj(source, destination)
+            destination.write(struct.pack('<qq', payload_offset, payload.stat().st_size))
+            destination.write(bytes.fromhex(digest))
+            destination.write(b'CourtBundleZipV1')
         temporary.replace(output)
         with output.open('rb') as stream:
             output_hash = hashlib.file_digest(stream, 'sha256').hexdigest()

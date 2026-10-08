@@ -13,7 +13,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="$(PayloadPath)" LogicalName="CourtPayload.zip" />
     <Compile Include="$(BundleInfoPath)" />
   </ItemGroup>
 </Project>

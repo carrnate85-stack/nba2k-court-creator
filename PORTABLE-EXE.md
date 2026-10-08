@@ -6,18 +6,30 @@ NumPy and the first-run court preparation tools. It contains no extracted game
 files, floor images, personal projects, settings or virtual-environment paths.
 
 On first use, it extracts to a versioned directory under
-`%LOCALAPPDATA%\2K Court Creator Portable`. It discovers the installed NBA 2K27
+`%LOCALAPPDATA%\2K Court Creator Portable` and immediately opens the app. A small
+circular spinner covers the handoff until the app window is rendered. Inside the
+app, floor preparation runs in the background and reports progress in the status
+bar. The first floor is published early so editing can begin while the remaining
+catalog is prepared. The finished catalog refresh preserves court edits and undo.
+Closing the app stops its preparation processes; an incomplete catalog resumes
+on the next launch. A failure preserves the court and offers Retry.
+
+The background worker discovers the installed NBA 2K27
 game through the existing Steam/game-location discovery, or asks for the folder
 containing `manifest` and `mod.exe`. Only supported floor texture pairs are read
 from the game archives into scratch space. The stock geometry, floor PNGs and
 thumbnail catalog are generated locally. Completed PNGs survive an interrupted
-preparation; the catalog is committed only after every supported floor succeeds.
-Subsequent starts reuse that cache. The installed game archives and loose mods
+preparation; the catalog is marked complete after every supported floor succeeds.
+Subsequent starts recognize the completed cache without starting a separate
+Python setup process, and the app reuses its normal persistent engine. The
+compressed payload is appended to the launcher EXE, so opening the launcher does
+not load and decompress the entire payload as an embedded managed assembly.
+The installed game archives and loose mods
 are not replaced. Game-specific import/export still needs the game installation.
 
-The launcher verifies its embedded payload SHA-256 before extraction, validates
+The launcher verifies its appended payload SHA-256 before extraction, validates
 entry paths and sizes, and installs through a private candidate directory. Its
-normal user-facing launch then provisions the floors and opens the app. It does
+normal user-facing launch opens the app, which provisions floors as needed. It does
 not stage release updates; portable updates are supplied as a new bundle, leaving
 earlier caches intact. Save portable projects outside the extracted app directory.
 

@@ -45,6 +45,15 @@ class PortableCacheTests(unittest.TestCase):
         self.thumbnail.unlink()
         self.assertFalse(bootstrap.ready())
 
+    def test_first_floor_catalog_is_available_but_not_complete(self):
+        data = json.loads(self.index.read_text())
+        bootstrap.publish_catalog(data['templates'], False)
+        self.assertFalse(bootstrap.ready())
+        self.assertTrue(self.png.is_file())
+        self.assertEqual(len(json.loads(self.index.read_text())['templates']), 1)
+        bootstrap.publish_catalog(data['templates'], True)
+        self.assertTrue(bootstrap.ready())
+
     def test_bad_or_empty_catalog_is_not_ready(self):
         for text in ('broken json', '{"templates": []}'):
             self.index.write_text(text, encoding='utf-8')
