@@ -25,6 +25,8 @@ public partial class StudioWindow
     private long _hardwoodPreviewRevision;
     private void ConfigureHardwoodTools()
     {
+        HardwoodEditTarget.SelectionChanged += HardwoodEditTargetChanged;
+        HardwoodOptionsPanel.SizeChanged += (_, _) => ArrangeHardwoodOptions();
         foreach (var (label, key, minimum, maximum) in new[] {
             ("Brightness", "brightness", -100, 100), ("Contrast", "contrast", -100, 100),
             ("Saturation", "saturation", -100, 100), ("Grain scale", "scale", 50, 200), ("Rotation", "rotation", -180, 180) })
@@ -36,6 +38,28 @@ public partial class StudioWindow
         }
         _hardwoodPreviewTimer.Tick += async (_, _) => { _hardwoodPreviewTimer.Stop(); await Guard(RefreshHardwoodPreviewAsync); };
         Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
+    }
+
+    private void ArrangeHardwoodOptions()
+    {
+        var compact = HardwoodOptionsPanel.ActualWidth < 640;
+        Grid.SetRow(HardwoodEditTarget, compact ? 0 : 1);
+        Grid.SetColumn(HardwoodOptions, compact ? 0 : 1);
+        Grid.SetColumnSpan(HardwoodOptions, compact ? 2 : 1);
+        HardwoodEditTarget.Margin = compact ? new Thickness(8, 6, 8, 0) : new Thickness(8, 0, 8, 0);
+    }
+
+    private void HardwoodEditTargetChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_writingHardwoodValues) return;
+        var twoPoint = HardwoodEditTarget.SelectedIndex == 1 && _twoPointHardwoodEnabled;
+        if (!CanChangeDocument) { RefreshHardwoodValues(); return; }
+        try
+        {
+            CommitHardwoodNumberInputs(); CommitHardwoodGesture();
+            _editingTwoPointHardwood = twoPoint; RefreshHardwoodValues();
+        }
+        catch (InvalidOperationException error) { SetStatus(error.Message); RefreshHardwoodValues(); }
     }
 
     private void EnableTwoPointHardwoodChecked(object sender, RoutedEventArgs e)
@@ -154,7 +178,13 @@ public partial class StudioWindow
     {
         if (!_twoPointHardwoodEnabled) _editingTwoPointHardwood = false;
         _writingHardwoodValues = true;
-        try { foreach (var update in _hardwoodPeers) update(); RefreshHardwoodSelectionCard(); }
+        try
+        {
+            HardwoodEditTarget.SelectedIndex = _editingTwoPointHardwood ? 1 : 0;
+            TwoPointEditTarget.IsEnabled = _twoPointHardwoodEnabled;
+            HardwoodEditTarget.IsEnabled = CanChangeDocument;
+            foreach (var update in _hardwoodPeers) update(); RefreshHardwoodSelectionCard();
+        }
         finally { _writingHardwoodValues = false; }
         HardwoodResetButton.IsEnabled = CanChangeDocument && (_editingTwoPointHardwood ? _twoPointFloor : _floor) is not null;
     }
@@ -170,6 +200,7 @@ public partial class StudioWindow
         TwoPointHardwoodCheckBox.IsChecked = _twoPointHardwoodEnabled;
         TwoPointHardwoodCheckBox.Visibility = _twoPointHardwoodEnabled ? Visibility.Collapsed : Visibility.Visible;
         TwoPointSelector.Visibility = _twoPointHardwoodEnabled ? Visibility.Visible : Visibility.Collapsed;
+        DisableTwoPointHardwoodButton.Visibility = TwoPointSelector.Visibility;
         var enabled = CanChangeDocument && PendingLogoImports == 0;
         SelectedCourtCard.IsEnabled = TwoPointCourtCard.IsEnabled = TwoPointHardwoodCheckBox.IsEnabled = DisableTwoPointHardwoodButton.IsEnabled = enabled;
         SelectedCourtCard.SetResourceReference(Control.BorderBrushProperty, _hardwoodToolActive && !_editingTwoPointHardwood ? "AccentBrightBrush" : "BorderBrush");

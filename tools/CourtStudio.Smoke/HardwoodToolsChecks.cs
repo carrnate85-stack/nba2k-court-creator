@@ -57,6 +57,7 @@ internal static partial class Program
         try
         {
             await window.InitializeAsync(); await window.SelectFloorAsync(main);
+            Assert(!((ComboBoxItem)window.FindName("TwoPointEditTarget")).IsEnabled, "Secondary adjustment target is available when two-point hardwood is disabled.");
             Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Hardwood bar did not open by default.");
             window.SwitchSection("logos"); Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Inspector tabs closed the hardwood bar."); window.SwitchSection("paint");
             foreach (var layer in window.PaintLayers.Concat(window.LineLayers)) window.SetLayerSettings(layer.Id, visible: false);
@@ -129,6 +130,9 @@ internal static partial class Program
                     Assert(control.ActualWidth >= 18 && bounds.Contains(control.TransformToAncestor(panel).TransformBounds(new Rect(control.RenderSize))), "An adjustment is clipped at width " + width);
                 var strip = (FrameworkElement)window.FindName("HardwoodSelectionStrip");
                 Assert(strip.TransformToAncestor(content).TransformBounds(new Rect(strip.RenderSize)).Top >= ((FrameworkElement)window.FindName("ViewportCard")).TransformToAncestor(content).TransformBounds(new Rect(((FrameworkElement)window.FindName("ViewportCard")).RenderSize)).Bottom, "Hardwood selectors are not below the workspace.");
+                Assert(Math.Abs(((FrameworkElement)window.FindName("SelectedCourtCard")).ActualWidth - ((FrameworkElement)window.FindName("TwoPointCourtCard")).ActualWidth) <= .1, "Bottom hardwood selectors do not have equal widths at " + width);
+                var dropdown = (FrameworkElement)window.FindName("HardwoodEditTarget");
+                Assert(dropdown.ActualHeight == 28 && bounds.Contains(dropdown.TransformToAncestor(panel).TransformBounds(new Rect(dropdown.RenderSize))), "Adjustment target dropdown is clipped at " + width);
                 Snapshot(window, Path.Combine(output, "hardwood-bottom-" + width + ".png"), width, 800);
             }
             Layout(window, 1200, 800);
@@ -141,7 +145,7 @@ internal static partial class Program
             {
                 Descendants<Button>(bar).Single(button => AutomationProperties.GetName(button) == "Enter hardwood " + setting).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 var input = Descendants<TextBox>(bar).Single(box => Equals(box.Tag, "HardwoodNumber:" + setting));
-                Assert(input.Visibility == Visibility.Visible, "Clicking the value did not open number entry."); input.Text = text; return input;
+                Assert(input.Visibility == Visibility.Visible, $"Clicking the value did not open number entry: slider={brightness.IsEnabled}, bar={bar.IsEnabled}, target={((ComboBox)window.FindName("HardwoodEditTarget")).SelectedIndex}, status={((TextBlock)window.FindName("StatusText")).Text}."); input.Text = text; return input;
             }
             void NumberKey(TextBox input, Key key) => input.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, new OffscreenKeySource(), Environment.TickCount, key) { RoutedEvent = Keyboard.PreviewKeyDownEvent });
             foreach (var (setting, number) in new[] { ("brightness", 17), ("contrast", -13), ("saturation", 24), ("scale", 125), ("rotation", -90) })
@@ -165,6 +169,20 @@ internal static partial class Program
             Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!.ToJsonString() == new HardwoodTextureSettings().ToJson().ToJsonString() && window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == -20, "Reset icon did not reset only the selected hardwood.");
             await window.UndoAsync(); Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 19, "Reset icon undo failed.");
             window.ShowHardwoodTools(true); content.UpdateLayout();
+            var editTarget = (ComboBox)window.FindName("HardwoodEditTarget");
+            editTarget.SelectedIndex = 0; Assert(brightness.Value == -20, "Main target did not populate its independent settings.");
+            draft = EditNumber("brightness", "-7"); editTarget.SelectedIndex = 1;
+            Assert(draft.Visibility == Visibility.Collapsed && window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == -7 && window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 19 && brightness.Value == 19, "Target switch lost a main draft or changed the secondary settings.");
+            await window.UndoAsync(); Assert(window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == -20, "Main exact edit undo failed.");
+            editTarget.SelectedIndex = 0; draft = EditNumber("brightness", "101"); editTarget.SelectedIndex = 1;
+            Assert(editTarget.SelectedIndex == 0 && draft.Visibility == Visibility.Visible, "Invalid draft was discarded by changing the adjustment target."); NumberKey(draft, Key.Escape);
+            editTarget.SelectedIndex = 1; brightness.Value = 24;
+            Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 24 && window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == -20, "Secondary dropdown target changed the main hardwood.");
+            await window.UndoAsync();
+            editTarget.SelectedIndex = 0; reset.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); resetDeadline = DateTime.UtcNow.AddSeconds(10);
+            while (window.CreateProject()["floor"]!["textureSettings"]!["brightness"]!.GetValue<int>() != 0 && DateTime.UtcNow < resetDeadline) await Task.Delay(25);
+            Assert(window.CreateProject()["floor"]!["textureSettings"]!.ToJsonString() == new HardwoodTextureSettings().ToJson().ToJsonString() && window.CreateProject()["twoPointFloor"]!["textureSettings"]!["brightness"]!.GetValue<int>() == 19, "Main dropdown target reset changed the secondary hardwood.");
+            await window.UndoAsync(); editTarget.SelectedIndex = 1; content.UpdateLayout();
             var screenshot = new RenderTargetBitmap(1200, 800, 96, 96, PixelFormats.Pbgra32); screenshot.Render((Visual)window.Content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(screenshot)); using (var stream = File.Create(Path.Combine(output, "hardwood-controls.png"))) encoder.Save(stream);
             window.SelectCanvasTool(ArtworkTool.Hand); Assert(bar.Visibility == Visibility.Collapsed, "Hardwood bar remained active after choosing another tool.");
@@ -175,7 +193,7 @@ internal static partial class Program
             await window.ExportToAsync(Path.Combine(output, "two-point-export.iff"), true);
             Assert(originals == (AssetHash(mainPath), AssetHash(secondaryPath)), "Hardwood controls modified an original source.");
             File.WriteAllText(Path.Combine(output, "samples.json"), new JsonObject { ["left"] = new JsonArray(left.X, left.Y), ["right"] = new JsonArray(right.X, right.Y), ["key"] = new JsonArray(key.X, key.Y), ["center"] = new JsonArray(center.X, center.Y), ["fixture"] = fixture }.ToJsonString());
-            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, bottom main/optional secondary selectors, responsive Canvas-styled adjustments without scrolling, reset icon and undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
+            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, equal-width bottom selectors at 1000/1200/1440/1920, Main/2-point adjustment dropdown and draft validation, responsive Canvas-styled adjustments without scrolling, independent reset and editing after undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
         }
         finally { window.Close(); }
     }

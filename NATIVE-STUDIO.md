@@ -20,6 +20,8 @@ Its close button disables the second texture and restores the checkbox while
 retaining the texture and its adjustments. Clicking either selector opens its
 catalog and selects that texture for adjustment; the active selector has an accent
 border. Both selectors show their own thumbnail and selected texture name.
+When the second texture is enabled, the two selector cards have equal widths;
+the close button sits outside their equal-width columns.
 The enabled state survives recovery, undo/redo and portable save/reopen, and
 native previews and PNG/IFF exports honor it. Older projects with a secondary
 texture keep it enabled. Choosing a new secondary texture enables it.
@@ -30,6 +32,13 @@ and appearance changes until another canvas tool is selected. Five equal-width
 groups use the released Canvas toolkit's slider and button styles, with labels
 above their controls so Brightness, Contrast, Saturation, Grain scale and Rotation
 remain visible at the minimum window width without scrolling or an overflow menu.
+The Main hardwood / 2-point hardwood dropdown chooses which texture the sliders
+and reset edit without opening its catalog. Each target keeps independent settings.
+A valid number draft commits to its original texture before switching targets;
+invalid drafts keep their target until corrected or cancelled. At narrow widths
+the dropdown moves above the sliders so every control remains visible.
+Hardwood controls regain their enabled state after document operations and logo
+inspector synchronization, including undo and redo.
 The reset icon stays at the right. Clicking a percentage or degree value opens
 integer entry; Enter or leaving the field applies it, Escape cancels, and
 out-of-range values block save until corrected. Reset affects only the hardwood

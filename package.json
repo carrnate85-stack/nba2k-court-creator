@@ -1,6 +1,6 @@
 {
   "name": "nba2k-court-creator",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Native WPF court studio with shared 2K Canvas artwork editing and a Python game-file backend.",
   "main": "electron/main.js",
   "private": true,

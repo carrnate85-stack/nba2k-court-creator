@@ -71,5 +71,7 @@ public partial class StudioWindow
         ExportTopButton.IsEnabled = available && !_exporting && PendingLogoImports == 0;
         ExportPanel.IsEnabled = available && !_exporting && PendingLogoImports == 0;
         RefreshImportState();
+        HardwoodOptions.IsEnabled = CanChangeDocument;
+        RefreshHardwoodValues();
     }
 }

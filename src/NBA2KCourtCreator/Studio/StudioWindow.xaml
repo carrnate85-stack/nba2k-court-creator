@@ -44,12 +44,15 @@
     <Grid MinHeight="42"><DockPanel x:Name="PreviewContextLabel" Margin="12,8"><TextBlock x:Name="ActiveToolText" Visibility="Collapsed"/><TextBlock Text="GAME UV" Foreground="{DynamicResource MutedTextBrush}" FontSize="10" HorizontalAlignment="Right"/></DockPanel>
      <Border x:Name="TransformOptionsBar" Visibility="Collapsed" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,5"><StackPanel x:Name="LogoProperties" Orientation="Horizontal" VerticalAlignment="Center"/></Border>
      <Border x:Name="HardwoodOptionsPanel" Visibility="Collapsed" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-      <DockPanel>
-       <Button x:Name="HardwoodResetButton" DockPanel.Dock="Right" Style="{StaticResource CanvasActionButton}" Width="28" Height="28" Margin="6,0" Padding="5" VerticalAlignment="Center" Click="ResetHardwoodTextureClick" ToolTip="Reset the selected hardwood texture" AutomationProperties.Name="Reset hardwood texture">
+      <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+       <ComboBox x:Name="HardwoodEditTarget" Grid.Row="1" Width="144" Height="28" MinHeight="28" FontSize="11" Margin="8,0" VerticalAlignment="Center" Padding="5,2" ToolTip="Choose which hardwood the texture adjustments and reset edit" AutomationProperties.Name="Hardwood adjustment target">
+        <ComboBoxItem Content="Main hardwood"/><ComboBoxItem x:Name="TwoPointEditTarget" Content="2-point hardwood" IsEnabled="False"/>
+       </ComboBox>
+       <Grid x:Name="HardwoodOptions" Grid.Row="1" Grid.Column="1" Height="52" Margin="4,0" Visibility="Collapsed"/>
+       <Button x:Name="HardwoodResetButton" Grid.Row="1" Grid.Column="2" Style="{StaticResource CanvasActionButton}" Width="28" Height="28" Margin="6,0" Padding="5" VerticalAlignment="Center" Click="ResetHardwoodTextureClick" ToolTip="Reset the selected hardwood texture" AutomationProperties.Name="Reset hardwood texture">
         <Viewbox Width="17" Height="17"><Path Stroke="{DynamicResource TextBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Data="M3,11 A9,9 0 1 1 12,20 M3,4 V11 H10"/></Viewbox>
        </Button>
-       <Grid x:Name="HardwoodOptions" Height="52" Margin="4,0" Visibility="Collapsed"/>
-      </DockPanel>
+      </Grid>
      </Border>
     </Grid><studio:ArtworkCanvas x:Name="CourtCanvas" Grid.Row="1"/><TextBlock x:Name="CanvasHint" Grid.Row="2" Text="Scroll to zoom &#x2022; Space + drag to pan" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" HorizontalAlignment="Center" Margin="12,10,12,16"/></Grid></Border>
    <Grid Grid.Column="3" Margin="10,8,10,8">
@@ -112,7 +115,7 @@
       </Border>
    </Grid>
    <Border x:Name="HardwoodSelectionStrip" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="12,0,10,8" Padding="8" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8">
-    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
      <Button x:Name="SelectedCourtCard" Style="{StaticResource CourtCardButton}" Padding="8" Height="48" Click="CatalogClick" AutomationProperties.Name="Main hardwood: open catalog">
       <Grid IsHitTestVisible="False"><Grid.ColumnDefinitions><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
        <Image x:Name="FloorThumbnail" Width="56" Height="28" Stretch="Uniform"/>
@@ -121,7 +124,7 @@
       </Grid>
      </Button>
      <CheckBox x:Name="TwoPointHardwoodCheckBox" Grid.Column="2" Content="2-point hardwood" Tag="TwoPointHardwoodEnabled" Margin="8,0" Checked="EnableTwoPointHardwoodChecked" ToolTip="Add a second hardwood for the left and right two-point areas" AutomationProperties.Name="Enable 2-point hardwood"/>
-     <Grid x:Name="TwoPointSelector" Grid.Column="2" Visibility="Collapsed"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <Grid x:Name="TwoPointSelector" Grid.Column="2" Visibility="Collapsed">
       <Button x:Name="TwoPointCourtCard" Style="{StaticResource CourtCardButton}" Padding="8" Height="48" Click="TwoPointCatalogClick" AutomationProperties.Name="Two-point hardwood: open catalog">
        <Grid IsHitTestVisible="False"><Grid.ColumnDefinitions><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <Image x:Name="TwoPointThumbnail" Width="56" Height="28" Stretch="Uniform"/>
@@ -129,8 +132,8 @@
         <Path Grid.Column="2" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.5" Data="M4,2 L10,8 L4,14" Width="14" Height="16" Margin="8,0,4,0" VerticalAlignment="Center"/>
        </Grid>
       </Button>
-      <Button x:Name="DisableTwoPointHardwoodButton" Grid.Column="1" Style="{StaticResource CanvasActionButton}" Width="28" Height="28" Margin="6,0,0,0" Padding="6" VerticalAlignment="Center" Click="DisableTwoPointHardwoodClick" ToolTip="Turn off 2-point hardwood; its texture and adjustments are remembered" AutomationProperties.Name="Disable 2-point hardwood"><Path Stroke="{DynamicResource TextBrush}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M2,2 L12,12 M12,2 L2,12"/></Button>
      </Grid>
+      <Button x:Name="DisableTwoPointHardwoodButton" Grid.Column="3" Visibility="Collapsed" Style="{StaticResource CanvasActionButton}" Width="28" Height="28" Margin="6,0,0,0" Padding="6" VerticalAlignment="Center" Click="DisableTwoPointHardwoodClick" ToolTip="Turn off 2-point hardwood; its texture and adjustments are remembered" AutomationProperties.Name="Disable 2-point hardwood"><Path Stroke="{DynamicResource TextBrush}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M2,2 L12,12 M12,2 L2,12"/></Button>
     </Grid>
    </Border>
   </Grid>

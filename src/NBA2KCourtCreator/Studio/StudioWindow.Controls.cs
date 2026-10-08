@@ -211,7 +211,7 @@ public partial class StudioWindow
             Field(LogoProperties,"°",()=>logo.Rotation,value=>logo.Rotation=value,"Rotation (°)");
             RefreshToolState();
         }
-        finally { _syncing=false; }
+        finally { _syncing=false; RefreshHardwoodBar(); }
     }
 
     public async Task AddLogoAsync(string path, string? displayName = null)
