@@ -134,6 +134,7 @@ internal static partial class Program
                 var dropdown = (FrameworkElement)window.FindName("HardwoodEditTarget");
                 Assert(dropdown.ActualHeight == 28 && bounds.Contains(dropdown.TransformToAncestor(panel).TransformBounds(new Rect(dropdown.RenderSize))), "Adjustment target dropdown is clipped at " + width);
                 Snapshot(window, Path.Combine(output, "hardwood-bottom-" + width + ".png"), width, 800);
+                CheckHardwoodBarView(window, width, mainPath);
             }
             Layout(window, 1200, 800);
             var brightness = Descendants<Slider>(bar).Single(slider => Equals(slider.Tag, "brightness"));
@@ -193,8 +194,46 @@ internal static partial class Program
             await window.ExportToAsync(Path.Combine(output, "two-point-export.iff"), true);
             Assert(originals == (AssetHash(mainPath), AssetHash(secondaryPath)), "Hardwood controls modified an original source.");
             File.WriteAllText(Path.Combine(output, "samples.json"), new JsonObject { ["left"] = new JsonArray(left.X, left.Y), ["right"] = new JsonArray(right.X, right.Y), ["key"] = new JsonArray(key.X, key.Y), ["center"] = new JsonArray(center.X, center.Y), ["fixture"] = fixture }.ToJsonString());
-            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, equal-width bottom selectors at 1000/1200/1440/1920, Main/2-point adjustment dropdown and draft validation, responsive Canvas-styled adjustments without scrolling, independent reset and editing after undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
+            Console.WriteLine("PASS hardwood tools: both region masks, unchanged keys/center, independent sliders and exact numeric entry, Enter/Escape/focus/save validation, equal-width bottom selectors at 1000/1200/1440/1920, Main/2-point adjustment dropdown and draft validation, responsive Canvas-styled adjustments without scrolling, stationary canvas across tool bars at both heights, all viewports and zoom/pan, independent reset and editing after undo, portable save/reopen, Use main/New undo, full PNG/IFF exports, original files unchanged. No native windows opened.");
         }
         finally { window.Close(); }
+    }
+
+    private static void CheckHardwoodBarView(StudioWindow window, int width, string logoPath)
+    {
+        var canvas = window.Canvas;
+        var content = (FrameworkElement)window.Content;
+        var logo = new ArtworkLayer { Path = logoPath, Name = "Toolbar position check" };
+        canvas.Layers.Add(logo); canvas.SelectedLayer = logo;
+        try
+        {
+            foreach (var height in new[] { 680, 800 })
+            foreach (var viewport in new Rect?[] { null, new Rect(0, 0, 4096, 4096), new Rect(4096, 0, 4096, 4096) })
+            foreach (var zoom in new[] { 1.0, 1.75 })
+            {
+                Layout(window, width, height); window.ShowHardwoodTools(true); content.UpdateLayout();
+                canvas.Viewport = viewport; canvas.Fit();
+                canvas.ChangeZoom(zoom, new Point(canvas.ActualWidth * .3, canvas.ActualHeight * .65));
+                (Rect Bounds, double Scale, double Zoom, Point Corner, Point Center) Mapping() => (
+                    canvas.TransformToAncestor(content).TransformBounds(new Rect(canvas.RenderSize)), canvas.Scale, canvas.Zoom,
+                    canvas.TransformToAncestor(content).Transform(canvas.ToScreen(new Point(0, 0))),
+                    canvas.TransformToAncestor(content).Transform(canvas.ToScreen(new Point(4096, 2048))));
+                var before = Mapping(); var project = window.CreateProject().ToJsonString();
+                foreach (var tool in new[] { ArtworkTool.Hand, ArtworkTool.Zoom, ArtworkTool.Eyedropper, ArtworkTool.Move, ArtworkTool.Transform })
+                {
+                    window.SelectCanvasTool(tool); content.UpdateLayout();
+                    Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Collapsed, "Choosing a tool did not hide the hardwood bar.");
+                    Assert(Mapping() == before, $"Hiding hardwood bar moved or scaled the court at {width}x{height}, {viewport}, zoom {zoom}, tool {tool}.");
+                    Assert(window.CreateProject().ToJsonString() == project, "Switching tool bars changed the court document.");
+                    window.ShowHardwoodTools(true); content.UpdateLayout();
+                    Assert(Mapping() == before, $"Showing hardwood bar moved or scaled the court at {width}x{height}, {viewport}, zoom {zoom}.");
+                }
+            }
+        }
+        finally
+        {
+            canvas.Layers.Remove(logo); canvas.SelectedLayer = null; canvas.Viewport = null; canvas.Fit();
+            Layout(window, width, 800); window.ShowHardwoodTools(true); content.UpdateLayout();
+        }
     }
 }

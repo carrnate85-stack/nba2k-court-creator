@@ -37,6 +37,9 @@ and reset edit without opening its catalog. Each target keeps independent settin
 A valid number draft commits to its original texture before switching targets;
 invalid drafts keep their target until corrected or cancelled. At narrow widths
 the dropdown moves above the sliders so every control remains visible.
+Tool adjustment bars overlay the top of a canvas that spans the header and
+workspace rows. Showing or hiding hardwood or logo controls leaves the canvas
+size, court screen position, zoom and pan unchanged, including in side viewports.
 Hardwood controls regain their enabled state after document operations and logo
 inspector synchronization, including undo and redo.
 The reset icon stays at the right. Clicking a percentage or degree value opens
