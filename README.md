@@ -1,5 +1,8 @@
 # NBA 2K Court Creator
 
+For an optional single portable Windows EXE with bundled Python/.NET and a
+first-run floor cache generated from the installed game, see [Portable EXE](PORTABLE-EXE.md).
+
 ## Native Studio Migration
 
 The desktop launcher now opens the C#/WPF studio, backed by the existing persistent
