@@ -34,7 +34,7 @@ public partial class StudioWindow
     {
         HardwoodOptions.Host = new HardwoodOptionsHost(new(ToolMode.Move, "Hardwood", [
             new("target", "", CreateHardwoodTarget),
-            new("choose", "", () => { var button = new Button { Content = "Choose", Height = 28, Margin = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 2, 8, 2) }; button.Click += async (_, _) => await Guard(() => OpenFloorCatalogAsync(_editingTwoPointHardwood)); return button; }),
+            new("choose", "", CreateHardwoodChooser),
             new("brightness", "Brightness", () => CreateHardwoodSlider("brightness", -100, 100)),
             new("contrast", "Contrast", () => CreateHardwoodSlider("contrast", -100, 100)),
             new("saturation", "Saturation", () => CreateHardwoodSlider("saturation", -100, 100)),
@@ -51,10 +51,30 @@ public partial class StudioWindow
     private FrameworkElement CreateHardwoodTarget()
     {
         var input = new ComboBox { ItemsSource = new[] { "Main hardwood", "Two-point hardwood" }, Width = 155, Height = 28, MinHeight = 28, Padding = new Thickness(5, 2, 5, 2) };
-        _hardwoodPeers.Add(() => input.SelectedIndex = _editingTwoPointHardwood ? 1 : 0);
+        _hardwoodPeers.Add(() => { input.SelectedIndex = _editingTwoPointHardwood ? 1 : 0; input.ToolTip = _editingTwoPointHardwood ? "Left and right two-point areas: " + (_twoPointFloor?.Name ?? "Use main hardwood") : "Main hardwood: " + (_floor?.Name ?? "Choose a hardwood"); });
         input.SelectedIndex = _editingTwoPointHardwood ? 1 : 0;
         input.SelectionChanged += (_, _) => { if (_writingHardwoodValues) return; CommitHardwoodGesture(); _editingTwoPointHardwood = input.SelectedIndex == 1; RefreshHardwoodValues(); };
         return input;
+    }
+
+    private FrameworkElement CreateHardwoodChooser()
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        var choose = new Button { Content = "Choose", Height = 28, Margin = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 2, 8, 2) };
+        AutomationProperties.SetName(choose, "Choose hardwood");
+        choose.Click += async (_, _) => await Guard(() => OpenFloorCatalogAsync(_editingTwoPointHardwood));
+        var clear = new Button { Content = "Use main", Height = 28, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 2, 8, 2),
+            ToolTip = "Remove the second hardwood and restore the main hardwood / two-point colors" };
+        AutomationProperties.SetName(clear, "Remove two-point hardwood"); clear.Click += ClearTwoPointFloorClick;
+        void Update()
+        {
+            var floor = _editingTwoPointHardwood ? _twoPointFloor : _floor;
+            choose.ToolTip = (_editingTwoPointHardwood ? "Two-point hardwood: " : "Main hardwood: ") + (floor?.Name ?? (_editingTwoPointHardwood ? "Use main hardwood" : "Choose a hardwood")) + "\nChoose a texture from the catalog or add an image.";
+            choose.IsEnabled = CanChangeDocument && PendingLogoImports == 0;
+            clear.Visibility = _editingTwoPointHardwood && _twoPointFloor is not null ? Visibility.Visible : Visibility.Collapsed;
+            clear.IsEnabled = CanChangeDocument && PendingLogoImports == 0;
+        }
+        _hardwoodPeers.Add(Update); Update(); row.Children.Add(choose); row.Children.Add(clear); return row;
     }
 
     private FrameworkElement CreateHardwoodSlider(string key, int minimum, int maximum)

@@ -11,10 +11,14 @@
 
 ## Hardwood Textures
 
-The main hardwood card fills the court surface. The Two-point Hardwood card
-selects a second catalog/custom texture for both left and right two-point areas,
-using the stock NBA three-point enclosure with both outer keys excluded. Use main
-removes the second texture and restores the main hardwood and any two-point colors.
+The main hardwood card fills the court surface. The optional second hardwood is
+managed entirely in the hardwood tool's top bar, leaving the right inspector
+available for colors, lines and logos. Select Two-point hardwood in the target
+dropdown, then Choose a catalog/custom texture for both left and right two-point
+areas, using the stock NBA three-point enclosure with both outer keys excluded.
+Use main appears beside Choose only when editing an assigned second texture;
+it removes that texture and restores the main hardwood and any two-point colors.
+The target and Choose tooltips identify the currently selected texture.
 Paint in the keys, court markings and logos keep their existing drawing order.
 
 The hardwood tool opens the actual `TextureStudio.ContextualToolOptionsBar` from

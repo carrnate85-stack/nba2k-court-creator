@@ -42,9 +42,6 @@ public partial class StudioWindow
         _twoPointFloor = prepared?.Floor; _twoPointDrawing = prepared?.Drawing;
         _preparedTwoPointFloor = prepared; _twoPointHardwoodSettings = prepared?.Settings ?? new();
         _twoPointSourceRevision = prepared?.SourceRevision;
-        TwoPointThumbnail.Source = prepared?.Thumbnail;
-        TwoPointCourtText.Text = prepared?.Floor.Name ?? "Use main hardwood";
-        ClearTwoPointFloorButton.Visibility = prepared is null ? Visibility.Collapsed : Visibility.Visible;
         RefreshHardwoodValues();
     }
 
@@ -58,6 +55,5 @@ public partial class StudioWindow
         return result;
     }
 
-    private async void TwoPointCatalogClick(object sender, RoutedEventArgs e) => await Guard(() => OpenFloorCatalogAsync(true));
     private async void ClearTwoPointFloorClick(object sender, RoutedEventArgs e) => await Guard(() => SelectTwoPointFloorAsync(null));
 }

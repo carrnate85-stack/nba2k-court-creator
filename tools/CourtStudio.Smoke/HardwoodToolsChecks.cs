@@ -84,7 +84,14 @@ internal static partial class Program
             await window.OpenProjectFromAsync(savedPath);
             Assert(window.CreateProject()["twoPointFloor"]!["textureSettings"]!["rotation"]!.GetValue<int>() == 45, "Reopening lost secondary settings.");
             var reopened = window.CreateProject()["twoPointFloor"]!.ToJsonString();
-            await window.SelectTwoPointFloorAsync(null); Assert(window.CreateProject()["twoPointFloor"] is null, "Use main did not clear secondary hardwood.");
+            window.ShowHardwoodTools(true);
+            var initialContent = (FrameworkElement)window.Content; initialContent.Measure(new Size(1200, 800)); initialContent.Arrange(new Rect(0, 0, 1200, 800)); initialContent.UpdateLayout();
+            var hardwoodBar = (ContextualToolOptionsBar)window.FindName("HardwoodOptions");
+            var useMain = Descendants<Button>(hardwoodBar).Single(button => AutomationProperties.GetName(button) == "Remove two-point hardwood");
+            Assert(useMain.Visibility == Visibility.Visible && useMain.IsEnabled, "Use main is unavailable in the two-point tool controls.");
+            window.ShowHardwoodTools(); Assert(useMain.Visibility == Visibility.Collapsed, "Use main takes space while editing the main hardwood.");
+            window.ShowHardwoodTools(true); useMain.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert(window.CreateProject()["twoPointFloor"] is null && useMain.Visibility == Visibility.Collapsed, "Use main did not clear secondary hardwood and hide itself.");
             await window.UndoAsync(); Assert(window.CreateProject()["twoPointFloor"]!.ToJsonString() == reopened, "Undo did not restore the bundled secondary hardwood.");
             await window.NewProjectAsync(); Assert(window.CreateProject()["twoPointFloor"] is null, "New project retained the secondary hardwood."); await window.UndoAsync();
             Layout(window, 1200, 800); window.ShowHardwoodTools(true);
