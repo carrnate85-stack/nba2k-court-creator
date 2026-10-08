@@ -6,7 +6,6 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Globalization;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
 namespace NBA2KCourtCreator.Studio;
@@ -27,7 +26,8 @@ public partial class StudioWindow
     private void ConfigureHardwoodTools()
     {
         HardwoodEditTarget.SelectionChanged += HardwoodEditTargetChanged;
-        HardwoodOptionsPanel.SizeChanged += (_, _) => ArrangeHardwoodOptions();
+        // Canvas reserves this row above the entire workspace, even for tools with no options.
+        ((Grid)ToolOptionsOverlay.Parent).RowDefinitions[2].Height = new GridLength(TextureStudio.ContextualToolOptionsBar.RowHeight);
         foreach (var (label, key, minimum, maximum) in new[] {
             ("Brightness", "brightness", -100, 100), ("Contrast", "contrast", -100, 100),
             ("Saturation", "saturation", -100, 100), ("Grain scale", "scale", 50, 200), ("Rotation", "rotation", -180, 180) })
@@ -39,15 +39,6 @@ public partial class StudioWindow
         }
         _hardwoodPreviewTimer.Tick += async (_, _) => { _hardwoodPreviewTimer.Stop(); await Guard(RefreshHardwoodPreviewAsync); };
         Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
-    }
-
-    private void ArrangeHardwoodOptions()
-    {
-        var compact = HardwoodOptionsPanel.ActualWidth < 640;
-        Grid.SetRow(HardwoodEditTarget, compact ? 0 : 1);
-        Grid.SetColumn(HardwoodOptions, compact ? 0 : 1);
-        Grid.SetColumnSpan(HardwoodOptions, compact ? 2 : 1);
-        HardwoodEditTarget.Margin = compact ? new Thickness(8, 6, 8, 0) : new Thickness(8, 0, 8, 0);
     }
 
     private void HardwoodEditTargetChanged(object sender, SelectionChangedEventArgs e)
@@ -78,13 +69,13 @@ public partial class StudioWindow
 
     private FrameworkElement CreateHardwoodSlider(string label, string key, int minimum, int maximum)
     {
-        var group = new Grid { Margin = new Thickness(5, 4, 5, 4) };
-        group.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); group.RowDefinitions.Add(new RowDefinition());
-        var caption = new TextBlock { Text = label, FontSize = 11, Margin = new Thickness(2, 0, 0, 2) };
+        var group = new Grid { Margin = new Thickness(5, 0, 5, 0), VerticalAlignment = VerticalAlignment.Center };
+        group.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        group.ColumnDefinitions.Add(new ColumnDefinition());
+        group.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var caption = new TextBlock { Text = label, FontSize = 11, Margin = new Thickness(0, 0, 5, 0), VerticalAlignment = VerticalAlignment.Center };
         caption.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush"); group.Children.Add(caption);
-        var row = new Grid(); row.ColumnDefinitions.Add(new ColumnDefinition()); row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        Grid.SetRow(row, 1); group.Children.Add(row);
-        var slider = new Slider { Minimum = minimum, Maximum = maximum, MinWidth = 18, TickFrequency = 1, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center, Tag = key };
+        var slider = new Slider { Minimum = minimum, Maximum = maximum, MinWidth = 18, Margin = new Thickness(), TickFrequency = 1, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center, Tag = key };
         slider.SetResourceReference(StyleProperty, "CanvasLayerSlider");
         AutomationProperties.SetName(slider, "Hardwood " + key);
         var value = new Button { Width = 40, Height = 24, Margin = new Thickness(0), Padding = new Thickness(2, 0, 2, 0), FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
@@ -148,7 +139,7 @@ public partial class StudioWindow
         };
         slider.AddHandler(Thumb.DragCompletedEvent, new DragCompletedEventHandler((_, _) => CommitHardwoodGesture()));
         slider.LostKeyboardFocus += (_, _) => CommitHardwoodGesture();
-        Grid.SetColumn(numberHost, 1); row.Children.Add(slider); row.Children.Add(numberHost); return group;
+        Grid.SetColumn(slider, 1); Grid.SetColumn(numberHost, 2); group.Children.Add(slider); group.Children.Add(numberHost); return group;
     }
 
     private void CommitHardwoodNumberInputs()
@@ -219,11 +210,6 @@ public partial class StudioWindow
     {
         if (HardwoodOptions is null) return;
         var visible = _hardwoodToolActive;
-        if (visible && HardwoodOptionsPanel.Visibility != Visibility.Visible && PresentationSource.FromVisual(this) is not null)
-        {
-            var drop = new TranslateTransform(0, -40); HardwoodOptionsPanel.RenderTransform = drop;
-            drop.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-40, 0, TimeSpan.FromMilliseconds(150)));
-        }
         HardwoodOptions.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         HardwoodOptionsPanel.Visibility = HardwoodOptions.Visibility;
         if (!visible) { foreach (var cancel in _cancelHardwoodNumbers) cancel(); }

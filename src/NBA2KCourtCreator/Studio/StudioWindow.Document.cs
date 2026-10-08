@@ -91,7 +91,7 @@ public partial class StudioWindow
         HistoryInputShield.Visibility = _historyRestoring && _restoring ? Visibility.Visible : Visibility.Collapsed;
         if (_historyRestoring && _restoring) return;
         var available = _ready && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending && !_artworkEditorOpen;
-        ApplicationMenu.IsEnabled = DocumentChrome.IsEnabled = WorkspaceRoot.IsEnabled = available;
+        ApplicationMenu.IsEnabled = DocumentChrome.IsEnabled = ToolOptionsOverlay.IsEnabled = WorkspaceRoot.IsEnabled = available;
         SaveToolbarButton.IsEnabled = SaveMenuItem.IsEnabled = SaveAsMenuItem.IsEnabled = available && PendingLogoImports == 0;
         ExportTopButton.IsEnabled = available && !_exporting && PendingLogoImports == 0;
         ExportPanel.IsEnabled = available && !_exporting && PendingLogoImports == 0;

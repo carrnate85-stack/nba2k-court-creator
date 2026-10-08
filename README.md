@@ -27,6 +27,10 @@ large image operations before allocation without discarding the preceding draft.
 Export uses full-resolution source or normalized working assets at 8192 x 4096,
 rather than resampling the preview.
 Floor selection uses a searchable popup catalog with categories, favorites, and recents.
+Tool adjustments follow Canvas's fixed 40-DIP row below the document bar and above
+the entire workspace, including the tool rail and inspector. Options change with
+the active tool without moving or resizing the court. Hardwood sliders, exact
+number entry, the main/2-point edit selector, and reset stay on a single line.
 
 Native Save/Save As now creates a portable `.court.json` and a neighboring
 `<project-name>.assets` folder for its hardwood and logos. Move both together when

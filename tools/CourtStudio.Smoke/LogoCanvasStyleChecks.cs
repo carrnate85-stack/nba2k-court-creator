@@ -30,7 +30,7 @@ internal static partial class Program
             {
                 if(count>0)await window.AddLogoAsync(file,$"Logo {count}");Layout(window,width,height);
                 var current=actions.TransformToAncestor(root).TransformBounds(new Rect(actions.RenderSize));
-                Assert(list.ActualHeight==224 && current==baseline,"Layer count shifts fixed list/actions.");
+                Assert(list.ActualHeight is >=160 and <=224 && current==baseline,"Layer count shifts the list/actions or the list does not fit the inspector.");
                 Assert(list.BorderThickness==new Thickness(1) && ((SolidColorBrush)list.Background).Color==((SolidColorBrush)window.FindResource("PanelBrush")).Color,"List border/background differs from Canvas.");
                 Assert(options.Visibility==(count==0?Visibility.Collapsed:Visibility.Visible) && window.FindName("LogoDetailsExpander") is null,"Move-tool selection did not automatically populate the compact options bar.");
                 StableCanvas();

@@ -54,7 +54,7 @@ public partial class StudioWindow
         var index = CourtCanvas.SelectedLayer is null ? -1 : CourtCanvas.Layers.IndexOf(CourtCanvas.SelectedLayer);
         CourtCanvas.EditingEnabled = _section != "import" && ((!_hardwoodToolActive && CourtCanvas.Tool is ArtworkTool.Move or ArtworkTool.Transform) || _section == "logos");
         TransformOptionsBar.Visibility = _section != "import" && CourtCanvas.Tool is ArtworkTool.Move or ArtworkTool.Transform && index >= 0 ? Visibility.Visible : Visibility.Collapsed;
-        PreviewContextLabel.Visibility = TransformOptionsBar.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        PreviewContextLabel.Visibility = TransformOptionsBar.Visibility == Visibility.Visible || TextOptionsBar.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         MoveLogoDownButton.IsEnabled = index >= 0 && index < CourtCanvas.Layers.Count - 1;
         MoveLogoUpButton.IsEnabled = index > 0;
         PinnedColorButton.IsEnabled = CanChangeDocument && !_colorPickerOpen;
