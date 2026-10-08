@@ -57,7 +57,7 @@
        </Button>
       </Grid>
      </Border>
-    </Grid><studio:ArtworkCanvas x:Name="CourtCanvas" Grid.RowSpan="2"/><TextBlock x:Name="CanvasHint" Grid.Row="2" Text="Scroll to zoom &#x2022; Space + drag to pan" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" HorizontalAlignment="Center" Margin="12,10,12,16"/></Grid></Border>
+    </Grid><studio:ArtworkCanvas x:Name="CourtCanvas" Grid.RowSpan="2" Margin="0,48,0,0"/><TextBlock x:Name="CanvasHint" Grid.Row="2" Text="Scroll to zoom &#x2022; Space + drag to pan" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" HorizontalAlignment="Center" Margin="12,10,12,16"/></Grid></Border>
    <Grid Grid.Column="3" Margin="10,8,10,8">
 <Border x:Name="Inspector" Style="{StaticResource StudioPanel}" Padding="12,10,12,12"><DockPanel><UniformGrid x:Name="InspectorTabs" DockPanel.Dock="Top" Columns="2" Margin="0,0,0,10"><Button x:Name="PaintButton" Style="{StaticResource StudioNav}" Tag="paint" Click="SectionClick" ToolTip="Colors &amp; Lines"><StackPanel Orientation="Horizontal"><Viewbox Width="18" Height="18" Margin="0,0,7,0"><Path Width="24" Height="24" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.6" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M5,4 H15 L20,14 L13,21 L3,11 Z M5,4 L13,14 H20 M7,7 L11,11"/></Viewbox><TextBlock Text="Colors &amp; Lines" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel></Button><Button x:Name="LogosButton" Style="{StaticResource StudioNav}" Tag="logos" Click="SectionClick" ToolTip="Logos"><StackPanel Orientation="Horizontal"><Viewbox Width="18" Height="18" Margin="0,0,7,0"><Path Width="24" Height="24" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.6" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M4,4 H20 V20 H4 Z M7,16 L11,11 L14,14 L17,8 M8,8 H8.1"/></Viewbox><TextBlock Text="Logos" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel></Button></UniformGrid>
         <Grid>
@@ -152,5 +152,6 @@
    <Button x:Name="StartupRetryButton" DockPanel.Dock="Right" Content="Retry" Visibility="Collapsed" Height="22" MinWidth="48" Padding="6,0" FontSize="11" Margin="8,0" ToolTip="Retry loading the court library" AutomationProperties.Name="Retry loading the court library" Click="StartupRetryClick"/>
    <TextBlock x:Name="StatusText" Text="Starting studio..." Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
   </DockPanel></Border>
+  <Border x:Name="HistoryInputShield" Grid.RowSpan="3" Panel.ZIndex="100" Background="Transparent" Visibility="Collapsed" Cursor="Wait"/>
  </Grid></Border>
 </Window>

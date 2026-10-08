@@ -43,8 +43,18 @@ A valid number draft commits to its original texture before switching targets;
 invalid drafts keep their target until corrected or cancelled. At narrow widths
 the dropdown moves above the sliders so every control remains visible.
 Tool adjustment bars overlay the top of a canvas that spans the header and
-workspace rows. Showing or hiding hardwood or logo controls leaves the canvas
+workspace rows, with a fixed 48-DIP top inset that places the fitted court center
+24 DIPs lower and gives the adjustment bar more room. Showing or hiding hardwood
+or logo controls leaves the canvas
 size, court screen position, zoom and pan unchanged, including in side viewports.
+Undo/redo keeps the current workspace appearance while a transparent input shield
+blocks overlapping edits. Unchanged hardwood and logo previews are reused only
+when their saved source revision, path and editable-artwork metadata match the
+retained preview. Unchanged color rows and logo layers retain their existing
+controls and selection. Changed textures rebuild their drawing without decoding the
+source again. Opening a project still validates and reads its external assets;
+export and save retain their source-revision checks. Failed history preparation
+keeps the existing court and history entry available for retry.
 Choosing any left toolbar tool preserves the current right inspector tab. Move
 and Transform can edit selected logos while Colors & Lines stays open; their
 adjustments follow the active tool rather than the inspector tab. Hardwood opens

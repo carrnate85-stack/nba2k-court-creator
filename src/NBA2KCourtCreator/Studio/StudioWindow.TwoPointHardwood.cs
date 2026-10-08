@@ -106,7 +106,7 @@ public partial class StudioWindow
     private void ApplyTwoPointFloor(PreparedFloor? prepared, bool enabled)
     {
         _twoPointFloor = prepared?.Floor; _twoPointDrawing = prepared?.Drawing;
-        _preparedTwoPointFloor = prepared; _twoPointHardwoodSettings = prepared?.Settings ?? new();
+        _preparedTwoPointFloor = prepared; _twoPointHardwoodSettings = _twoPointRenderedSettings = prepared?.Settings ?? new();
         _twoPointSourceRevision = prepared?.SourceRevision;
         _twoPointHardwoodEnabled = enabled;
         RefreshHardwoodValues();

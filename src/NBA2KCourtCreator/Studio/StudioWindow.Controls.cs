@@ -338,6 +338,7 @@ public partial class StudioWindow
     private void ZoomInClick(object sender, RoutedEventArgs e) => CourtCanvas.ChangeZoom(1.25);
     private async void WindowKeyDown(object sender, KeyEventArgs e)
     {
+        if (_historyRestoring) { e.Handled = !(e.Key == Key.System && e.SystemKey == Key.F4 && Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)); return; }
         if (!CanChangeDocument) return;
         if (SaveShortcut(e.Key,Keyboard.Modifiers) is {} saveAs) { if(saveAs)SaveAsClick(sender,e);else SaveClick(sender,e); e.Handled = true; return; }
         if (e.OriginalSource is TextBox || e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase) return;

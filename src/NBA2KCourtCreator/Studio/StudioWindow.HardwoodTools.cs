@@ -15,6 +15,7 @@ public partial class StudioWindow
 {
     private PreparedFloor? _preparedMainFloor, _preparedTwoPointFloor;
     private HardwoodTextureSettings _mainHardwoodSettings = new(), _twoPointHardwoodSettings = new();
+    private HardwoodTextureSettings _mainRenderedSettings = new(), _twoPointRenderedSettings = new();
     private bool _hardwoodToolActive = true;
     private bool _editingTwoPointHardwood, _writingHardwoodValues;
     private readonly List<Action> _hardwoodPeers = [];
@@ -247,7 +248,8 @@ public partial class StudioWindow
             Main: main is null ? null : HardwoodTextureSettings.CreateDrawing(main.Image, rectangle, _courtSurface!, mainSettings),
             Second: secondary is null ? null : HardwoodTextureSettings.CreateDrawing(secondary.Image, rectangle, _courtSurface!, secondarySettings)));
         if (_closed || revision != _hardwoodPreviewRevision || !ReferenceEquals(main, _preparedMainFloor) || !ReferenceEquals(secondary, _preparedTwoPointFloor)) return;
-        _hardwoodDrawing = drawings.Main; _twoPointDrawing = drawings.Second; RebuildBackground();
+        _hardwoodDrawing = drawings.Main; _twoPointDrawing = drawings.Second;
+        _mainRenderedSettings = mainSettings; _twoPointRenderedSettings = secondarySettings; RebuildBackground();
     }
 
     public async Task SetHardwoodTextureAsync(HardwoodTextureSettings settings, bool twoPoint = false)
@@ -259,8 +261,8 @@ public partial class StudioWindow
         var drawing = await Task.Run(() => HardwoodTextureSettings.CreateDrawing(prepared.Image, HardwoodRectangle(), _courtSurface!, settings));
         if (!CanChangeDocument || version != _documentVersion || previewRevision != _hardwoodPreviewRevision || !ReferenceEquals(prepared, twoPoint ? _preparedTwoPointFloor : _preparedMainFloor)) return;
         var before = CreateProject(); ++_hardwoodPreviewRevision;
-        if (twoPoint) { _twoPointHardwoodSettings = settings; _twoPointDrawing = drawing; }
-        else { _mainHardwoodSettings = settings; _hardwoodDrawing = drawing; }
+        if (twoPoint) { _twoPointHardwoodSettings = _twoPointRenderedSettings = settings; _twoPointDrawing = drawing; }
+        else { _mainHardwoodSettings = _mainRenderedSettings = settings; _hardwoodDrawing = drawing; }
         if (before.ToJsonString() != CreateProject().ToJsonString()) { RecordUndo(before); Changed(); }
         RefreshHardwoodValues();
     }

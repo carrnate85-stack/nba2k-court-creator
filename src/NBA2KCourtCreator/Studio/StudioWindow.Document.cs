@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,6 +13,28 @@ public partial class StudioWindow
     private readonly Func<string, int, BitmapSource> _loadFloorImage;
     private readonly bool _usePairedFloorLoader;
     private readonly SemaphoreSlim _floorDecoder = new(1, 1);
+    private static bool HistoryArtworkMatches(JsonObject saved, string path, JsonObject retained, string retainedPath, string? revision)
+    {
+        if (revision is null || saved["sourceRevision"]?.GetValue<string>() != revision
+            || !StringComparer.OrdinalIgnoreCase.Equals(Path.GetFullPath(path), Path.GetFullPath(retainedPath))) return false;
+        foreach (var key in new[] { "artworkProjectPath", "artworkProjectRevision", "artworkDdsPath", "artworkDdsRevision", "artworkAlphaMode", "textSettings" })
+            if (!JsonNode.DeepEquals(saved[key], retained[key])) return false;
+        return true;
+    }
+    private PreparedFloor? HistoryFloor(JsonObject saved, string path) => new[] { _preparedMainFloor, _preparedTwoPointFloor }
+        .FirstOrDefault(prepared => prepared is not null && HistoryArtworkMatches(saved, path, prepared.Floor.Source, prepared.Floor.Path, prepared.SourceRevision));
+    private async Task<PreparedFloor> PrepareRestoredFloorAsync(StockFloor floor, bool history, CancellationToken cancellation)
+    {
+        var retained = history ? HistoryFloor(floor.Source, floor.Path) : null;
+        if (retained is null) return await PrepareFloorAsync(floor, cancellation);
+        cancellation.ThrowIfCancellationRequested();
+        var settings = HardwoodTextureSettings.Read(floor.Source);
+        var currentSettings = ReferenceEquals(retained, _preparedMainFloor) ? _mainRenderedSettings : _twoPointRenderedSettings;
+        var drawing = settings == currentSettings ? (ReferenceEquals(retained, _preparedMainFloor) ? _hardwoodDrawing : _twoPointDrawing)!
+            : settings == retained.Settings ? retained.Drawing
+            : await Task.Run(() => HardwoodTextureSettings.CreateDrawing(retained.Image, HardwoodRectangle(), _courtSurface!, settings), cancellation);
+        return retained with { Floor = floor, Settings = settings, Drawing = drawing };
+    }
     private CancellationTokenSource? _floorSelectionCancellation;
     private long InvalidateFloorRequests()
     {
@@ -56,7 +79,7 @@ public partial class StudioWindow
     {
         CancelImportRequest(); _importPreviewRequest = null;
         _floor = prepared.Floor; _hardwoodDrawing = prepared.Drawing;
-        _preparedMainFloor = prepared; _mainHardwoodSettings = prepared.Settings;
+        _preparedMainFloor = prepared; _mainHardwoodSettings = _mainRenderedSettings = prepared.Settings;
         _floorSourceRevision = prepared.SourceRevision;
         _recent.Remove(prepared.Floor.Id); _recent.Insert(0, prepared.Floor.Id); if (_recent.Count > 20) _recent.RemoveAt(20);
         SavePreferences();
@@ -65,6 +88,8 @@ public partial class StudioWindow
     }
     private void RefreshMutationState()
     {
+        HistoryInputShield.Visibility = _historyRestoring && _restoring ? Visibility.Visible : Visibility.Collapsed;
+        if (_historyRestoring && _restoring) return;
         var available = _ready && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending && !_artworkEditorOpen;
         ApplicationMenu.IsEnabled = DocumentChrome.IsEnabled = WorkspaceRoot.IsEnabled = available;
         SaveToolbarButton.IsEnabled = SaveMenuItem.IsEnabled = SaveAsMenuItem.IsEnabled = available && PendingLogoImports == 0;

@@ -297,23 +297,26 @@ public partial class StudioWindow : Window
     }
     private CancellationTokenSource? _projectRestoreCancellation;
     private List<PreparedLogoAsset>? _projectRestoreAssets;
+    private bool _historyRestoring;
     private void CancelProjectRestore()
     {
         _projectRestoreCancellation?.Cancel();
         // Closing may stop the dispatcher before a blocked load can resume its finally block.
         if (_projectRestoreAssets is not null) foreach (var asset in _projectRestoreAssets) asset.Dispose();
     }
-    private async Task RestoreProjectFromAsync(Func<Task<JsonObject>> load, bool opened = false)
+    private async Task RestoreProjectFromAsync(Func<Task<JsonObject>> load, bool opened = false, bool history = false)
     {
         if (_restoring || _saving || _catalogBusy || _closed || _closePending || _artworkEditorOpen) throw new InvalidOperationException("A court operation is already in progress.");
         CommitHardwoodGesture(); ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop();
         CourtCanvas.CancelGesture(); FinishLogoOpacity();
         using var cancellation = new CancellationTokenSource();
         _projectRestoreCancellation = cancellation;
-        _restoring = true; InvalidateFloorRequests(); InvalidateDocumentOperations(); _recoveryTimer.Stop(); RefreshToolState(); RefreshMutationState();
+        _restoring = true; _historyRestoring = history; InvalidateFloorRequests(); InvalidateDocumentOperations(); _recoveryTimer.Stop();
+        if (!history) RefreshToolState(); RefreshMutationState();
         SetStatus(opened ? "Opening project..." : "Preparing the court project...");
         var preparedAssets = new List<PreparedLogoAsset>();
         _projectRestoreAssets = preparedAssets;
+        var unchangedLogos = false;
         try
         {
             var project = await load();
@@ -322,6 +325,7 @@ public partial class StudioWindow : Window
             cancellation.Token.ThrowIfCancellationRequested();
             var projectPath = LocalProjectPath(project["_projectPath"]?.GetValue<string>());
             var projectRelative = String(project, "assetPathMode") == "project-relative";
+            unchangedLogos = history && JsonNode.DeepEquals(new JsonArray(CourtCanvas.Layers.Select(SerializeLogo).Cast<JsonNode?>().ToArray()), project["logoImages"]);
             var preparedLogos = new List<ArtworkLayer>();
             var preparedArtwork = new Dictionary<string, JsonObject>();
             var missing = new List<string>();
@@ -330,19 +334,26 @@ public partial class StudioWindow : Window
             {
                 cancellation.Token.ThrowIfCancellationRequested();
                 var path = ResolvePath(String(item, "path"), projectPath, projectRelative);
-                var artwork = await Task.Run(() => RestoreArtworkReference(item, projectPath, projectRelative), cancellation.Token);
+                var existing = history ? CourtCanvas.Layers.FirstOrDefault(layer => layer.Id == String(item, "id") && layer.Image is not null
+                    && HistoryArtworkMatches(item, path, SerializeLogo(layer), layer.Path, StudioImages.SourceRevision(layer.Image))) : null;
+                var artwork = existing is not null ? _logoArtwork.GetValueOrDefault(existing.Id)?.DeepClone() as JsonObject
+                    : await Task.Run(() => RestoreArtworkReference(item, projectPath, projectRelative), cancellation.Token);
                 var logo = new ArtworkLayer { Id = String(item, "id", Guid.NewGuid().ToString("N")), Name = String(item, "name", "Logo"), Path = path,
                     X = Number(item["x"]), Y = Number(item["y"]), Width = Number(item["width"], 400), Height = Number(item["height"], 400), Rotation = Number(item["rotation"]),
                     Opacity = Number(item["opacity"], 100), Visible = item["visible"]?.GetValue<bool>() ?? true, ScaleLocked = item["scaleLocked"]?.GetValue<bool>() ?? true,
                     FlipX = item["flipX"]?.GetValue<bool>() ?? false, FlipY = item["flipY"]?.GetValue<bool>() ?? false };
                 try
                 {
-                    var asset = await _prepareLogo(path, cancellation.Token);
-                    preparedAssets.Add(asset); logo.Image = artwork?["artworkAlphaMode"]?.GetValue<string>() == "GameData"
-                        ? await Task.Run(() => StudioArtworkPreview.Load(asset.Path, artwork), cancellation.Token) : asset.Image;
-                    logo.Path = asset.Path;
+                    if (existing is not null) logo.Image = existing.Image;
+                    else
+                    {
+                        var asset = await _prepareLogo(path, cancellation.Token);
+                        preparedAssets.Add(asset); logo.Image = artwork?["artworkAlphaMode"]?.GetValue<string>() == "GameData"
+                            ? await Task.Run(() => StudioArtworkPreview.Load(asset.Path, artwork), cancellation.Token) : asset.Image;
+                        logo.Path = asset.Path;
+                    }
                     cancellation.Token.ThrowIfCancellationRequested();
-                    if (item["sourceRevision"]?.GetValue<string>() is { } savedRevision && savedRevision != StudioImages.SourceRevision(asset.Image))
+                    if (item["sourceRevision"]?.GetValue<string>() is { } savedRevision && savedRevision != StudioImages.SourceRevision(logo.Image))
                         updatedAssets.Add(logo.Name);
                 }
                 catch (Exception error) when (error is IOException or NotSupportedException or FileFormatException or UnauthorizedAccessException) { missing.Add(logo.Name); }
@@ -355,8 +366,11 @@ public partial class StudioWindow : Window
             StockFloor ReadSavedFloor(JsonObject source, string path, bool custom)
             {
                 var restored = (JsonObject)source.DeepClone(); restored["path"] = path; restored["previewPath"] = path;
-                if (RestoreArtworkReference(source, projectPath, projectRelative) is { } artwork)
-                    foreach (var item in artwork) restored[item.Key] = item.Value?.DeepClone();
+                var retained = history ? HistoryFloor(source, path) : null;
+                if ((retained is not null ? retained.Floor.Source : RestoreArtworkReference(source, projectPath, projectRelative)) is { } artwork)
+                    // A retained preview already owns the exact revision and resolved artwork references.
+                    // Copy only artwork fields, not its old texture settings or catalog metadata.
+                    foreach (var item in artwork.Where(item => item.Key.StartsWith("artwork", StringComparison.Ordinal) || item.Key == "textSettings")) restored[item.Key] = item.Value?.DeepClone();
                 if (custom) restored["category"] = "Custom";
                 restored["id"] ??= "custom_floor_" + Guid.NewGuid().ToString("N"); restored["name"] ??= Path.GetFileNameWithoutExtension(path);
                 return StockFloor.Read(restored, _engine.ProjectRoot, custom ? null : _floors);
@@ -391,7 +405,7 @@ public partial class StudioWindow : Window
                 selectedFloor = selectedFloor with { Source = source };
             }
             cancellation.Token.ThrowIfCancellationRequested();
-            var preparedFloor = await PrepareFloorAsync(selectedFloor ?? _floors.First(f => f.Id == _defaultFloorId), cancellation.Token);
+            var preparedFloor = await PrepareRestoredFloorAsync(selectedFloor ?? _floors.First(f => f.Id == _defaultFloorId), history, cancellation.Token);
             if (project["floor"]?["sourceRevision"]?.GetValue<string>() is { } floorRevision && floorRevision != preparedFloor.SourceRevision)
                 updatedAssets.Add("hardwood");
             PreparedFloor? preparedTwoPoint = null;
@@ -404,7 +418,7 @@ public partial class StudioWindow : Window
                 if (secondary is null) missing.Add("two-point hardwood (using main hardwood)");
                 else
                 {
-                    preparedTwoPoint = await PrepareFloorAsync(secondary, cancellation.Token, _courtSurface);
+                    preparedTwoPoint = await PrepareRestoredFloorAsync(secondary, history, cancellation.Token);
                     if (savedTwoPoint["sourceRevision"]?.GetValue<string>() is { } secondaryRevision && secondaryRevision != preparedTwoPoint.SourceRevision)
                         updatedAssets.Add("two-point hardwood");
                 }
@@ -413,20 +427,25 @@ public partial class StudioWindow : Window
             // Load and validate assets first. A failed read must not replace the open document.
             _syncing = true;
             FinishRename(false);
+            var layerNamesChanged = false;
             foreach (var layer in _paints.Concat(_lines).Append(_outside))
             {
                 var settings = (project["paintSettings"] as JsonObject)?[layer.Id] ?? (project["lineSettings"] as JsonObject)?[layer.Id];
                 layer.Visible = settings?["visible"]?.GetValue<bool>() ?? visibility?[layer.Id]?.GetValue<bool>() ?? layer.DefaultVisible;
                 var rgb = project["colorOverrides"]?[layer.Id] as JsonArray;
                 layer.Color = StudioImages.Hex(settings?["color"]?.GetValue<string>()) ?? (rgb?.Count >= 3 ? $"#{(int)Number(rgb[0]):X2}{(int)Number(rgb[1]):X2}{(int)Number(rgb[2]):X2}" : layer.DefaultColor);
-                layer.Name = project["layerNames"]?[layer.Id]?.GetValue<string>() ?? layer.Name;
+                var restoredName = project["layerNames"]?[layer.Id]?.GetValue<string>() ?? layer.Name;
+                layerNamesChanged |= restoredName != layer.Name; layer.Name = restoredName;
             }
             if (Number(project["version"]) == 1) RestoreLegacyColors(project);
             _outside.Color = StudioImages.Hex(project["outsideColor"]?.GetValue<string>()) ?? _outside.Color;
             _outside.Visible = project["outsideVisible"]?.GetValue<bool>() ?? _outside.Visible;
-            CourtCanvas.Layers.Clear();
-            _logoArtwork.Clear(); foreach (var item in preparedArtwork) _logoArtwork[item.Key] = item.Value;
-            foreach (var logo in preparedLogos) CourtCanvas.Layers.Add(logo);
+            if (!unchangedLogos)
+            {
+                CourtCanvas.Layers.Clear();
+                _logoArtwork.Clear(); foreach (var item in preparedArtwork) _logoArtwork[item.Key] = item.Value;
+                foreach (var logo in preparedLogos) CourtCanvas.Layers.Add(logo);
+            }
             foreach (var custom in customFloors)
             {
                 var index = _floors.FindIndex(f => f.Id == custom.Id && f.Category == "Custom");
@@ -436,9 +455,15 @@ public partial class StudioWindow : Window
             if (!_floors.Any(f => f.Id == preparedFloor.Floor.Id)) _floors.Add(preparedFloor.Floor);
             _projectPath = projectPath;
             ApplyFloor(preparedFloor); ApplyTwoPointFloor(preparedTwoPoint, project["twoPointHardwoodEnabled"]?.GetValue<bool>() ?? preparedTwoPoint is not null); RebuildBackground();
-            CourtCanvas.SelectedLayer = CourtCanvas.Layers.FirstOrDefault();
+            if (!unchangedLogos) CourtCanvas.SelectedLayer = CourtCanvas.Layers.FirstOrDefault();
             _projectName = project["projectName"]?.GetValue<string>() is { } savedName && !string.IsNullOrWhiteSpace(savedName) ? savedName : _projectPath is null ? "Untitled court" : Path.GetFileNameWithoutExtension(_projectPath); UpdateProjectLabel();
-            _dirty = updatedAssets.Count > 0; RebuildLayerRows();
+            _dirty = updatedAssets.Count > 0;
+            if (history && !layerNamesChanged)
+            {
+                CancelLayerHex(); foreach (var layer in _paints.Concat(_lines).Append(_outside)) RefreshLayerRow(layer);
+                FlushLayerHex(); RefreshSelectedColor();
+            }
+            else RebuildLayerRows();
             var notices = new List<string>();
             if (missing.Count > 0) notices.Add("Missing assets: " + string.Join(", ", missing));
             if (updatedAssets.Count > 0) notices.Add("Updated artwork loaded: " + string.Join(", ", updatedAssets));
@@ -456,10 +481,10 @@ public partial class StudioWindow : Window
         finally
         {
             foreach (var asset in preparedAssets) asset.Dispose();
-            _projectRestoreCancellation = null; _projectRestoreAssets = null; _syncing = false; _restoring = false;
+            _projectRestoreCancellation = null; _projectRestoreAssets = null; _syncing = false; _restoring = false; _historyRestoring = false;
             if (!_closed) { RefreshMutationState(); if (_dirty && _recovery is not null && !_closePending) _recoveryTimer.Start(); }
         }
-        RefreshLogoInspector();
+        if (unchangedLogos) RefreshToolState(); else RefreshLogoInspector();
         if (opened) WriteRecovery();
     }
     public async Task NewProjectAsync()
@@ -545,7 +570,8 @@ public partial class StudioWindow : Window
         if(!CanChangeDocument)throw new InvalidOperationException("A court operation is already in progress.");
         var source = redo ? _redo : _undo; var destination = redo ? _undo : _redo;
         if (source.Count == 0) return; var target = source[^1]; var before = CreateProject();
-        await RestoreProjectAsync(target); source.RemoveAt(source.Count - 1); destination.Add(before); Changed(); RefreshHistoryState(); SetStatus(redo ? "Redo applied." : "Undo applied.");
+        var snapshot = (JsonObject)target.DeepClone();
+        await RestoreProjectFromAsync(() => Task.FromResult(snapshot), history: true); source.RemoveAt(source.Count - 1); destination.Add(before); Changed(); RefreshHistoryState(); SetStatus(redo ? "Redo applied." : "Undo applied.");
     }
     private void SetStatus(string text) => StatusText.Text = text;
     private async Task Guard(Func<Task> work) { try { await work(); } catch (OperationCanceledException error) when (error.CancellationToken.IsCancellationRequested) { } catch (Exception error) { if (_closed) return; SetStatus(error.Message); if (!_testing) MessageBox.Show(this, error.Message, "Court Creator", MessageBoxButton.OK, MessageBoxImage.Warning); } }

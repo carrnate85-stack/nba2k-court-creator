@@ -24,6 +24,8 @@ internal static partial class Program
             {
                 var output = args.FirstOrDefault(arg => !arg.StartsWith("--"));
                 if (args.Contains("--hardwood-tools")) await CheckHardwoodTools(output ?? "outputs/hardwood-tools-check");
+                else if (args.Contains("--history-restore")) await CheckHistoryRestore(output ?? "outputs/history-restore-check");
+                else if (args.Contains("--asset-revisions")) { output ??= "outputs/asset-revision-check"; Directory.CreateDirectory(output); await CheckAssetRevisions(output); }
                 else if (args.Contains("--portable-startup")) await CheckPortableStartup(output ?? "outputs/portable-startup-check");
                 else if (args.Contains("--benchmark")) await Benchmark(output ?? "outputs/native-performance.json");
                 else if (args.Contains("--artwork-editor"))
