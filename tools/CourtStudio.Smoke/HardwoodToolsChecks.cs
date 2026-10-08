@@ -177,13 +177,16 @@ internal static partial class Program
                 var workspaceBounds = workspace.TransformToAncestor(root).TransformBounds(new Rect(workspace.RenderSize));
                 var rail = (FrameworkElement)window.FindName("LeftToolRail");
                 var railBounds = rail.TransformToAncestor(root).TransformBounds(new Rect(rail.RenderSize));
+                var viewportBounds = viewport.TransformToAncestor(root).TransformBounds(new Rect(viewport.RenderSize));
                 Assert(ReferenceEquals(overlay.Parent, host) && Grid.GetRow(workspace) == 2
                     && Math.Abs(attachedBounds.Top) < .001 && Math.Abs(attachedBounds.Left) < .001
                     && Math.Abs(attachedBounds.Width - host.ActualWidth) < .001
                     && attachedBounds.Height == TextureStudio.ContextualToolOptionsBar.RowHeight
                     && Math.Abs(workspaceBounds.Top - documentBounds.Bottom) < .001
                     && Math.Abs(railBounds.Top - documentBounds.Bottom) < .001 && Math.Abs(railBounds.Left) < .001
-                    && viewport.Margin == new Thickness(12),
+                    && viewport.Margin == new Thickness(0, 0, 12, 12)
+                    && Math.Abs(viewportBounds.Left - railBounds.Right) < .001
+                    && Math.Abs(viewportBounds.Top - documentBounds.Bottom) < .001,
                     "Tool bar is not attached inside the court frame while the left tool rail extends to the document tabs at width " + width);
                 var bounds = new Rect(0, 0, panel.ActualWidth, panel.ActualHeight); bounds.Inflate(.1, .1);
                 var sliders = Descendants<Slider>(bar).ToArray(); Assert(sliders.Length == 5, "An adjustment slider is missing.");

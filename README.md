@@ -29,8 +29,9 @@ rather than resampling the preview.
 Floor selection uses a searchable popup catalog with categories, favorites, and recents.
 Tool adjustments occupy a 40-DIP overlay inside the court frame at its upper-left
 edge, beside the left tool rail and spanning the frame's width. The tool rail
-and inspector extend directly to the document bar. Options change with the
-active tool without moving or resizing the court. Narrow windows put hardwood
+and inspector extend directly to the document bar. The court frame meets the
+document bar and left tool rail directly, with no top or left gutter. Options
+change with the active tool without moving or resizing the court. Narrow windows put hardwood
 labels above their sliders while keeping the edit selector and reset visible.
 
 Native Save/Save As now creates a portable `.court.json` and a neighboring

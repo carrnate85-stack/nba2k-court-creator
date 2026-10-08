@@ -20,7 +20,7 @@ internal static partial class Program
         foreach(var (width,height) in new[]{(1440,900),(1000,680)})
         {
             Layout(window,width,height);var column=(ColumnDefinition)window.FindName("InspectorWidth");Assert(Math.Abs(column.ActualWidth-400)<1,$"Canvas inspector width differs: {column.ActualWidth}, configured {column.Width}.");
-            var viewport=(Border)window.FindName("ViewportCard");Assert(viewport.Margin==new Thickness(12)&&viewport.CornerRadius==new CornerRadius(8)&&viewport.BorderThickness==new Thickness(1),"Canvas viewport gutter/border/radius differs.");
+            var viewport=(Border)window.FindName("ViewportCard");Assert(viewport.Margin==new Thickness(0,0,12,12)&&viewport.CornerRadius==new CornerRadius(0,0,8,0)&&viewport.BorderThickness==new Thickness(1),"Workspace has a top/left gap or its joined edges are rounded.");
             var root=(Visual)window.Content;var baseline=actions.TransformToAncestor(root).TransformBounds(new Rect(actions.RenderSize));
             Rect CanvasBounds()=>window.Canvas.TransformToAncestor(root).TransformBounds(new Rect(window.Canvas.RenderSize));
             Point CourtCenter()=>window.Canvas.TransformToAncestor(root).Transform(window.Canvas.ToScreen(new Point(4096,2048)));
