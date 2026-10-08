@@ -255,6 +255,20 @@ internal static partial class Program
             {
                 Layout(window, width, height); window.ShowHardwoodTools(true); content.UpdateLayout();
                 canvas.Viewport = viewport; canvas.Fit();
+                var view = viewport ?? new Rect(new Point(), canvas.DocumentSize);
+                var parent = (FrameworkElement)canvas.Parent;
+                var canvasBounds = canvas.TransformToAncestor(parent).TransformBounds(new Rect(canvas.RenderSize));
+                Assert(canvas.Margin == new Thickness() && canvasBounds.Top == 0 && canvasBounds.Left == 0 && canvas.ActualWidth == parent.ActualWidth,
+                    "Court centering moved or narrowed the workspace control.");
+                var fitScale = Math.Min((canvas.ActualWidth - 24) / view.Width, (canvas.ActualHeight - 24) / view.Height);
+                var fitOffset = Math.Min(24, Math.Max(0, (canvas.ActualHeight - view.Height * fitScale) / 2 - 12));
+                var fitCenter = canvas.ToScreen(new Point(view.X + view.Width / 2, view.Y + view.Height / 2));
+                Assert(Math.Abs(canvas.Scale - fitScale) < .000001 && Math.Abs(fitCenter.Y - canvas.ActualHeight / 2 - fitOffset) < .000001,
+                    "Initial court centering changed the fit scale or moved the workspace instead of the artwork.");
+                Assert(canvas.ToScreen(view.TopLeft).Y >= 12 - .001 && canvas.ToScreen(view.BottomRight).Y <= canvas.ActualHeight - 12 + .001,
+                    "Initial court offset clipped a fitted viewport.");
+                Assert((canvas.ToDocument(fitCenter) - new Point(view.X + view.Width / 2, view.Y + view.Height / 2)).Length < .000001,
+                    "Offset court input coordinates do not match its preview.");
                 canvas.ChangeZoom(zoom, new Point(canvas.ActualWidth * .3, canvas.ActualHeight * .65));
                 (Rect Bounds, double Scale, double Zoom, Point Corner, Point Center) Mapping() => (
                     canvas.TransformToAncestor(content).TransformBounds(new Rect(canvas.RenderSize)), canvas.Scale, canvas.Zoom,

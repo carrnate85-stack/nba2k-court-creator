@@ -88,12 +88,29 @@ public sealed class ArtworkCanvas : FrameworkElement
         set { if (_selected == value) return; CancelGesture(); _selected = value; InvalidateVisual(); SelectionChanged?.Invoke(this, EventArgs.Empty); }
     }
     public double Zoom => _zoom;
+    private double _fitVerticalOffset;
+    /// <summary>Offsets the fitted artwork inside the existing workspace without moving or resizing the control.</summary>
+    public double FitVerticalOffset
+    {
+        get => _fitVerticalOffset;
+        set
+        {
+            if (!double.IsFinite(value)) throw new ArgumentOutOfRangeException(nameof(value));
+            if (_fitVerticalOffset == value) return;
+            CancelGesture(); _fitVerticalOffset = value; InvalidateVisual(); ViewChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
     private Rect View => Viewport ?? new Rect(new Point(), DocumentSize);
     private static bool Finite(Point point)=>double.IsFinite(point.X) && double.IsFinite(point.Y);
     private static bool Finite(Vector vector)=>double.IsFinite(vector.X) && double.IsFinite(vector.Y);
     private static bool Finite(ArtworkState state)=>double.IsFinite(state.X) && double.IsFinite(state.Y) && double.IsFinite(state.Width) && double.IsFinite(state.Height) && double.IsFinite(state.Rotation);
     private double ScaleFor(Rect view,double zoom)=>Math.Max(.001,Math.Min(Math.Max(1,ActualWidth-24)/view.Width,Math.Max(1,ActualHeight-24)/view.Height)*zoom);
-    private Point OriginFor(Rect view,double scale,Vector pan)=>new((ActualWidth-view.Width*scale)/2-view.X*scale+pan.X,(ActualHeight-view.Height*scale)/2-view.Y*scale+pan.Y);
+    private double FitOffsetFor(Rect view)
+    {
+        var available = Math.Max(0, (ActualHeight - view.Height * ScaleFor(view, 1)) / 2 - 12);
+        return Math.Clamp(FitVerticalOffset, -available, available);
+    }
+    private Point OriginFor(Rect view,double scale,Vector pan)=>new((ActualWidth-view.Width*scale)/2-view.X*scale+pan.X,(ActualHeight-view.Height*scale)/2-view.Y*scale+FitOffsetFor(view)+pan.Y);
     private bool HasFiniteMapping(Rect view)
     {
         if(view.IsEmpty || !double.IsFinite(view.X) || !double.IsFinite(view.Y) || !double.IsFinite(view.Width) || !double.IsFinite(view.Height) ||
@@ -128,7 +145,7 @@ public sealed class ArtworkCanvas : FrameworkElement
     public void ChangeZoom(double factor, Point? center = null)
     {
         if (!double.IsFinite(factor) || factor <= 0 || factor == 1) return;
-        var target = center ?? new Point(ActualWidth / 2, ActualHeight / 2);
+        var target = center ?? new Point(ActualWidth / 2, ActualHeight / 2 + FitOffsetFor(View));
         if(!Finite(target) || !PrepareZoom(factor,target,out var zoom,out var pan))return;
         CancelGesture();
         if(!PrepareZoom(factor,target,out zoom,out pan))return;
