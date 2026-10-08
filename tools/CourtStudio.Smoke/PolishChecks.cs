@@ -93,7 +93,7 @@ internal static partial class Program
         Assert(window.FindName("LayerSearch") is null && window.FindName("WorkflowTeamColorsButton") is null && window.FindName("InspectorTeamColorsButton") is null,"Removed search/duplicate palettes remain.");
         ((Button)window.FindName("LogosButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Assert(window.Section=="logos","Logos tab failed.");
         ((Button)window.FindName("PaintButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Assert(window.Section=="paint","Colors tab failed.");
-        Assert(((StackPanel)window.FindName("LayersHost")).Children.OfType<Expander>().Sum(group=>((StackPanel)group.Content).Children.Count)==23,"Removing layer search omitted controls.");
+        Assert(((StackPanel)window.FindName("LayersHost")).Children.OfType<Expander>().Sum(group=>((StackPanel)group.Content).Children.Count)==window.PaintLayers.Count+window.LineLayers.Count+1,"Removing layer search omitted controls.");
         await window.NewProjectAsync();
 
         var source=Path.Combine(output,"polish-logo.png");WriteLogoExample(source);

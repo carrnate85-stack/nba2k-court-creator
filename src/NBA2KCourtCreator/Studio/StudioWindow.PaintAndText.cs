@@ -37,7 +37,7 @@ public partial class StudioWindow
             || !new Rect(0, 0, 8192, 4096).Contains(point)) return null;
         CommitPendingDocumentInput();
         // Colors fill their own geometric regions, including regions whose paint is currently off.
-        var layer = _paints.FirstOrDefault(layer => layer.Geometry.FillContains(point));
+        var layer = _paints.FirstOrDefault(layer => PaintRegionGeometry(layer).FillContains(point));
         if (layer is null && _courtSurface?.FillContains(point) != true) layer = _outside;
         if (layer is null) return null;
         SetLayerSettings(layer.Id, visible: true, color: _primaryColorHex);

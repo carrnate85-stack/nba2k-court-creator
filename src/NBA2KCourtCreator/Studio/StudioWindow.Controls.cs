@@ -70,10 +70,18 @@ public partial class StudioWindow
     {
         CancelLayerHex(); _layerRows.Clear(); LayersHost.Children.Clear(); if (!_initialized) return;
         var query = "";
-        foreach (var (name, layers) in new[] { ("Paint Colors", _paints.AsEnumerable()), ("Lines", _lines.AsEnumerable()), ("Outside", new[] { _outside }.AsEnumerable()) })
+        foreach (var (name, layers) in new[] { ("Colors", _paints.Append(_outside)), ("Lines", _lines.AsEnumerable()) })
         {
             var filtered = layers.Where(layer => layer.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (name == "Lines") filtered = filtered.OrderBy(layer => layer.Id switch { "NBA_line_three_point_lowShape" => -30, "college-three" => -20, "high-school-three" => -10, _ => _lines.IndexOf(layer) }).ToArray();
+            if (name == "Lines")
+            {
+                var outerCircle = _lines.FindIndex(layer => layer.Id == "line_center_circle_outer_lowShape");
+                filtered = filtered.OrderBy(layer => layer.Id switch
+                {
+                    "NBA_line_three_point_lowShape" => -30, "college-three" => -20, "high-school-three" => -10,
+                    "line_center_circle_inner_lowShape" => outerCircle, _ => _lines.IndexOf(layer)
+                }).ThenBy(layer => layer.Id == "line_center_circle_inner_lowShape" ? 0 : 1).ToArray();
+            }
             if (filtered.Length == 0) continue;
             var rows = new StackPanel();
             var header = new TextBlock { Text = name, FontWeight = FontWeights.SemiBold, Margin = new Thickness(6, 9, 6, 9) };

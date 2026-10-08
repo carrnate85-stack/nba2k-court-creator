@@ -11,11 +11,14 @@ public partial class StudioWindow
     private string? _twoPointSourceRevision;
     private bool _twoPointHardwoodEnabled;
     private readonly Dictionary<string, Geometry> _threePointSurfaces = [];
+    private readonly Dictionary<string, Geometry> _paintRegionGeometries = [];
+    private string? _paintBoundaryId = "uninitialized";
     private static readonly string[] ThreePointLineIds = ["NBA_line_three_point_lowShape", "college-three", "high-school-three"];
 
     private void PrepareThreePointSurfaces()
     {
         _threePointSurfaces.Clear();
+        _paintRegionGeometries.Clear(); _paintBoundaryId = "uninitialized";
         foreach (var id in ThreePointLineIds)
         {
             var layer = _geometry!["layers"]!.AsArray().OfType<JsonObject>().Single(item => String(item, "id") == id);
@@ -42,8 +45,29 @@ public partial class StudioWindow
     }
     private Geometry CurrentTwoPointSurface()
     {
-        var id = ThreePointLineIds.FirstOrDefault(id => _lines.Any(line => line.Id == id && line.Visible));
+        var id = CurrentThreePointLineId();
         return id is null ? Geometry.Empty : _threePointSurfaces[id];
+    }
+    private string? CurrentThreePointLineId() => ThreePointLineIds.FirstOrDefault(id => _lines.Any(line => line.Id == id && line.Visible));
+
+    internal Geometry PaintRegionGeometry(StockLayer layer) => _paintRegionGeometries.GetValueOrDefault(layer.Id, layer.Geometry);
+
+    private void RefreshPaintRegionGeometries()
+    {
+        if (_courtSurface is null) return;
+        var boundary = CurrentThreePointLineId();
+        if (_paintBoundaryId == boundary) return;
+        var surface = CurrentTwoPointSurface();
+        var regions = new GeometryGroup { FillRule = FillRule.Nonzero };
+        foreach (var layer in _paints.Where(layer => layer.Id != "main-court-area"))
+        {
+            var region = layer.Id is "two-point-left" or "two-point-right"
+                ? Geometry.Combine(layer.Geometry, surface, GeometryCombineMode.Intersect, null) : layer.Geometry;
+            region.Freeze(); _paintRegionGeometries[layer.Id] = region; regions.Children.Add(region);
+        }
+        var main = Geometry.Combine(_courtSurface, regions, GeometryCombineMode.Exclude, null);
+        main.Freeze(); _paintRegionGeometries["main-court-area"] = main;
+        _paintBoundaryId = boundary;
     }
 
     public void SetTwoPointHardwoodEnabled(bool enabled)

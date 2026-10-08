@@ -731,12 +731,43 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
         canvas.alpha_composite(hardwood, (left, top))
     settings = request.get("lineSettings", {})
     paint_settings = request.get("paintSettings", {})
+    active_enclosures = None
+    region_polygons = {}
+
+    def three_point_enclosures():
+        nonlocal active_enclosures
+        if active_enclosures is None:
+            from shapely.geometry import MultiPoint
+            by_id = {layer["id"]: layer for layer in geometry["layers"]}
+            active_id = next((key for key in ("NBA_line_three_point_lowShape", "college-three", "high-school-three")
+                              if key in by_id and settings.get(key, {}).get("visible", by_id[key]["visible"])), None)
+            if active_id is None:
+                active_enclosures = []
+            else:
+                layer = by_id[active_id]
+                points = [p for polygon in (layer["gameUvPolygons"] if native else layer["polygons"]) for p in polygon]
+                midpoint = (min(p[0] for p in points) + max(p[0] for p in points)) / 2
+                hulls = [MultiPoint([p for p in points if (p[0] < midpoint) == side]).convex_hull for side in (True, False)]
+                active_enclosures = [list(hull.exterior.coords[:-1]) for hull in hulls if hull.geom_type == "Polygon"]
+        return active_enclosures
+
+    def paint_polygons(layer):
+        polygons = layer["gameUvPolygons"] if native else layer["polygons"]
+        if layer["id"] not in {"two-point-left", "two-point-right"}:
+            return polygons
+        if layer["id"] not in region_polygons:
+            # UV projection can leave nearly coincident vertices. Clip each convex
+            # projected polygon directly, preserving coverage without a topology union.
+            clipped = [_clip_polygon(polygon, enclosure) for polygon in polygons for enclosure in three_point_enclosures()]
+            region_polygons[layer["id"]] = [polygon for polygon in clipped if len(polygon) >= 3 and _polygon_area(polygon) > 1e-6]
+        return region_polygons[layer["id"]]
+
     draw = ImageDraw.Draw(canvas)
-    def draw_layer(layer, settings):
+    def draw_layer(layer, settings, paint=False):
         setting = settings.get(layer["id"], {})
         if setting.get("visible", layer["visible"]):
             color = setting.get("color", layer["color"])
-            for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
+            for polygon in paint_polygons(layer) if paint else (layer["gameUvPolygons"] if native else layer["polygons"]):
                 draw.polygon([(point[0] * scale, point[1] * scale) for point in polygon], fill=color)
     if two_point_enabled and two_point_path is not None:
         from PIL import ImageChops
@@ -750,18 +781,8 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
             secondary = place_hardwood(secondary, secondary_settings)
         mask = Image.new("L", (width, height))
         mask_draw = ImageDraw.Draw(mask)
-        from shapely.geometry import MultiPoint
-        by_id = {layer["id"]: layer for layer in geometry["layers"]}
-        active_id = next((key for key in ("NBA_line_three_point_lowShape", "college-three", "high-school-three")
-                          if settings.get(key, {}).get("visible", by_id[key]["visible"])), None)
-        if active_id is not None:
-            layer = by_id[active_id]
-            points = [p for polygon in (layer["gameUvPolygons"] if native else layer["polygons"]) for p in polygon]
-            midpoint = (min(p[0] for p in points) + max(p[0] for p in points)) / 2
-            for side in (True, False):
-                hull = MultiPoint([p for p in points if (p[0] < midpoint) == side]).convex_hull
-                if hull.geom_type == "Polygon":
-                    mask_draw.polygon([(p[0] * scale - left, p[1] * scale - top) for p in hull.exterior.coords], fill=255)
+        for polygon in three_point_enclosures():
+            mask_draw.polygon([(p[0] * scale - left, p[1] * scale - top) for p in polygon], fill=255)
         secondary.putalpha(ImageChops.multiply(secondary.getchannel("A"), mask))
         canvas.alpha_composite(secondary, (left, top))
         secondary.close(); mask.close()
@@ -774,13 +795,13 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
         for polygon in surface:
             mask_draw.polygon([(p[0] * scale, p[1] * scale) for p in polygon], fill=255)
         for layer in geometry["paints"]:
-            for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
+            for polygon in paint_polygons(layer):
                 mask_draw.polygon([(p[0] * scale, p[1] * scale) for p in polygon], fill=0)
         canvas.paste(main_paint.get("color", "#19583F"), (0, 0), mask)
         mask.close()
     draw = ImageDraw.Draw(canvas)
     for layer in geometry["paints"]:
-        draw_layer(layer, paint_settings)
+        draw_layer(layer, paint_settings, paint=True)
     for layer in geometry["layers"]:
         draw_layer(layer, settings)
     from .court_template import _save_png_atomic, _composite_logo

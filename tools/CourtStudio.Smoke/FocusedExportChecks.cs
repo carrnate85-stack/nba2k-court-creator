@@ -19,7 +19,7 @@ internal static partial class Program
         ProcessStartInfo Worker()
         {
             var start=new ProcessStartInfo(Path.Combine(root,"runtime","python","python.exe")){WorkingDirectory=root};
-            foreach(var arg in new[]{"-B","-u",Path.Combine(root,"tests","worker_snapshot_fixture.py")})start.ArgumentList.Add(arg);
+            foreach(var arg in new[]{"-B","-u",Path.Combine(Environment.CurrentDirectory,"tests","worker_snapshot_fixture.py")})start.ArgumentList.Add(arg);
             return start;
         }
         using var exports=new PythonServiceClient(root,Worker);
@@ -141,7 +141,7 @@ internal static partial class Program
         }
         TextBox Outside()
         {
-            var host=(StackPanel)window.FindName("LayersHost");host.Children.OfType<Expander>().Single(item=>item.Header is TextBlock {Text:"Outside"}).IsExpanded=true;
+            var host=(StackPanel)window.FindName("LayersHost");host.Children.OfType<Expander>().Single(item=>item.Header is TextBlock {Text:"Colors"}).IsExpanded=true;
             Layout(window,1440,900);return Descendants<TextBox>(host).Single(box=>Equals(box.Tag,"Color:stock-outside"));
         }
         try

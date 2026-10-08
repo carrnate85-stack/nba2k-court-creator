@@ -70,6 +70,12 @@ Paint (G) fills the clicked primary key, secondary key, two-point region,
 three-point court area or outside region with the primary color. It enables that
 region's paint and records one undo; painting the same color again is a no-op.
 Turning a paint checkbox off reveals the hardwood underneath.
+Two-point paint uses the same outermost enabled three-point boundary as the
+hardwood. Changing the visible line automatically reshapes existing paint and
+the remaining outer court area, including bucket hit testing and PNG/IFF export.
+With no three-point line enabled, two-point paint is hidden while its color is
+remembered. The Colors group ends with Outside Color; court Lines remain below.
+Center Circle - Inner sits directly above Center Circle - Outer in the Lines list.
 
 Text (T) opens the shared Canvas text editor at the clicked court position, with
 font, size, fill, outline, bold/italic, alignment, line height and letter spacing.

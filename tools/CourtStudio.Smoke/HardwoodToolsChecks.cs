@@ -112,6 +112,7 @@ internal static partial class Program
             window.SetLayerSettings("NBA_line_three_point_lowShape", visible: false);
             Assert(NativePixel(left) == Colors.Red, "Two-point hardwood draws without any visible three-point boundary.");
             window.SetLayerSettings("NBA_line_three_point_lowShape", visible: true);
+            await CheckTwoPointPaintBoundaries(window, output, left, right, key, nbaCollege, collegeSchool, NativePixel);
             await CheckPaintAndText(window, output, left, key, center);
             window.ShowHardwoodTools(true);
             var toggleContent = (FrameworkElement)window.Content; toggleContent.Measure(new Size(1200, 800)); toggleContent.Arrange(new Rect(0, 0, 1200, 800)); toggleContent.UpdateLayout();

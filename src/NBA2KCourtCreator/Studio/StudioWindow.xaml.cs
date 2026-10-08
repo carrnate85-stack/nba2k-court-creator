@@ -219,6 +219,7 @@ public partial class StudioWindow : Window
     private Drawing? _hardwoodDrawing;
     private void RebuildBackground()
     {
+        RefreshPaintRegionGeometries();
         if (_section == "import" && _importDrawing is not null) { CourtCanvas.BackgroundDrawing = _importDrawing; return; }
         var group = new DrawingGroup();
         if (_outside.Visible) group.Children.Add(new GeometryDrawing(StudioImages.Brush(_outside.Color), null, new RectangleGeometry(new Rect(0, 0, 8192, 4096))));
@@ -233,7 +234,7 @@ public partial class StudioWindow : Window
         foreach (var paintGroup in _paints.Where(layer => layer.Visible).GroupBy(layer => layer.Color, StringComparer.OrdinalIgnoreCase))
         {
             var geometry = new GeometryGroup { FillRule = FillRule.Nonzero };
-            foreach (var layer in paintGroup) geometry.Children.Add(layer.Geometry);
+            foreach (var layer in paintGroup) geometry.Children.Add(PaintRegionGeometry(layer));
             geometry.Freeze(); group.Children.Add(new GeometryDrawing(StudioImages.Brush(paintGroup.Key), null, geometry));
         }
         foreach (var layer in _lines.Where(layer => layer.Visible)) group.Children.Add(new GeometryDrawing(StudioImages.Brush(layer.Color), null, layer.Geometry));
