@@ -168,17 +168,23 @@ internal static partial class Program
                 var panel = (FrameworkElement)window.FindName("HardwoodOptionsPanel");
                 var workspace = (Grid)window.FindName("WorkspaceRoot");
                 var overlay = (FrameworkElement)window.FindName("ToolOptionsOverlay");
-                var root = (Grid)overlay.Parent;
-                var attachedBounds = panel.TransformToAncestor(root).TransformBounds(new Rect(panel.RenderSize));
+                var viewport = (FrameworkElement)window.FindName("ViewportCard");
+                var host = (Grid)window.Canvas.Parent;
+                var root = (Grid)workspace.Parent;
+                var attachedBounds = panel.TransformToAncestor(host).TransformBounds(new Rect(panel.RenderSize));
                 var document = (FrameworkElement)window.FindName("DocumentChrome");
                 var documentBounds = document.TransformToAncestor(root).TransformBounds(new Rect(document.RenderSize));
                 var workspaceBounds = workspace.TransformToAncestor(root).TransformBounds(new Rect(workspace.RenderSize));
-                Assert(ReferenceEquals(workspace.Parent, root) && Grid.GetRow(overlay) == 2 && Grid.GetRow(workspace) == 3
-                    && Math.Abs(attachedBounds.Top - documentBounds.Bottom) < .001 && Math.Abs(attachedBounds.Left) < .001
-                    && Math.Abs(attachedBounds.Width - root.ActualWidth) < .001
+                var rail = (FrameworkElement)window.FindName("LeftToolRail");
+                var railBounds = rail.TransformToAncestor(root).TransformBounds(new Rect(rail.RenderSize));
+                Assert(ReferenceEquals(overlay.Parent, host) && Grid.GetRow(workspace) == 2
+                    && Math.Abs(attachedBounds.Top) < .001 && Math.Abs(attachedBounds.Left) < .001
+                    && Math.Abs(attachedBounds.Width - host.ActualWidth) < .001
                     && attachedBounds.Height == TextureStudio.ContextualToolOptionsBar.RowHeight
-                    && Math.Abs(workspaceBounds.Top - attachedBounds.Bottom) < .001,
-                    "Tool row does not match Canvas's fixed full-width row above the entire workspace at width " + width);
+                    && Math.Abs(workspaceBounds.Top - documentBounds.Bottom) < .001
+                    && Math.Abs(railBounds.Top - documentBounds.Bottom) < .001 && Math.Abs(railBounds.Left) < .001
+                    && viewport.Margin == new Thickness(12),
+                    "Tool bar is not attached inside the court frame while the left tool rail extends to the document tabs at width " + width);
                 var bounds = new Rect(0, 0, panel.ActualWidth, panel.ActualHeight); bounds.Inflate(.1, .1);
                 var sliders = Descendants<Slider>(bar).ToArray(); Assert(sliders.Length == 5, "An adjustment slider is missing.");
                 foreach (var control in sliders.Cast<FrameworkElement>().Concat(Descendants<Button>(bar)))
@@ -298,7 +304,7 @@ internal static partial class Program
                     Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Collapsed, "Choosing a tool did not hide the hardwood bar.");
                     Assert(options.Visibility == Visibility.Visible && options.ActualHeight == TextureStudio.ContextualToolOptionsBar.RowHeight
                         && options.TransformToAncestor(content).TransformBounds(new Rect(options.RenderSize)) == optionsBounds,
-                        "Switching tools collapsed or moved Canvas's reserved options row.");
+                        "Switching tools collapsed or moved the attached options bar.");
                     if (tool == ArtworkTool.Type)
                         Assert(((FrameworkElement)window.FindName("TextOptionsBar")).Visibility == Visibility.Visible
                             && ((FrameworkElement)window.FindName("PreviewContextLabel")).Visibility == Visibility.Collapsed,

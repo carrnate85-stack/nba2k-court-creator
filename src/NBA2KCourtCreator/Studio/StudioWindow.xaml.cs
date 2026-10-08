@@ -63,12 +63,6 @@ public partial class StudioWindow : Window
         ConfigureArtworkActions();
         _pickTextSettings = pickTextSettings ?? (testing ? _ => null : ShowTextDialog);
         ConfigurePaintAndTextTools();
-        LogoPropertiesScroll.SizeChanged += (_, e) =>
-        {
-            if (LogoPropertiesScroll.Content is not StackPanel content || e.NewSize.Height <= 0) return;
-            var reserved = content.Children.OfType<FrameworkElement>().Where(child => child != LogoList).Sum(child => child.DesiredSize.Height);
-            LogoList.Height = Math.Clamp(e.NewSize.Height - reserved - LogoList.Margin.Top - LogoList.Margin.Bottom - 2, 160, 224);
-        };
         if (!testing) { StudioWindowBounds.Attach(this); ContentRendered += async (_, _) => await Guard(InitializePortableAsync); }
         CourtCanvas.ShowGuides=false;CourtCanvas.SnapEnabled=false;
         CourtCanvas.TransformPreviewChanged+=(_,_)=>QueueLiveLogoFields();

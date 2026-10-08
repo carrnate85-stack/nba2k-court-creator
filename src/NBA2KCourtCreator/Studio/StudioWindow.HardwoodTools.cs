@@ -26,8 +26,8 @@ public partial class StudioWindow
     private void ConfigureHardwoodTools()
     {
         HardwoodEditTarget.SelectionChanged += HardwoodEditTargetChanged;
-        // Canvas reserves this row above the entire workspace, even for tools with no options.
-        ((Grid)ToolOptionsOverlay.Parent).RowDefinitions[2].Height = new GridLength(TextureStudio.ContextualToolOptionsBar.RowHeight);
+        // Keep the contextual controls attached to the middle workspace without changing its layout.
+        ToolOptionsOverlay.Height = TextureStudio.ContextualToolOptionsBar.RowHeight;
         foreach (var (label, key, minimum, maximum) in new[] {
             ("Brightness", "brightness", -100, 100), ("Contrast", "contrast", -100, 100),
             ("Saturation", "saturation", -100, 100), ("Grain scale", "scale", 50, 200), ("Rotation", "rotation", -180, 180) })
@@ -69,7 +69,9 @@ public partial class StudioWindow
 
     private FrameworkElement CreateHardwoodSlider(string label, string key, int minimum, int maximum)
     {
-        var group = new Grid { Margin = new Thickness(5, 0, 5, 0), VerticalAlignment = VerticalAlignment.Center };
+        var group = new Grid { Margin = new Thickness(1, 0, 1, 0), VerticalAlignment = VerticalAlignment.Center };
+        group.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        group.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         group.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         group.ColumnDefinitions.Add(new ColumnDefinition());
         group.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -139,7 +141,17 @@ public partial class StudioWindow
         };
         slider.AddHandler(Thumb.DragCompletedEvent, new DragCompletedEventHandler((_, _) => CommitHardwoodGesture()));
         slider.LostKeyboardFocus += (_, _) => CommitHardwoodGesture();
-        Grid.SetColumn(slider, 1); Grid.SetColumn(numberHost, 2); group.Children.Add(slider); group.Children.Add(numberHost); return group;
+        Grid.SetColumn(slider, 1); Grid.SetColumn(numberHost, 2); group.Children.Add(slider); group.Children.Add(numberHost);
+        group.SizeChanged += (_, _) =>
+        {
+            // Narrow windows retain every slider and exact-value button in the same 40-DIP bar.
+            var compact = group.ActualWidth < 128;
+            Grid.SetColumnSpan(caption, compact ? 3 : 1);
+            caption.Margin = compact ? new Thickness() : new Thickness(0, 0, 5, 0);
+            Grid.SetRow(slider, compact ? 1 : 0); Grid.SetColumn(slider, compact ? 0 : 1); Grid.SetColumnSpan(slider, compact ? 2 : 1);
+            Grid.SetRow(numberHost, compact ? 1 : 0);
+        };
+        return group;
     }
 
     private void CommitHardwoodNumberInputs()
