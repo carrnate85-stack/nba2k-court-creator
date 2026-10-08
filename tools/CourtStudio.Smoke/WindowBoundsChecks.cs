@@ -57,7 +57,7 @@ internal static partial class Program
             picker.MinWidth = 600; picker.MinHeight = 330; picker.Width = 600; picker.Height = 330;
             content.Measure(new Size(600, 330)); content.Arrange(new Rect(0, 0, 600, 330)); content.UpdateLayout();
             var apply = Descendants<Button>(content).Single(button => Equals(button.Content, "Apply"));
-            var teamColors = Descendants<Button>(content).Single(button => Equals(button.Content, "Team Colors"));
+            var teamColors = (Button)picker.FindName("TeamColorsButton");
             var viewport = new Rect(0, 0, 600, 330);
             Assert(viewport.Contains(apply.TransformToAncestor(content).TransformBounds(new Rect(apply.RenderSize))) && viewport.Contains(teamColors.TransformToAncestor(content).TransformBounds(new Rect(teamColors.RenderSize))), "Compact color picker clipped its Apply or Team Colors action.");
             Assert(StudioWindowBounds.IsAttached(picker), "Color picker did not use shared work-area fitting.");

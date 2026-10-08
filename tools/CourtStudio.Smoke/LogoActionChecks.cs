@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using NBA2KCourtCreator.Studio;
@@ -11,6 +12,7 @@ internal static partial class Program
         var file=Path.Combine(output,"logo-actions-source.png");WriteLogoExample(file);
         var sourceRevision=StudioImages.FileRevision(file);
         var window=new StudioWindow(true);
+        bool SnapshotEquals(string json) => JsonNode.DeepEquals(window.CreateProject(), JsonNode.Parse(json));
         void Click(string name) => ((MenuItem)window.FindName(name)).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         void ButtonClick(string name) => ((Button)window.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         async Task<ArtworkLayer> Prepare()
@@ -31,9 +33,9 @@ internal static partial class Program
                 Assert(window.Canvas.Layers.Count==1 && logo.Capture()==pose && logo.FlipX==vertical && logo.FlipY==vertical,
                     "Flip menu changed placement, rotation, count or the wrong axis.");
                 var after=window.CreateProject().ToJsonString();await window.UndoAsync();
-                Assert(window.CreateProject().ToJsonString()==before,"Flip undo did not restore the exact original.");
-                await window.UndoAsync(true);Assert(window.CreateProject().ToJsonString()==after,"Flip redo differs.");
-                Click(vertical?"FlipYMenu":"FlipXMenu");Assert(window.CreateProject().ToJsonString()==before,"Double flip did not restore the artwork.");
+                Assert(SnapshotEquals(before),"Flip undo did not restore the exact original.");
+                await window.UndoAsync(true);Assert(SnapshotEquals(after),"Flip redo differs.");
+                Click(vertical?"FlipYMenu":"FlipXMenu");Assert(SnapshotEquals(before),"Double flip did not restore the artwork.");
             }
             foreach(var x in new[]{true,false})
             {
@@ -48,8 +50,8 @@ internal static partial class Program
                     && copy.ScaleLocked==logo.ScaleLocked && copy.Path==logo.Path && ReferenceEquals(copy.Image,logo.Image),
                     "Mirror did not retain artwork orientation/appearance/source.");
                 var after=window.CreateProject().ToJsonString();await window.UndoAsync();
-                Assert(window.CreateProject().ToJsonString()==before,"Mirror undo failed.");await window.UndoAsync(true);
-                Assert(window.CreateProject().ToJsonString()==after,"Mirror redo failed.");
+                Assert(SnapshotEquals(before),"Mirror undo failed.");await window.UndoAsync(true);
+                Assert(SnapshotEquals(after),"Mirror redo failed.");
                 var project=Path.Combine(output,x?"mirror-x.court.json":"mirror-y.court.json");
                 await window.SaveProjectToAsync(project);await window.NewProjectAsync();await window.OpenProjectFromAsync(project);
                 var reopened=window.Canvas.Layers.Single(layer=>layer.Id==copy.Id);
@@ -61,22 +63,22 @@ internal static partial class Program
                 && !((MenuItem)window.FindName("CopyYMenu")).IsEnabled && ((Button)window.FindName("FlipLogoButton")).IsEnabled,
                 "Four-slot capacity disabled flip or left mirror available.");
             var full=window.CreateProject().ToJsonString();Click("CopyXMenu");Click("CopyYMenu");
-            Assert(window.CreateProject().ToJsonString()==full,"Mirror exceeded the four-logo limit.");
+            Assert(SnapshotEquals(full),"Mirror exceeded the four-logo limit.");
             window.Canvas.SelectedLayer=window.Canvas.Layers[1];var ordered=window.CreateProject().ToJsonString();
             var selected=window.Canvas.SelectedLayer!;var originalOrder=window.Canvas.Layers.Select(layer=>layer.Id).ToArray();var selectedPose=selected.Capture();
             ButtonClick("MoveLogoUpButton");
             Assert(window.Canvas.Layers.IndexOf(selected)==0 && window.Canvas.SelectedLayer==selected && selected.Capture()==selectedPose
                 && !((Button)window.FindName("MoveLogoUpButton")).IsEnabled,"Up arrow failed row movement, selection or boundary state.");
             var moved=window.CreateProject().ToJsonString();ButtonClick("MoveLogoUpButton");
-            Assert(window.CreateProject().ToJsonString()==moved,"Top boundary arrow changed the project.");
-            await window.UndoAsync();Assert(window.CreateProject().ToJsonString()==ordered,"Layer-order undo differs.");
-            await window.UndoAsync(true);Assert(window.CreateProject().ToJsonString()==moved,"Layer-order redo differs.");
+            Assert(SnapshotEquals(moved),"Top boundary arrow changed the project.");
+            await window.UndoAsync();Assert(SnapshotEquals(ordered),"Layer-order undo differs.");
+            await window.UndoAsync(true);Assert(SnapshotEquals(moved),"Layer-order redo differs.");
             window.Canvas.SelectedLayer=window.Canvas.Layers.Single(layer=>layer.Id==selected.Id);ButtonClick("MoveLogoDownButton");
             Assert(window.Canvas.Layers.Select(layer=>layer.Id).SequenceEqual(originalOrder) && window.Canvas.SelectedLayer!.Id==selected.Id,
                 "Down arrow did not restore row order and selection.");
             window.Canvas.SelectedLayer=window.Canvas.Layers.Last();var bottom=window.CreateProject().ToJsonString();
             Assert(!((Button)window.FindName("MoveLogoDownButton")).IsEnabled,"Bottom arrow remains available.");ButtonClick("MoveLogoDownButton");
-            Assert(window.CreateProject().ToJsonString()==bottom,"Bottom boundary arrow changed the project.");
+            Assert(SnapshotEquals(bottom),"Bottom boundary arrow changed the project.");
             window.Canvas.SelectedLayer=null;
             Assert(new[]{"FlipLogoButton","MirrorLogoButton","MoveLogoUpButton","MoveLogoDownButton"}
                 .All(name=>!((Button)window.FindName(name)).IsEnabled),"Empty selection left logo actions enabled.");

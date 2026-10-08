@@ -20,6 +20,7 @@ public static class StudioColorWindow
         TextureStudio.StudioTheme.Apply(picker.Resources, TwoK.Studio.StudioTheme.IsDark);
         picker.Style = (Style)picker.FindResource(typeof(Window));
         picker.Tag = nameof(StudioColorWindow);
+        if (owner is StudioWindow studio) picker.PaintColorPalette = studio.PickerColors;
         picker.WindowStartupLocation = WindowStartupLocation.Manual;
         picker.Left = owner.Left + 190; picker.Top = owner.Top + Math.Min(300, owner.ActualHeight / 3);
         StudioWindowBounds.Attach(picker);
@@ -28,21 +29,21 @@ public static class StudioColorWindow
         heading.ToolTip = roleName;
         var input = (TextBox)picker.FindName("HexInput");
         var apply = (Button)picker.FindName("AcceptButton"); apply.Content = "Apply"; apply.IsDefault = true;
-        var palette = new Button { Content = "Team Colors", MinWidth = 100, Margin = new Thickness(0, 0, 8, 0) };
-        ((StackPanel)apply.Parent).Children.Insert(0, palette);
+        var palette = (Button)picker.FindName("TeamColorsButton");
         chooseTeamColor ??= parent =>
         {
             var paletteWindow = new TeamColorWindow(parent, teams);
             return paletteWindow.ShowDialog() == true ? paletteWindow.SelectedHex : null;
         };
-        palette.Click += (_, _) =>
+        picker.TeamColorChooser = _ =>
         {
-            if (closed || teamPickerOpen) return;
+            if (closed || teamPickerOpen) return null;
             teamPickerOpen = true; palette.IsEnabled = false;
             try
             {
                 var selected = chooseTeamColor(picker);
-                if (!closed && StudioImages.Hex(selected) is { } color) input.Text = color;
+                if (!closed && StudioImages.Hex(selected) is { } color) return RasterPaintService.ParseHexColor(color);
+                return null;
             }
             finally { teamPickerOpen = false; if (!closed) palette.IsEnabled = true; }
         };

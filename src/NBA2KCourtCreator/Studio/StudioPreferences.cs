@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NBA2KCourtCreator.Studio;
 
-internal sealed record StudioPreferences(string[] Favorites, string[] Recent, bool Dark)
+internal sealed record StudioPreferences(string[] Favorites, string[] Recent, bool Dark, string PrimaryColor = "#19583F")
 {
     internal const int MaximumBytes = 1024 * 1024;
     internal static StudioPreferences Read(string path)
@@ -27,7 +27,7 @@ internal sealed record StudioPreferences(string[] Favorites, string[] Recent, bo
     }
     internal static StudioPreferences FromDocument(JsonObject settings)
     {
-        if (settings.Any(pair => pair.Key is not ("favorites" or "recent" or "dark"))) throw new InvalidDataException("Preferences contain unrecognized settings.");
+        if (settings.Any(pair => pair.Key is not ("favorites" or "recent" or "dark" or "primaryColor"))) throw new InvalidDataException("Preferences contain unrecognized settings.");
         string[] ReadIds(string key, int limit)
         {
             if (settings[key] is null) return [];
@@ -44,12 +44,19 @@ internal sealed record StudioPreferences(string[] Favorites, string[] Recent, bo
         var dark = false;
         if (settings["dark"] is not null && (settings["dark"] is not JsonValue value || !value.TryGetValue<bool>(out dark)))
             throw new InvalidDataException("Invalid theme preference.");
-        return new StudioPreferences(ReadIds("favorites", 10000), ReadIds("recent", 20), dark);
+        var primary = "#19583F";
+        if (settings["primaryColor"] is { } primaryNode)
+        {
+            if (primaryNode is not JsonValue primaryValue || !primaryValue.TryGetValue<string>(out var primaryText) || StudioImages.Hex(primaryText) is not { } hex)
+                throw new InvalidDataException("Invalid primary color preference.");
+            primary = hex;
+        }
+        return new StudioPreferences(ReadIds("favorites", 10000), ReadIds("recent", 20), dark, primary);
     }
 
     internal JsonObject ToDocument() => new()
     { ["favorites"] = new JsonArray(Favorites.Select(id => (JsonNode?)JsonValue.Create(id)).ToArray()),
-      ["recent"] = new JsonArray(Recent.Select(id => (JsonNode?)JsonValue.Create(id)).ToArray()), ["dark"] = Dark };
+      ["recent"] = new JsonArray(Recent.Select(id => (JsonNode?)JsonValue.Create(id)).ToArray()), ["dark"] = Dark, ["primaryColor"] = PrimaryColor };
 
     internal static void Write(string path, JsonObject document) => Write(path, document, null);
     internal static void Write(string path, JsonObject document, Action<int>? wait)

@@ -17,9 +17,11 @@ internal static partial class Program
         CheckSharedCourtColorDialog(output);
         var flags=BindingFlags.Instance|BindingFlags.NonPublic;
         Func<StockLayer,bool,string?> choose=(_,_)=>"#123456";
+        Func<string,string?> choosePrimary=_=>null; var primaryCalls=0;
         var calls=0;
         var window=new StudioWindow(true,new PythonServiceClient(),new PythonServiceClient(),
-            pickLayerColor:(layer,team)=>{calls++;return choose(layer,team);});
+            pickLayerColor:(layer,team)=>{calls++;return choose(layer,team);},
+            pickPrimaryColor:hex=>{primaryCalls++;return choosePrimary(hex);});
         var blocked=new Dictionary<string,bool>{["_initialized"]=false,["_ready"]=false,["_syncing"]=true,["_restoring"]=true,["_saving"]=true,["_catalogBusy"]=true,["_closed"]=true,["_closePending"]=true};
         int History(string name)=>((ICollection)typeof(StudioWindow).GetField(name,flags)!.GetValue(window)!).Count;
         Grid Row(string id)=>((StackPanel)window.FindName("LayersHost")).Children.OfType<Expander>()
@@ -47,6 +49,16 @@ internal static partial class Program
         try
         {
             await window.InitializeAsync();Layout(window,1000,680);
+            var primaryBefore=window.CreateProject();var primaryHistory=History("_undo");
+            window.StoreSampledColor(Color.FromRgb(30,60,90));
+            choosePrimary=hex=>{Assert(hex=="#1E3C5A","Primary picker did not open on the sampled color.");return "abc";};
+            Click(Action("pinned"));
+            Assert(primaryCalls==1 && window.PickerColors.PrimaryColor==new SixLabors.ImageSharp.PixelFormats.Rgba32(170,187,204,255)
+                && JsonNode.DeepEquals(primaryBefore,window.CreateProject()) && History("_undo")==primaryHistory,"Primary picker applied its color to the selected row or lost the sample.");
+            choosePrimary=_=>{Click(Action("pinned"));return null;};Click(Action("pinned"));
+            Assert(primaryCalls==2 && window.PickerColors.PrimaryColor?.R==170,"Primary Cancel or nested picker guard failed.");
+            choosePrimary=_=>{Pump(window.NewProjectAsync());return "#123456";};Click(Action("pinned"));
+            Assert(window.PickerColors.PrimaryColor?.R==170,"Stale primary picker applied after replacing the court.");
             Assert(Descendants<Button>(Row("paint-left")).Any(button=>Equals(button.Tag,"TeamColors:paint-left")),
                 "Visible paint row has no direct Team Colors action beside its hex field.");
             foreach(var layer in window.PaintLayers.Concat(window.LineLayers).Append((StockLayer)typeof(StudioWindow).GetField("_outside",flags)!.GetValue(window)!))
@@ -57,13 +69,13 @@ internal static partial class Program
                 Assert(layer.Color=="#A25B36" && Descendants<TextBox>(row).Single().Text=="#A25B36" && History("_undo")==undo+(before=="#A25B36"?0:1),"Inline palette lost the target, normalized field, or one-edit history.");
                 Assert(ReferenceEquals(row,Row(layer.Id)),"Palette application rebuilt the active layer controls.");
             }
-            foreach(var mode in new[]{"color","team","pinned"})
+            foreach(var mode in new[]{"color","team"})
             {
                 await Prepare();var target=window.PaintLayers.First(layer=>layer.Id=="paint-left");var before=window.CreateProject();var drawing=window.Canvas.BackgroundDrawing;
                 choose=(layer,team)=>{Assert(ReferenceEquals(layer,target)&&team==(mode=="team"),"Picker mode/target was incorrect.");return "abc";};
                 Click(Action(mode));Flush();
                 Assert(calls==1 && target.Color=="#AABBCC" && History("_undo")==1 && !ReferenceEquals(drawing,window.Canvas.BackgroundDrawing),"Accepted color failed to update preview once.");
-                await window.UndoAsync();Assert(window.CreateProject().ToJsonString()==before.ToJsonString(),"Picker undo lost document data.");
+                await window.UndoAsync();Assert(JsonNode.DeepEquals(window.CreateProject(),before),"Picker undo lost document data.");
                 var retainedRedo=History("_redo");var retainedUndo=History("_undo");
                 choose=(_,_)=>target.Color.ToLowerInvariant();Click(Action(mode));Flush();
                 Assert(retainedRedo==1&&History("_redo")==retainedRedo&&History("_undo")==retainedUndo,"No-op picker cleared a pending redo action.");
@@ -77,7 +89,7 @@ internal static partial class Program
                     Assert(window.CreateProject().ToJsonString()==state&&History("_undo")==undo&&History("_redo")==redo,"Canceled/invalid picker mutated the document.");
                 }
             }
-            foreach(var mode in new[]{"color","team","pinned"})
+            foreach(var mode in new[]{"color","team"})
             foreach(var (name,value) in blocked)
             {
                 await Prepare();var action=Action(mode);var state=window.CreateProject().ToJsonString();var field=typeof(StudioWindow).GetField(name,flags)!;var prior=field.GetValue(window);
@@ -85,7 +97,7 @@ internal static partial class Program
                 try{Click(action);Assert(calls==0&&window.CreateProject().ToJsonString()==state&&History("_undo")==0,"Blocked picker opened or changed the document: "+mode+" / "+name);}
                 finally{field.SetValue(window,prior);}
             }
-            foreach(var mode in new[]{"color","team","pinned"})
+            foreach(var mode in new[]{"color","team"})
             foreach(var transition in new[]{"new","open","undo","theme","selection","color","hidden","busy","nested"})
             {
                 await Prepare();var action=Action(mode);string? after=null;var undo=0;var redo=0;
@@ -114,7 +126,7 @@ internal static partial class Program
                 }
                 finally{typeof(StudioWindow).GetField("_catalogBusy",flags)!.SetValue(window,false);StudioTheme.Apply(false);}
             }
-            foreach(var mode in new[]{"color","team","pinned"})
+            foreach(var mode in new[]{"color","team"})
             {
                 await Prepare();var old=Action(mode);window.SetLayerSettings("paint-left",visible:false);Flush();var state=window.CreateProject().ToJsonString();var undo=History("_undo");
                 Click(old);Assert(calls==0&&window.CreateProject().ToJsonString()==state&&History("_undo")==undo,"Hidden layer opened a picker or changed settings.");
@@ -137,7 +149,7 @@ internal static partial class Program
             DoubleClick(nameText);Assert(!doubleLayer.Visible&&History("_undo")==1,"Left name double-click no longer toggles the layer.");
             DoubleClick(nameText);Assert(doubleLayer.Visible&&History("_undo")==2,"Left name double-click did not restore the layer.");
             var logoPath=Path.Combine(output,"picker-gesture-logo.png");WriteLogoExample(logoPath);
-            foreach(var mode in new[]{"color","team","pinned"})
+            foreach(var mode in new[]{"color","team"})
             foreach(var result in new[]{"cancel","unchanged","invalid"})
             {
                 await Prepare();await window.AddLogoAsync(logoPath);window.SwitchSection("logos");Layout(window,1000,680);
@@ -154,7 +166,7 @@ internal static partial class Program
                 }
                 finally{window.Canvas.TransformCommitted-=committed;window.Canvas.CancelGesture();}
             }
-            foreach(var mode in new[]{"color","team","pinned"})
+            foreach(var mode in new[]{"color","team"})
             foreach(var transition in new[]{"new","selection","busy"})
             {
                 await Prepare();await window.AddLogoAsync(logoPath);window.SwitchSection("logos");Layout(window,1000,680);
@@ -197,7 +209,7 @@ internal static partial class Program
             Assert(!window.IsVisible,"Color picker checks opened the workspace.");
             await Prepare();string? closedState=null;var closedHistory=0;
             choose=(_,_)=>{window.Close();closedState=window.CreateProject().ToJsonString();closedHistory=History("_undo");return "#654321";};
-            Click(Action("pinned"));Assert(window.CreateProject().ToJsonString()==closedState&&History("_undo")==closedHistory,"Picker result wrote to a closed workspace.");
+            Click(Action("color"));Assert(window.CreateProject().ToJsonString()==closedState&&History("_undo")==closedHistory,"Picker result wrote to a closed workspace.");
             Console.WriteLine("PASS color pickers: all 23 inline palette targets; swatch/palette/pinned acceptance, undo/redo and no-ops; hidden/blocked/retired rows; New/Open/Undo/theme/selection/color/busy/closed ownership; nested dialog rejection; name-only left double-click; live-drag no-op preservation and post-cleanup ownership; failure/retry; 1000/1440px layout. Dialog results and click counts injected; no native windows opened.");
         }
         finally{StudioTheme.Apply(false);window.Close();}
@@ -220,8 +232,7 @@ internal static partial class Program
                 picker = StudioColorWindow.Create(owner, "#19583F", [], testing: true, roleName: "Paint", chooseTeamColor: _ =>
                 {
                     paletteCalls++;
-                    if (reenter) Descendants<Button>((FrameworkElement)picker!.Content)
-                        .Single(button => Equals(button.Content, "Team Colors")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    if (reenter) ((Button)picker!.FindName("TeamColorsButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     return paletteResult;
                 });
                 try
@@ -232,7 +243,9 @@ internal static partial class Program
                     var input = (TextBox)picker.FindName("HexInput");
                     var red = (TextBox)picker.FindName("RedInput");
                     var apply = (Button)picker.FindName("AcceptButton");
-                    var palette = Descendants<Button>((FrameworkElement)picker.Content).Single(button => Equals(button.Content, "Team Colors"));
+                    var palette = ((Button)picker.FindName("TeamColorsButton"));
+                    Assert(Descendants<Button>((FrameworkElement)picker.Content).Count(button => ReferenceEquals(button, palette) || Equals(button.Content, "Team Colors")) == 1,
+                        "Court color picker has duplicate Team Colors buttons.");
                     Assert(picker.FindName("ColorField") is Grid && picker.FindName("HueStrip") is Grid
                         && picker.FindName("HueInput") is TextBox && picker.FindName("SaturationInput") is TextBox
                         && picker.FindName("BrightnessInput") is TextBox, "Shared spectrum, hue or numeric controls are missing.");
@@ -279,7 +292,7 @@ internal static partial class Program
             }
             TextureStudio.ColorPickerDialog? closed = null;
             closed = StudioColorWindow.Create(owner, "#19583F", [], testing: true, chooseTeamColor: _ => { closed!.Close(); return "#AABBCC"; });
-            var action = Descendants<Button>((FrameworkElement)closed.Content).Single(button => Equals(button.Content, "Team Colors"));
+            var action = ((Button)closed.FindName("TeamColorsButton"));
             action.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert(Hex(closed) == "#19583F", "A late palette result changed a closed color picker.");
             Console.WriteLine("PASS shared court color picker: actual Canvas.Wpf dialog; spectrum/hue/RGB/HSB/hex/swatches; RGB-only alpha; palette sync/cancel/invalid/nesting/close; original restore; hex-first selection; isolated light/dark themes. No native windows opened.");

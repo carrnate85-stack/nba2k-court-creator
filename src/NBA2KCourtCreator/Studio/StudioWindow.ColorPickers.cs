@@ -2,8 +2,39 @@ namespace NBA2KCourtCreator.Studio;
 
 public partial class StudioWindow
 {
+    private string _primaryColorHex = "#19583F";
+    internal TextureStudio.Services.PaintColorPalette PickerColors { get; } = new();
+    private readonly Func<string, string?> _pickPrimaryColor;
     private readonly Func<StockLayer, bool, string?> _pickLayerColor;
     private bool _colorPickerOpen;
+
+    private string? ShowPrimaryColorDialog(string hex)
+    {
+        var picker = StudioColorWindow.Create(this, hex, _teams, "Primary color");
+        return picker.ShowDialog() == true ? TextureStudio.Services.RasterPaintService.ToHex(picker.SelectedColor) : null;
+    }
+    internal void StoreSampledColor(System.Windows.Media.Color color)
+    {
+        if (!CanChangeDocument) return;
+        SetPrimaryColor($"#{color.R:X2}{color.G:X2}{color.B:X2}");
+        SetStatus("Primary color sampled: " + _primaryColorHex + ". Choose Primary in a color picker to use it.");
+    }
+    private void SetPrimaryColor(string color)
+    {
+        _primaryColorHex = StudioImages.Hex(color) ?? throw new ArgumentException("Enter a valid primary color.");
+        RefreshSelectedColor(); SavePreferences();
+    }
+    private void PickPrimaryColor()
+    {
+        if (!CanChangeDocument || _colorPickerOpen) return;
+        var version = _documentVersion; _colorPickerOpen = true; RefreshToolState();
+        try
+        {
+            var selected = _pickPrimaryColor(_primaryColorHex);
+            if (CanChangeDocument && version == _documentVersion && StudioImages.Hex(selected) is { } hex) SetPrimaryColor(hex);
+        }
+        finally { _colorPickerOpen = false; if (!_closed) RefreshToolState(); }
+    }
 
     private string? ShowLayerColorDialog(StockLayer layer, bool teamColors)
     {

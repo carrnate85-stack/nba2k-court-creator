@@ -209,7 +209,7 @@ public partial class StudioWindow
 
     public void ShowHardwoodTools(bool twoPoint = false)
     {
-        CommitHardwoodGesture(); SwitchSection("paint"); CourtCanvas.Tool = TwoK.Studio.ArtworkTool.Move;
+        CommitHardwoodGesture(); CourtCanvas.CancelGesture(); CourtCanvas.Tool = TwoK.Studio.ArtworkTool.Move;
         _hardwoodToolActive = true; _editingTwoPointHardwood = twoPoint; RefreshHardwoodValues(); RefreshToolState();
     }
     private void HardwoodToolClick(object sender, RoutedEventArgs e) => ShowHardwoodTools();
@@ -245,7 +245,7 @@ public partial class StudioWindow
         var rectangle = HardwoodRectangle();
         var drawings = await Task.Run(() => (
             Main: main is null ? null : HardwoodTextureSettings.CreateDrawing(main.Image, rectangle, _courtSurface!, mainSettings),
-            Second: secondary is null ? null : HardwoodTextureSettings.CreateDrawing(secondary.Image, rectangle, _twoPointSurface!, secondarySettings)));
+            Second: secondary is null ? null : HardwoodTextureSettings.CreateDrawing(secondary.Image, rectangle, _courtSurface!, secondarySettings)));
         if (_closed || revision != _hardwoodPreviewRevision || !ReferenceEquals(main, _preparedMainFloor) || !ReferenceEquals(secondary, _preparedTwoPointFloor)) return;
         _hardwoodDrawing = drawings.Main; _twoPointDrawing = drawings.Second; RebuildBackground();
     }
@@ -256,7 +256,7 @@ public partial class StudioWindow
             throw new InvalidOperationException("Choose a hardwood before adjusting its texture.");
         settings = HardwoodTextureSettings.Read(new JsonObject { ["textureSettings"] = settings.ToJson() });
         CommitHardwoodGesture(); var version = _documentVersion; var previewRevision = _hardwoodPreviewRevision;
-        var drawing = await Task.Run(() => HardwoodTextureSettings.CreateDrawing(prepared.Image, HardwoodRectangle(), twoPoint ? _twoPointSurface! : _courtSurface!, settings));
+        var drawing = await Task.Run(() => HardwoodTextureSettings.CreateDrawing(prepared.Image, HardwoodRectangle(), _courtSurface!, settings));
         if (!CanChangeDocument || version != _documentVersion || previewRevision != _hardwoodPreviewRevision || !ReferenceEquals(prepared, twoPoint ? _preparedTwoPointFloor : _preparedMainFloor)) return;
         var before = CreateProject(); ++_hardwoodPreviewRevision;
         if (twoPoint) { _twoPointHardwoodSettings = settings; _twoPointDrawing = drawing; }

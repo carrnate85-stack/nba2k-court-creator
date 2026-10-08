@@ -26,10 +26,9 @@ public partial class StudioWindow
     private string _colorLayerId = "paint-left";
     public void SelectCanvasTool(ArtworkTool tool)
     {
+        if (_section == "import" && tool is ArtworkTool.Transform or ArtworkTool.Eyedropper or ArtworkTool.Bucket or ArtworkTool.Type) return;
         CommitHardwoodGesture(); _hardwoodToolActive = false;
         CourtCanvas.CancelGesture();
-        if (tool is ArtworkTool.Move or ArtworkTool.Transform) SwitchSection("logos");
-        if (tool == ArtworkTool.Eyedropper) SwitchSection("paint");
         if (tool == ArtworkTool.Transform && CourtCanvas.SelectedLayer is null) { RefreshToolState(); return; }
         CourtCanvas.Tool = tool; RefreshToolState(); CourtCanvas.Focus();
     }
@@ -40,36 +39,41 @@ public partial class StudioWindow
         if (MoveToolButton is null) return;
         var usable = _initialized && !_closePending && !_closed;
         SelectedCourtCard.IsEnabled = _ready && !_catalogBusy && !_closePending && !_closed && PendingLogoImports == 0;
-        foreach (var button in new[] { MoveToolButton, TransformToolButton, EyedropperToolButton, HandToolButton, ZoomToolButton })
+        foreach (var button in new[] { MoveToolButton, TransformToolButton, EyedropperToolButton, PaintToolButton, TextToolButton, HandToolButton, ZoomToolButton })
         { if (!_hardwoodToolActive && Equals(button.Tag, CourtCanvas.Tool.ToString())) button.SetResourceReference(Control.BackgroundProperty, "AccentDarkBrush"); else button.Background = Brushes.Transparent; }
         MoveToolButton.IsEnabled = usable; HandToolButton.IsEnabled = ZoomToolButton.IsEnabled = usable;
-        TransformToolButton.IsEnabled = usable && CourtCanvas.SelectedLayer is not null && _section == "logos";
+        TransformToolButton.IsEnabled = usable && CourtCanvas.SelectedLayer is not null && _section != "import";
         EyedropperToolButton.IsEnabled = usable && _section != "import";
+        PaintToolButton.IsEnabled = TextToolButton.IsEnabled = CanChangeDocument && _section != "import";
+        TextOptionsBar.Visibility = !_hardwoodToolActive && CourtCanvas.Tool == ArtworkTool.Type && _section != "import" ? Visibility.Visible : Visibility.Collapsed;
+        EditTextButton.IsEnabled = ReadTextSettings(CourtCanvas.SelectedLayer) is not null;
         LogoActions.IsEnabled = CourtCanvas.SelectedLayer is not null;
         LogoLayerCount.Text = CourtCanvas.Layers.Count == 1 ? "1 layer" : $"{CourtCanvas.Layers.Count} layers";
         ImportLogoButton.IsEnabled = CanChangeDocument && !_logoImporterOpen && CourtCanvas.Layers.Count + PendingLogoImports < 4;
         DuplicateLogoButton.IsEnabled = MirrorLogoButton.IsEnabled = CopyXMenu.IsEnabled = CopyYMenu.IsEnabled = CourtCanvas.Layers.Count + PendingLogoImports < 4 && CourtCanvas.SelectedLayer is not null;
         var index = CourtCanvas.SelectedLayer is null ? -1 : CourtCanvas.Layers.IndexOf(CourtCanvas.SelectedLayer);
-        TransformOptionsBar.Visibility = _section == "logos" && CourtCanvas.Tool is ArtworkTool.Move or ArtworkTool.Transform && index >= 0 ? Visibility.Visible : Visibility.Collapsed;
+        CourtCanvas.EditingEnabled = _section != "import" && ((!_hardwoodToolActive && CourtCanvas.Tool is ArtworkTool.Move or ArtworkTool.Transform) || _section == "logos");
+        TransformOptionsBar.Visibility = _section != "import" && CourtCanvas.Tool is ArtworkTool.Move or ArtworkTool.Transform && index >= 0 ? Visibility.Visible : Visibility.Collapsed;
         PreviewContextLabel.Visibility = TransformOptionsBar.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         MoveLogoDownButton.IsEnabled = index >= 0 && index < CourtCanvas.Layers.Count - 1;
         MoveLogoUpButton.IsEnabled = index > 0;
-        PinnedColorButton.IsEnabled = CanChangeDocument && !_colorPickerOpen && SelectedColorLayer?.Visible == true && _section != "import";
+        PinnedColorButton.IsEnabled = CanChangeDocument && !_colorPickerOpen;
         ActiveToolText.Text = CourtCanvas.Tool == ArtworkTool.Move && _section != "logos" ? _section switch { "paint" => "Colors & Lines", "import" => "Convert Court", "export" => "Export Court", _ => "Hardwood" } : CourtCanvas.Tool switch { ArtworkTool.Transform => "Resize / rotate logo", ArtworkTool.Eyedropper => "Eyedropper: " + (SelectedColorLayer?.Name ?? "selected layer"), ArtworkTool.Hand => "Hand", ArtworkTool.Zoom => "Zoom", _ => "Move logo" };
-        CanvasHint.Text = CourtCanvas.Tool switch { ArtworkTool.Transform => "Drag corner handles to resize; top handle to rotate. Hold Shift to temporarily invert aspect lock.", ArtworkTool.Eyedropper => "Click court artwork to apply its color to the selected layer.", ArtworkTool.Hand => "Drag to pan. Scroll to zoom.", ArtworkTool.Zoom => "Click to zoom in; Alt-click to zoom out.", _ when _section == "logos" => "Drag a logo to move it. Corner handles resize; top handle rotates.", _ => "Scroll to zoom. Space + drag to pan." };
+        CanvasHint.Text = CourtCanvas.Tool switch { ArtworkTool.Bucket => "Click a court region to fill it with the primary color. Undo restores its previous color or hardwood.", ArtworkTool.Type => "Click to place text; click an existing text layer to edit. Move and Transform position it.", ArtworkTool.Transform => "Drag corner handles to resize; top handle to rotate. Hold Shift to temporarily invert aspect lock.", ArtworkTool.Eyedropper => "Click court artwork to store its color in the primary swatch.", ArtworkTool.Hand => "Drag to pan. Scroll to zoom.", ArtworkTool.Zoom => "Click to zoom in; Alt-click to zoom out.", _ when CourtCanvas.EditingEnabled => "Drag a logo to move it. Corner handles resize; top handle rotates.", _ => "Scroll to zoom. Space + drag to pan." };
         RefreshHardwoodBar();
     }
     private StockLayer? SelectedColorLayer => _paints.Concat(_lines).Append(_outside).FirstOrDefault(layer => layer.Id == _colorLayerId);
     private void RefreshSelectedColor()
     {
-        if (SelectedColorLayer is not { } layer || PinnedColorSwatch is null) return;
-        PinnedColorSwatch.Background = StudioImages.Brush(layer.Color);
-        PinnedColorButton.ToolTip = "Choose " + layer.Name + " color";
+        if (PinnedColorSwatch is null) return;
+        PickerColors.PrimaryColor = TextureStudio.Services.RasterPaintService.ParseHexColor(_primaryColorHex);
+        PinnedColorSwatch.Background = StudioImages.Brush(_primaryColorHex);
+        PinnedColorButton.ToolTip = "Primary color " + _primaryColorHex + " · sample with Eyedropper or click to choose";
 
     }
     private void PickSelectedColorClick(object sender, RoutedEventArgs e)
     {
-        if (SelectedColorLayer is { } layer) PickLayerColor(layer, false);
+        PickPrimaryColor();
     }
     private void TeamColorsClick(object sender, RoutedEventArgs e)
     {

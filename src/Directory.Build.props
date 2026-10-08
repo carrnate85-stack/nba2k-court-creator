@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <CanvasToolkitVersion Condition="'$(CanvasToolkitVersion)' == ''">0.6.0</CanvasToolkitVersion>
+    <CanvasToolkitVersion Condition="'$(CanvasToolkitVersion)' == ''">0.9.4</CanvasToolkitVersion>
     <CanvasToolkitFeed Condition="'$(CanvasToolkitFeed)' == ''">$(MSBuildThisFileDirectory)..\..\2k Texture Studio\artifacts\published-raster-v$(CanvasToolkitVersion)</CanvasToolkitFeed>
     <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);$(CanvasToolkitFeed)</RestoreAdditionalProjectSources>
   </PropertyGroup>

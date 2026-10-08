@@ -12,7 +12,7 @@ internal static partial class Program
 {
     private static async Task CheckLogoCanvasStyle(StudioWindow window,string output)
     {
-        await window.NewProjectAsync();window.SwitchSection("logos");
+        await window.NewProjectAsync();window.SwitchSection("logos");window.SelectCanvasTool(ArtworkTool.Move);
         var options=(Border)window.FindName("TransformOptionsBar");
         var list=(ListBox)window.FindName("LogoList");var actions=(FrameworkElement)window.FindName("LogoActions");
         var slider=(Slider)window.FindName("LogoOpacitySlider");
@@ -91,7 +91,7 @@ internal static partial class Program
             Assert(moving.Capture()!=movePose && undo.Count==moveHistory && Descendants<TextBox>((DependencyObject)window.FindName("LogoProperties")).Single(input=>Equals(input.Tag,"X")).Text==moving.X.ToString("0.##",CultureInfo.InvariantCulture),"Automatic toolbar canceled the move, committed early or failed to refresh.");
             window.Canvas.CancelGesture();Assert(moving.Capture()==movePose,"Automatic move options changed cancellation state.");
             window.Canvas.SelectedLayer=null;window.Canvas.SelectedLayer=window.Canvas.Layers[0];Layout(window,width,height);Assert(options.Visibility==Visibility.Visible,"Selecting a logo did not restore Move options.");StableCanvas();
-            window.SwitchSection("paint");Layout(window,width,height);Assert(options.Visibility==Visibility.Collapsed,"Paint tab left transform options visible.");StableCanvas();
+            window.SwitchSection("paint");Layout(window,width,height);Assert(options.Visibility==Visibility.Visible && window.Canvas.EditingEnabled,"Paint tab disabled the selected logo tool or hid its adjustments.");StableCanvas();
             await window.NewProjectAsync();window.SwitchSection("logos");Layout(window,width,height);Assert(options.Visibility==Visibility.Collapsed,"New document retained transform options.");StableCanvas();
         }
         Console.WriteLine("PASS Canvas logo panel: fixed list/actions; automatic Move/Transform options and live values, including selecting an unselected logo by dragging; fixed canvas bounds/mapping through toolbar visibility, tools, deselection, Paint and New; lock/save guards, compact/full-size 100–200% DPI light/dark renders; move cancellation and opacity undo/redo preserved.");

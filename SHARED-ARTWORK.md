@@ -9,7 +9,7 @@ paints, markings and IFF rules stay in
 Court Creator; this popup edits the source artwork, not court placement.
 
 The host-owned popup embeds the released `TwoK.Canvas.Core` and
-`TwoK.Canvas.Wpf` matching packages, minimum **0.6.0**. Shared tools provide selection, painting,
+`TwoK.Canvas.Wpf` matching packages, minimum **0.9.4**. Shared tools provide selection, painting,
 erasing, eyedropper, text, masks/layers, transforms, zoom and pan. The compact
 configuration hides file management, document resize and mip controls; it supplies
 court-green, white-marking and black-graphic color adjustment presets. It uses

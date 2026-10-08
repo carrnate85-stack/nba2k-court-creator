@@ -738,8 +738,6 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
             color = setting.get("color", layer["color"])
             for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
                 draw.polygon([(point[0] * scale, point[1] * scale) for point in polygon], fill=color)
-    for layer in geometry["paints"]:
-        draw_layer(layer, paint_settings)
     if two_point_enabled and two_point_path is not None:
         from PIL import ImageChops
         with verified_asset_stream(two_point_path, asset_revision(two_point_floor)) as stream, Image.open(stream) as source:
@@ -752,13 +750,37 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
             secondary = place_hardwood(secondary, secondary_settings)
         mask = Image.new("L", (width, height))
         mask_draw = ImageDraw.Draw(mask)
-        for layer in geometry["paints"]:
-            if layer["id"] not in {"two-point-left", "two-point-right"}: continue
-            for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
-                mask_draw.polygon([(p[0] * scale - left, p[1] * scale - top) for p in polygon], fill=255)
+        from shapely.geometry import MultiPoint
+        by_id = {layer["id"]: layer for layer in geometry["layers"]}
+        active_id = next((key for key in ("NBA_line_three_point_lowShape", "college-three", "high-school-three")
+                          if settings.get(key, {}).get("visible", by_id[key]["visible"])), None)
+        if active_id is not None:
+            layer = by_id[active_id]
+            points = [p for polygon in (layer["gameUvPolygons"] if native else layer["polygons"]) for p in polygon]
+            midpoint = (min(p[0] for p in points) + max(p[0] for p in points)) / 2
+            for side in (True, False):
+                hull = MultiPoint([p for p in points if (p[0] < midpoint) == side]).convex_hull
+                if hull.geom_type == "Polygon":
+                    mask_draw.polygon([(p[0] * scale - left, p[1] * scale - top) for p in hull.exterior.coords], fill=255)
         secondary.putalpha(ImageChops.multiply(secondary.getchannel("A"), mask))
         canvas.alpha_composite(secondary, (left, top))
         secondary.close(); mask.close()
+    main_paint = paint_settings.get("main-court-area", {})
+    if main_paint.get("visible", False):
+        # The remaining court surface is the region outside both three-point enclosures.
+        mask = Image.new("L", canvas.size)
+        mask_draw = ImageDraw.Draw(mask)
+        surface = geometry["gameUv"]["courtSurfacePolygons"] if native else [_rectangle([left, top, left + width, top + height])]
+        for polygon in surface:
+            mask_draw.polygon([(p[0] * scale, p[1] * scale) for p in polygon], fill=255)
+        for layer in geometry["paints"]:
+            for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
+                mask_draw.polygon([(p[0] * scale, p[1] * scale) for p in polygon], fill=0)
+        canvas.paste(main_paint.get("color", "#19583F"), (0, 0), mask)
+        mask.close()
+    draw = ImageDraw.Draw(canvas)
+    for layer in geometry["paints"]:
+        draw_layer(layer, paint_settings)
     for layer in geometry["layers"]:
         draw_layer(layer, settings)
     from .court_template import _save_png_atomic, _composite_logo

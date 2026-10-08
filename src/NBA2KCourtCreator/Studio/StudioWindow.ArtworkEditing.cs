@@ -112,7 +112,8 @@ public partial class StudioWindow
     }
     private JsonObject? RestoreArtworkReference(JsonObject item, string? projectPath, bool relative)
     {
-        if (item["artworkProjectPath"]?.GetValue<string>() is not { Length: > 0 } path) return null;
+        if (item["artworkProjectPath"]?.GetValue<string>() is not { Length: > 0 } path)
+            return item["textSettings"] is { } text ? new JsonObject { ["textSettings"] = text.DeepClone() } : null;
         var reference = new JsonObject();
         foreach (var key in new[] { "artworkProjectPath", "artworkDdsPath" })
             if (item[key]?.GetValue<string>() is { Length: > 0 } value) reference[key] = ResolvePath(value, projectPath, relative);

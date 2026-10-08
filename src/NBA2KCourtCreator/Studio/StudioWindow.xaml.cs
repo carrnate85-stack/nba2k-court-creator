@@ -44,11 +44,12 @@ public partial class StudioWindow : Window
 
     public StudioWindow() : this(false) { }
     public StudioWindow(bool testing) : this(testing, new PythonServiceClient(), new PythonServiceClient()) { }
-    internal StudioWindow(bool testing, PythonServiceClient engine, PythonServiceClient exports, Func<string, CancellationToken, Task<PreparedLogoAsset>>? prepareLogo = null, StudioImportBackend? imports = null, StudioSnapshotWriter? recovery = null, Func<string, JsonObject>? readProject = null, StudioPreferenceStore? preferences = null, Func<string, int, System.Windows.Media.Imaging.BitmapSource>? loadFloorImage = null, Func<TextBox?>? focusedInput = null, Func<StockLayer, bool, string?>? pickLayerColor = null, Func<LogoImportWindow>? createLogoImporter = null, Func<LogoImportWindow, bool?>? showLogoImporter = null)
+    internal StudioWindow(bool testing, PythonServiceClient engine, PythonServiceClient exports, Func<string, CancellationToken, Task<PreparedLogoAsset>>? prepareLogo = null, StudioImportBackend? imports = null, StudioSnapshotWriter? recovery = null, Func<string, JsonObject>? readProject = null, StudioPreferenceStore? preferences = null, Func<string, int, System.Windows.Media.Imaging.BitmapSource>? loadFloorImage = null, Func<TextBox?>? focusedInput = null, Func<StockLayer, bool, string?>? pickLayerColor = null, Func<LogoImportWindow>? createLogoImporter = null, Func<LogoImportWindow, bool?>? showLogoImporter = null, Func<string, string?>? pickPrimaryColor = null, Func<TextureStudio.Models.TextLayerSettings, TextureStudio.Models.TextLayerSettings?>? pickTextSettings = null)
     {
         _engine = engine; _exports = exports; _prepareLogo = prepareLogo ?? PrepareLogoAsync;
         _focusedInput=focusedInput ?? (()=>Keyboard.FocusedElement as TextBox);
         _pickLayerColor=pickLayerColor ?? ShowLayerColorDialog;
+        _pickPrimaryColor=pickPrimaryColor ?? (testing ? _ => null : ShowPrimaryColorDialog);
         _createLogoImporter=createLogoImporter ?? (()=>new LogoImportWindow(this));
         _showLogoImporter=showLogoImporter ?? (importer=>importer.ShowDialog());
         _loadFloorImage = loadFloorImage ?? StudioImages.Load;
@@ -60,6 +61,8 @@ public partial class StudioWindow : Window
         InitializeComponent(); Style = (Style)FindResource(typeof(Window));
         ConfigureHardwoodTools();
         ConfigureArtworkActions();
+        _pickTextSettings = pickTextSettings ?? (testing ? _ => null : ShowTextDialog);
+        ConfigurePaintAndTextTools();
         if (!testing) { StudioWindowBounds.Attach(this); ContentRendered += async (_, _) => await Guard(InitializePortableAsync); }
         CourtCanvas.ShowGuides=false;CourtCanvas.SnapEnabled=false;
         CourtCanvas.TransformPreviewChanged+=(_,_)=>QueueLiveLogoFields();
@@ -72,7 +75,7 @@ public partial class StudioWindow : Window
         };
         Closed+=(_,_)=>{ CancelLiveLogoFields(); CancelLayerHex(); };
         CourtCanvas.SelectionChanged += (_, _) => { RefreshLogoInspector(); RefreshToolState(); };
-        CourtCanvas.ColorSampled += color => { if (_initialized) { SetLayerSettings(_colorLayerId, color: $"#{color.R:X2}{color.G:X2}{color.B:X2}"); SetStatus("Sampled color applied to " + (SelectedColorLayer?.Name ?? "selected layer") + "."); } };
+        CourtCanvas.ColorSampled += StoreSampledColor;
         CourtCanvas.TransformCommitted += (_, e) =>
         {
             var before = CreateProject();
@@ -144,8 +147,12 @@ public partial class StudioWindow : Window
         _paints.Clear(); _paints.AddRange(paints);
         _lines.Clear(); _lines.AddRange(lines);
         var twoPointSurface = new GeometryGroup { FillRule = FillRule.Nonzero };
-        foreach (var layer in paints.Where(layer => layer.Id is "two-point-left" or "two-point-right")) twoPointSurface.Children.Add(layer.Geometry);
-        twoPointSurface.Freeze(); _twoPointSurface = twoPointSurface;
+        foreach (var layer in paints) twoPointSurface.Children.Add(layer.Geometry);
+        twoPointSurface.Freeze();
+        PrepareThreePointSurfaces();
+        var mainArea = Geometry.Combine(_courtSurface, twoPointSurface, GeometryCombineMode.Exclude, null);
+        mainArea.Freeze();
+        _paints.Add(new StockLayer { Id = "main-court-area", Name = "Three-Point Area", DefaultColor = "#19583F", Color = "#19583F", DefaultVisible = false, Visible = false, Geometry = mainArea });
         _defaultFloorId = _floors.FirstOrDefault(f => _loadedVisibility[f.Id]?.GetValue<bool>() == true)?.Id ?? _floors.FirstOrDefault()?.Id;
         CourtCanvas.Anchors = _geometry["guides"]?["game-uv"]?["anchors"]?.AsArray().OfType<JsonObject>()
             .Select(item => new StudioAnchor(String(item, "id"), String(item, "name"), new Point(Number(item["x"]), Number(item["y"])))) .ToArray() ?? [];
@@ -216,6 +223,11 @@ public partial class StudioWindow : Window
         var group = new DrawingGroup();
         if (_outside.Visible) group.Children.Add(new GeometryDrawing(StudioImages.Brush(_outside.Color), null, new RectangleGeometry(new Rect(0, 0, 8192, 4096))));
         if (_hardwoodDrawing is not null) group.Children.Add(_hardwoodDrawing);
+        if (_twoPointHardwoodEnabled && _twoPointDrawing is not null)
+        {
+            var secondary = new DrawingGroup { ClipGeometry = CurrentTwoPointSurface() };
+            secondary.Children.Add(_twoPointDrawing); secondary.Freeze(); group.Children.Add(secondary);
+        }
         // Paint regions partition the court. Rasterize equal-color neighbors together so their
         // shared boundary is internal to one fill, rather than two independently antialiased edges.
         foreach (var paintGroup in _paints.Where(layer => layer.Visible).GroupBy(layer => layer.Color, StringComparer.OrdinalIgnoreCase))
@@ -224,7 +236,6 @@ public partial class StudioWindow : Window
             foreach (var layer in paintGroup) geometry.Children.Add(layer.Geometry);
             geometry.Freeze(); group.Children.Add(new GeometryDrawing(StudioImages.Brush(paintGroup.Key), null, geometry));
         }
-        if (_twoPointHardwoodEnabled && _twoPointDrawing is not null) group.Children.Add(_twoPointDrawing);
         foreach (var layer in _lines.Where(layer => layer.Visible)) group.Children.Add(new GeometryDrawing(StudioImages.Brush(layer.Color), null, layer.Geometry));
         group.Freeze(); CourtCanvas.BackgroundDrawing = group;
     }
@@ -240,15 +251,14 @@ public partial class StudioWindow : Window
         LogoPanel.Visibility = section == "logos" ? Visibility.Visible : Visibility.Collapsed;
         ImportPanel.Visibility = section == "import" ? Visibility.Visible : Visibility.Collapsed;
         ExportPanel.Visibility = section == "export" ? Visibility.Visible : Visibility.Collapsed;
-        CourtCanvas.EditingEnabled = section == "logos"; CourtCanvas.ShowArtwork = section != "import";
+        CourtCanvas.ShowArtwork = section != "import";
         foreach (var button in new[] { PaintButton, LogosButton, ImportButton, ExportButton })
             {
             var selected = (string)button.Tag == section;
             button.SetResourceReference(Control.BackgroundProperty, selected ? "AccentDarkBrush" : "PanelBrush");
             button.SetResourceReference(Control.BorderBrushProperty, selected ? "AccentBrightBrush" : "BorderBrush");
         }
-        if (section != "logos" && CourtCanvas.Tool == ArtworkTool.Transform) CourtCanvas.Tool = ArtworkTool.Move;
-        if (section == "import" && CourtCanvas.Tool == ArtworkTool.Eyedropper) CourtCanvas.Tool = ArtworkTool.Move;
+        if (section == "import" && CourtCanvas.Tool is ArtworkTool.Transform or ArtworkTool.Eyedropper or ArtworkTool.Bucket or ArtworkTool.Type) CourtCanvas.Tool = ArtworkTool.Move;
         RefreshToolState(); RefreshSelectedColor();
         RebuildBackground(); CourtCanvas.InvalidateVisual();
     }
@@ -366,6 +376,10 @@ public partial class StudioWindow : Window
                 var savedPathExists = File.Exists(path);
                 if (savedPathExists && (projectRelative || !matchesLibraryPath))
                     selectedFloor = ReadSavedFloor(savedFloor, path, false);
+                else if (savedPathExists && selectedFloor is not null)
+                    // Preserve the snapshot metadata rather than rebuilding it from a custom
+                    // catalog entry (which adds visibility fields during an undo).
+                    selectedFloor = selectedFloor with { Source = (JsonObject)savedFloor.DeepClone() };
                 else if (!savedPathExists && selectedFloor is not null && (projectRelative || !matchesLibraryPath))
                     missing.Add((projectRelative ? "bundled" : "saved") + " hardwood (using the local library copy)");
             }
@@ -389,7 +403,7 @@ public partial class StudioWindow : Window
                 if (secondary is null) missing.Add("two-point hardwood (using main hardwood)");
                 else
                 {
-                    preparedTwoPoint = await PrepareFloorAsync(secondary, cancellation.Token, _twoPointSurface);
+                    preparedTwoPoint = await PrepareFloorAsync(secondary, cancellation.Token, _courtSurface);
                     if (savedTwoPoint["sourceRevision"]?.GetValue<string>() is { } secondaryRevision && secondaryRevision != preparedTwoPoint.SourceRevision)
                         updatedAssets.Add("two-point hardwood");
                 }

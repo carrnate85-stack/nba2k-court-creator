@@ -341,7 +341,7 @@ public partial class StudioWindow
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.OemPlus or Key.Add) { ZoomInClick(sender,e); e.Handled=true; }
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.OemMinus or Key.Subtract) { ZoomOutClick(sender,e); e.Handled=true; }
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.T && CourtCanvas.SelectedLayer is not null) { SelectCanvasTool(ArtworkTool.Transform); e.Handled = true; }
-        else if (Keyboard.Modifiers == ModifierKeys.None && e.Key is Key.V or Key.H or Key.Z or Key.I) { SelectCanvasTool(e.Key switch { Key.H => ArtworkTool.Hand, Key.Z => ArtworkTool.Zoom, Key.I => ArtworkTool.Eyedropper, _ => ArtworkTool.Move }); e.Handled = true; }
+        else if (Keyboard.Modifiers == ModifierKeys.None && e.Key is Key.V or Key.H or Key.Z or Key.I or Key.G or Key.T) { SelectCanvasTool(e.Key switch { Key.H => ArtworkTool.Hand, Key.Z => ArtworkTool.Zoom, Key.I => ArtworkTool.Eyedropper, Key.G => ArtworkTool.Bucket, Key.T => ArtworkTool.Type, _ => ArtworkTool.Move }); e.Handled = true; }
     }
     private static bool? HistoryShortcut(Key key,ModifierKeys modifiers) => modifiers==ModifierKeys.Control && key==Key.Z?false:
         (modifiers==ModifierKeys.Control && key==Key.Y) || (modifiers==(ModifierKeys.Control|ModifierKeys.Shift) && key==Key.Z)?true:null;

@@ -15,7 +15,7 @@ public sealed class ArtworkGestureEventArgs(ArtworkLayer layer, ArtworkState bef
     public ArtworkState After { get; } = after;
 }
 
-public enum ArtworkTool { Move, Transform, Hand, Zoom, Eyedropper }
+public enum ArtworkTool { Move, Transform, Hand, Zoom, Eyedropper, Bucket, Type }
 
 public sealed class ArtworkCanvas : FrameworkElement
 {
@@ -36,7 +36,7 @@ public sealed class ArtworkCanvas : FrameworkElement
     public ArtworkTool Tool
     {
         get => _tool;
-        set { if (_tool == value) return; CancelGesture(); _tool = value; Cursor = value switch { ArtworkTool.Hand => Cursors.Hand, ArtworkTool.Zoom or ArtworkTool.Eyedropper => Cursors.Cross, _ => Cursors.Arrow }; InvalidateVisual(); }
+        set { if (_tool == value) return; CancelGesture(); _tool = value; Cursor = value switch { ArtworkTool.Hand => Cursors.Hand, ArtworkTool.Type => Cursors.IBeam, ArtworkTool.Zoom or ArtworkTool.Eyedropper or ArtworkTool.Bucket => Cursors.Cross, _ => Cursors.Arrow }; InvalidateVisual(); }
     }
     private readonly byte[] _hitPixel = new byte[4];
     private readonly HashSet<ArtworkLayer> _observed = [];

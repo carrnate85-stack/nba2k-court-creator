@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace NBA2KCourtCreator.Studio;
@@ -54,6 +55,23 @@ public static class StudioProjectValidation
             Text(logo["name"], "logo.name"); Text(logo["path"], "logo.path");
             Revision(logo["sourceRevision"], "logo.sourceRevision");
             Artwork(logo);
+            if (logo["textSettings"] is { } textNode)
+            {
+                TextureStudio.Models.TextLayerSettings text;
+                try { text = textNode.Deserialize<TextureStudio.Models.TextLayerSettings>() ?? throw Invalid("textSettings", "must contain valid text settings"); }
+                catch (System.Text.Json.JsonException) { throw Invalid("textSettings", "must contain valid text settings"); }
+                if (string.IsNullOrWhiteSpace(text.Text) || text.Text.Length > 16384 || string.IsNullOrWhiteSpace(text.FontFamily) || text.FontFamily.Length > 256
+                    || !double.IsFinite(text.FontSize) || text.FontSize is < 6 or > 600
+                    || !double.IsFinite(text.OutlineWidth) || text.OutlineWidth is < 0 or > 40
+                    || !double.IsFinite(text.LineHeight) || text.LineHeight is < 0 or > 3000
+                    || !double.IsFinite(text.LetterSpacing) || text.LetterSpacing is < 0 or > 200 || !Enum.IsDefined(text.Alignment))
+                    throw Invalid("textSettings", "contains invalid text or dimensions");
+                foreach (var color in new[] { text.FillColor, text.OutlineColor })
+                {
+                    try { if (color is null || System.Windows.Media.ColorConverter.ConvertFromString(color) is not System.Windows.Media.Color) throw Invalid("textSettings", "contains an invalid color"); }
+                    catch (FormatException) { throw Invalid("textSettings", "contains an invalid color"); }
+                }
+            }
             foreach (var key in new[] { "visible", "scaleLocked", "flipX", "flipY" }) Boolean(logo[key], "logo." + key);
             foreach (var key in new[] { "x", "y", "rotation" })
                 if (logo[key] is not null && Math.Abs(Number(logo[key], "logo." + key)) > 1_000_000) throw Invalid("logo." + key, "is outside the supported range");

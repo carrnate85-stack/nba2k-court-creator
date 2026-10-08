@@ -4,7 +4,7 @@
 
 - `src/NBA2KCourtCreator/Studio`: the active WPF workspace and application workflow.
 - `src/TwoK.Studio`: court placement canvas, transforms, anchors, and thin central theme/icon adapters.
-- `TwoK.Canvas.Core` / `TwoK.Canvas.Wpf` matching releases (minimum 0.6.0): the shared native pixel editor,
+- `TwoK.Canvas.Core` / `TwoK.Canvas.Wpf` matching releases (minimum 0.9.4): the shared native pixel editor,
   documents, layers/masks, text, tools and DDS codecs. See [Shared Artwork](SHARED-ARTWORK.md).
 - `court_creator`: persistent Python engine for stock discovery, geometry, image composition, conversion, and IFF exports.
 - `electron`: retained fallback, not the default launcher target.
@@ -15,7 +15,9 @@ The main hardwood fills the court surface. Hardwood selection lives in a strip
 along the bottom of the workspace, leaving the right inspector for colors, lines
 and logos. The main selector stays visible. Checking 2-point hardwood replaces
 the checkbox with a second selector for the left and right two-point areas,
-using the stock NBA three-point enclosure with both outer keys excluded.
+clipped to the outermost visible three-point enclosure (NBA, College, then High
+School). Only High School enabled confines it to that line. With all three-point
+lines off, the second hardwood is hidden but its selection is retained.
 Its close button disables the second texture and restores the checkbox while
 retaining the texture and its adjustments. Clicking either selector opens its
 catalog and selects that texture for adjustment; the active selector has an accent
@@ -25,7 +27,10 @@ the close button sits outside their equal-width columns.
 The enabled state survives recovery, undo/redo and portable save/reopen, and
 native previews and PNG/IFF exports honor it. Older projects with a secondary
 texture keep it enabled. Choosing a new secondary texture enables it.
-Paint in the keys, court markings and logos keep their existing drawing order.
+The second hardwood also sits beneath both primary and secondary keys. Uncolored
+(unchecked) key paint reveals that hardwood; enabled paint draws on top. Markings
+and logos remain above the hardwood and paint. Preview and export use the same
+visible-line boundary without regenerating floor assets.
 
 The hardwood adjustment bar opens by default and stays open through inspector-tab
 and appearance changes until another canvas tool is selected. Five equal-width
@@ -40,12 +45,39 @@ the dropdown moves above the sliders so every control remains visible.
 Tool adjustment bars overlay the top of a canvas that spans the header and
 workspace rows. Showing or hiding hardwood or logo controls leaves the canvas
 size, court screen position, zoom and pan unchanged, including in side viewports.
+Choosing any left toolbar tool preserves the current right inspector tab. Move
+and Transform can edit selected logos while Colors & Lines stays open; their
+adjustments follow the active tool rather than the inspector tab. Hardwood opens
+its adjustments without changing the tab. Import previews keep logo editing and
+the eyedropper unavailable.
 Hardwood controls regain their enabled state after document operations and logo
 inspector synchronization, including undo and redo.
 The reset icon stays at the right. Clicking a percentage or degree value opens
 integer entry; Enter or leaving the field applies it, Escape cancels, and
 out-of-range values block save until corrected. Reset affects only the hardwood
 selected for editing.
+
+## Primary Color, Paint and Text
+
+Eyedropper stores the sampled primary color in the bottom-left swatch without
+changing the selected row or court history. Clicking that swatch opens a primary
+color picker. The primary color survives restarts in preferences. All shared
+Canvas pickers show Primary first, optional Secondary next, then Preset Colors.
+Saved presets have a right-click Remove preset action. Court pickers use one
+left-hand Team Colors button, opening the court team chooser.
+
+Paint (G) fills the clicked primary key, secondary key, two-point region,
+three-point court area or outside region with the primary color. It enables that
+region's paint and records one undo; painting the same color again is a no-op.
+Turning a paint checkbox off reveals the hardwood underneath.
+
+Text (T) opens the shared Canvas text editor at the clicked court position, with
+font, size, fill, outline, bold/italic, alignment, line height and letter spacing.
+Clicking existing text or Edit selected text reopens its settings. Text keeps its
+position and transform when edited. Cancel leaves the court unchanged. Metadata
+and a transparent rendered PNG survive undo, duplicate and portable save/reopen;
+the PNG exports even on a PC without the original font. Text uses one of the four
+court artwork slots. Move and Transform adjust its placement.
 Colors use Canvas's adjustment service; scale/rotation repeat the full-court
 texture around its center before clipping, keeping the texture inside its area.
 Original image files and alpha are preserved. Live native previews are debounced

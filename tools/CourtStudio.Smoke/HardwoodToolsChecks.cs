@@ -59,8 +59,10 @@ internal static partial class Program
             await window.InitializeAsync(); await window.SelectFloorAsync(main);
             Assert(!((ComboBoxItem)window.FindName("TwoPointEditTarget")).IsEnabled, "Secondary adjustment target is available when two-point hardwood is disabled.");
             Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Hardwood bar did not open by default.");
+            CheckToolInspectorTabs(window, mainPath);
             window.SwitchSection("logos"); Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Inspector tabs closed the hardwood bar."); window.SwitchSection("paint");
             foreach (var layer in window.PaintLayers.Concat(window.LineLayers)) window.SetLayerSettings(layer.Id, visible: false);
+            window.SetLayerSettings("NBA_line_three_point_lowShape", visible: true);
             window.SetLayerSettings("paint-left", visible: true, color: "#008000");
             await window.SelectTwoPointFloorAsync(second);
             Color NativePixel(Point point)
@@ -72,6 +74,45 @@ internal static partial class Program
             }
             Assert(NativePixel(left) == Colors.Blue && NativePixel(right) == Colors.Blue, "Second hardwood is not clipped to both two-point areas.");
             Assert(NativePixel(center) == Colors.Red && NativePixel(key) == Colors.Green, "Second hardwood changed the center or key.");
+            window.SetLayerSettings("paint-left", visible: false);
+            Assert(NativePixel(key) == Colors.Blue && NativePixel(Interior("secondary-paint-left")) == Colors.Blue
+                && NativePixel(Interior("paint-right")) == Colors.Blue && NativePixel(Interior("secondary-paint-right")) == Colors.Blue,
+                "Uncolored primary/secondary keys did not follow the two-point hardwood.");
+            await window.ExportToAsync(Path.Combine(output, "unpainted-keys.png"), false);
+            CheckExportPixel(Path.Combine(output, "unpainted-keys.png"), key, Colors.Blue);
+            window.SetLayerSettings("paint-left", visible: true, color: "#008000");
+            var surfaces = (Dictionary<string, Geometry>)typeof(StudioWindow).GetField("_threePointSurfaces", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
+            Point Between(string outer, string inner)
+            {
+                for (var x = 1200; x < 4000; x += 20)
+                    for (var y = 700; y < 3400; y += 20)
+                    {
+                        var point = new Point(x, y);
+                        var nearby = new[] { point, point + new Vector(8, 0), point + new Vector(-8, 0), point + new Vector(0, 8), point + new Vector(0, -8) };
+                        if (nearby.All(p => surfaces[outer].FillContains(p) && !surfaces[inner].FillContains(p)
+                            && !window.PaintLayers.First(layer => layer.Id == "paint-left").Geometry.FillContains(p)
+                            && !window.LineLayers.Any(line => line.Geometry.FillContains(p)))) return point;
+                    }
+                throw new Exception("No area between the three-point boundaries.");
+            }
+            var nbaCollege = Between("NBA_line_three_point_lowShape", "college-three");
+            var collegeSchool = Between("college-three", "high-school-three");
+            window.SetLayerSettings("NBA_line_three_point_lowShape", visible: false);
+            window.SetLayerSettings("high-school-three", visible: true);
+            Assert(NativePixel(nbaCollege) == Colors.Red && NativePixel(collegeSchool) == Colors.Red && NativePixel(left) == Colors.Blue,
+                "High-school-only hardwood extends beyond its three-point line.");
+            await window.ExportToAsync(Path.Combine(output, "high-school-only.png"), false);
+            CheckExportPixel(Path.Combine(output, "high-school-only.png"), nbaCollege, Colors.Red);
+            CheckExportPixel(Path.Combine(output, "high-school-only.png"), collegeSchool, Colors.Red);
+            window.SetLayerSettings("college-three", visible: true);
+            Assert(NativePixel(nbaCollege) == Colors.Red && NativePixel(collegeSchool) == Colors.Blue, "Multiple lines did not choose College as the outermost enabled line.");
+            window.SetLayerSettings("NBA_line_three_point_lowShape", visible: true);
+            Assert(NativePixel(nbaCollege) == Colors.Blue, "NBA hardwood boundary was not restored.");
+            window.SetLayerSettings("college-three", visible: false); window.SetLayerSettings("high-school-three", visible: false);
+            window.SetLayerSettings("NBA_line_three_point_lowShape", visible: false);
+            Assert(NativePixel(left) == Colors.Red, "Two-point hardwood draws without any visible three-point boundary.");
+            window.SetLayerSettings("NBA_line_three_point_lowShape", visible: true);
+            await CheckPaintAndText(window, output, left, key, center);
             window.ShowHardwoodTools(true);
             var toggleContent = (FrameworkElement)window.Content; toggleContent.Measure(new Size(1200, 800)); toggleContent.Arrange(new Rect(0, 0, 1200, 800)); toggleContent.UpdateLayout();
             var toggleBar = (Grid)window.FindName("HardwoodOptions");
@@ -219,7 +260,7 @@ internal static partial class Program
                     canvas.TransformToAncestor(content).Transform(canvas.ToScreen(new Point(0, 0))),
                     canvas.TransformToAncestor(content).Transform(canvas.ToScreen(new Point(4096, 2048))));
                 var before = Mapping(); var project = window.CreateProject().ToJsonString();
-                foreach (var tool in new[] { ArtworkTool.Hand, ArtworkTool.Zoom, ArtworkTool.Eyedropper, ArtworkTool.Move, ArtworkTool.Transform })
+                foreach (var tool in new[] { ArtworkTool.Hand, ArtworkTool.Zoom, ArtworkTool.Eyedropper, ArtworkTool.Move, ArtworkTool.Transform, ArtworkTool.Bucket, ArtworkTool.Type })
                 {
                     window.SelectCanvasTool(tool); content.UpdateLayout();
                     Assert(((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Collapsed, "Choosing a tool did not hide the hardwood bar.");
@@ -235,5 +276,53 @@ internal static partial class Program
             canvas.Layers.Remove(logo); canvas.SelectedLayer = null; canvas.Viewport = null; canvas.Fit();
             Layout(window, width, 800); window.ShowHardwoodTools(true); content.UpdateLayout();
         }
+    }
+
+    private static void CheckToolInspectorTabs(StudioWindow window, string logoPath)
+    {
+        var canvas = window.Canvas;
+        var logo = new ArtworkLayer { Path = logoPath, Image = StudioImages.Load(logoPath, 144), X = 2500, Y = 1400 };
+        try
+        {
+            foreach (var selected in new[] { false, true })
+            {
+                if (selected) { canvas.Layers.Add(logo); canvas.SelectedLayer = logo; }
+                foreach (var section in new[] { "paint", "logos", "export", "import" })
+                {
+                    window.SwitchSection(section); Layout(window, 1200, 800);
+                    var project = window.CreateProject().ToJsonString();
+                    foreach (var (name, tool) in new[] { ("Move", ArtworkTool.Move), ("Transform", ArtworkTool.Transform), ("Eyedropper", ArtworkTool.Eyedropper), ("Hand", ArtworkTool.Hand), ("Zoom", ArtworkTool.Zoom), ("Paint", ArtworkTool.Bucket), ("Text", ArtworkTool.Type) })
+                    {
+                        var button = (Button)window.FindName(name + "ToolButton");
+                        if (tool == ArtworkTool.Transform) Assert(button.IsEnabled == (selected && section != "import"), "Transform availability depends on the inspector tab.");
+                        if (tool == ArtworkTool.Eyedropper) Assert(button.IsEnabled == (section != "import"), "Eyedropper availability is incorrect.");
+                        if (!button.IsEnabled) continue;
+                        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        Assert(window.Section == section && canvas.Tool == tool, $"{name} changed the {section} inspector tab or failed to select its tool.");
+                        if (selected && section != "import" && tool is ArtworkTool.Move or ArtworkTool.Transform)
+                        {
+                            Assert(canvas.EditingEnabled && ((FrameworkElement)window.FindName("TransformOptionsBar")).Visibility == Visibility.Visible, "Logo editing depends on the inspector tab.");
+                            Assert(canvas.BeginArtworkGesture(canvas.ToScreen(logo.Center)), "Logo gesture cannot start outside the Logos tab."); canvas.CancelGesture();
+                        }
+                        ((Button)window.FindName("HardwoodToolButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        Assert(window.Section == section && ((FrameworkElement)window.FindName("HardwoodOptionsPanel")).Visibility == Visibility.Visible, "Hardwood changed the inspector tab or failed to open.");
+                        Assert(window.CreateProject().ToJsonString() == project, "Changing left tools edited the court.");
+                    }
+                    Assert(((FrameworkElement)window.FindName("PaintPanel")).Visibility == (section == "paint" ? Visibility.Visible : Visibility.Collapsed)
+                        && ((FrameworkElement)window.FindName("LogoPanel")).Visibility == (section == "logos" ? Visibility.Visible : Visibility.Collapsed), "Tool buttons changed the visible inspector content.");
+                }
+            }
+        }
+        finally { canvas.Layers.Remove(logo); canvas.SelectedLayer = null; window.SwitchSection("paint"); window.ShowHardwoodTools(); }
+        Console.WriteLine("PASS left toolbar: every available tool preserves Colors & Lines/Logos/Export/Import with and without a selected logo; Move/Transform gestures work outside Logos; Hardwood preserves the tab and opens its adjustments.");
+    }
+
+    private static void CheckExportPixel(string path, Point point, Color expected)
+    {
+        using var stream = File.OpenRead(path);
+        var frame = BitmapFrame.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+        var image = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 0); var bytes = new byte[4];
+        image.CopyPixels(new Int32Rect((int)point.X, (int)point.Y, 1, 1), bytes, 4, 0);
+        Assert(bytes[2] == expected.R && bytes[1] == expected.G && bytes[0] == expected.B && bytes[3] == expected.A, "Exported hardwood boundary/color differs from preview.");
     }
 }
