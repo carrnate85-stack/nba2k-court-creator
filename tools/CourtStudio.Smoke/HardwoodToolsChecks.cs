@@ -166,6 +166,13 @@ internal static partial class Program
             {
                 Layout(window, width, 800); content.UpdateLayout();
                 var panel = (FrameworkElement)window.FindName("HardwoodOptionsPanel");
+                var workspace = (Grid)window.FindName("WorkspaceRoot");
+                var overlay = (FrameworkElement)window.FindName("ToolOptionsOverlay");
+                var attachedBounds = panel.TransformToAncestor(workspace).TransformBounds(new Rect(panel.RenderSize));
+                Assert(ReferenceEquals(overlay.Parent, workspace) && Math.Abs(attachedBounds.Top) < .001
+                    && Math.Abs(attachedBounds.Left - workspace.ColumnDefinitions[0].ActualWidth) < .001
+                    && Math.Abs(attachedBounds.Width - workspace.ColumnDefinitions[1].ActualWidth) < .001,
+                    "Hardwood bar is not attached to the workspace top-left edge beside the tool rail at width " + width);
                 var bounds = new Rect(0, 0, panel.ActualWidth, panel.ActualHeight); bounds.Inflate(.1, .1);
                 var sliders = Descendants<Slider>(bar).ToArray(); Assert(sliders.Length == 5, "An adjustment slider is missing.");
                 foreach (var control in sliders.Cast<FrameworkElement>().Concat(Descendants<Button>(bar)))

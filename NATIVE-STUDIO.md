@@ -42,8 +42,10 @@ and reset edit without opening its catalog. Each target keeps independent settin
 A valid number draft commits to its original texture before switching targets;
 invalid drafts keep their target until corrected or cancelled. At narrow widths
 the dropdown moves above the sliders so every control remains visible.
-Tool adjustment bars overlay the top of a canvas that spans the header and
-workspace rows. The workspace keeps its full bounds; the fitted artwork alone is
+Tool adjustment bars attach directly to the workspace's top-left edge beside the
+left tool rail, directly under the document header. They overlay the canvas from
+outside its inset card, with no top or left gap. The workspace keeps its full
+bounds; the fitted artwork alone is
 centered up to 24 DIPs lower inside it, limited by available space so fitted side
 viewports stay fully visible. Fit uses the original scale, and zoom centers on
 that artwork position. Showing or hiding hardwood or logo controls leaves the canvas
