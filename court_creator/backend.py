@@ -359,7 +359,8 @@ def load_stock_state() -> dict:
 
 def _export_sources(request: dict) -> tuple[Path, ...]:
     from .experimental_lines import geometry_path
-    values = [request.get("_projectPath"), request.get("templatePath"), (request.get("floor") or {}).get("path")]
+    values = [request.get("_projectPath"), request.get("templatePath"), (request.get("floor") or {}).get("path"),
+              (request.get("twoPointFloor") or {}).get("path")]
     values.extend(item.get("path") for key in ("logoImages", "customFloorImages") for item in request.get(key, []))
     return (NBA2K27_EXPORT_BASE, PROJECT_ROOT / "tools" / "texconv.exe", geometry_path(PROJECT_ROOT),
             *(resolve_asset_path(str(value)) for value in values if value))
@@ -380,9 +381,13 @@ def render_preview(request_path: Path, *, geometry: dict | None = None) -> dict:
             floor = {**resolved, **({"sourceRevision": floor["sourceRevision"]} if "sourceRevision" in floor else {})}
             floor_path = resolve_asset_path(str(floor.get("path", "")))
         floor["path"] = str(floor_path)
+        two_point_floor = request.get("twoPointFloor")
+        if two_point_floor is not None:
+            if not isinstance(two_point_floor, dict): raise ValueError("Invalid two-point hardwood selection.")
+            two_point_floor = dict(two_point_floor, path=str(resolve_asset_path(str(two_point_floor.get("path", "")))))
         logos = [dict(item, path=str(resolve_asset_path(str(item.get("path", "")))))
                  for item in request.get("logoImages", [])]
-        render_experimental(PROJECT_ROOT, {**request, "floor": floor, "logoImages": logos}, output_path,
+        render_experimental(PROJECT_ROOT, {**request, "floor": floor, "twoPointFloor": two_point_floor, "logoImages": logos}, output_path,
                             preview=not request.get("exportFullResolution"), geometry=geometry, protected_sources=protected_sources)
         return {"ok": True, "previewPath": str(output_path)}
     template_path = resolve_asset_path(str(request.get("templatePath") or default_template_path()))

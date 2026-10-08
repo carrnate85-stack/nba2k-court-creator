@@ -248,28 +248,36 @@ public partial class StudioWindow
     }
 
     private bool _catalogBusy;
-    private async void CatalogClick(object sender, RoutedEventArgs e) => await Guard(async () =>
+    private async void CatalogClick(object sender, RoutedEventArgs e) => await Guard(() => OpenFloorCatalogAsync(false));
+    private async Task OpenFloorCatalogAsync(bool twoPoint)
     {
-        if (!_ready || _catalogBusy || PendingLogoImports > 0) return;
+        if (!CanChangeDocument || PendingLogoImports > 0) return;
+        ShowHardwoodTools(twoPoint);
         _catalogBusy = true;
         RefreshToolState(); RefreshMutationState();
         try
         {
-        var catalog = new FloorCatalogWindow(this, _floors, _floor, _favorites, _recent);
+        var catalog = new FloorCatalogWindow(this, _floors, twoPoint ? _twoPointFloor : _floor, _favorites, _recent);
+        if (twoPoint) catalog.Title = "Choose two-point hardwood";
         if (catalog.ShowDialog() == true && catalog.SelectedFloor is not null)
-        { var before = CreateProject(); await SelectFloorAsync(catalog.SelectedFloor); RecordUndo(before); Changed(); }
+        { await ApplyCatalogFloorAsync(catalog.SelectedFloor, twoPoint); }
         else if (catalog.AddRequested)
         {
             var dialog = new OpenFileDialog { Filter = "Floor image|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff" };
             if (dialog.ShowDialog(this) != true) return;
             var response = await _engine.RequestAsync(["add-stock-floor", "--source", dialog.FileName]);
             var floor = StockFloor.Read(response["image"]!.AsObject(), _engine.ProjectRoot); _floors.Add(floor);
-            var before = CreateProject(); await SelectFloorAsync(floor); RecordUndo(before); Changed();
+            await ApplyCatalogFloorAsync(floor, twoPoint);
         }
         SavePreferences();
         }
         finally { _catalogBusy = false; RefreshToolState(); RefreshMutationState(); }
-    });
+    }
+    private async Task ApplyCatalogFloorAsync(StockFloor floor, bool twoPoint)
+    {
+        if (twoPoint) await SelectTwoPointFloorAsync(floor);
+        else { var before = CreateProject(); await SelectFloorAsync(floor); RecordUndo(before); Changed(); }
+    }
     private void SectionClick(object sender, RoutedEventArgs e) => SwitchSection((string)((Button)sender).Tag);
 
     private void LogoSelectionChanged(object sender, SelectionChangedEventArgs e)

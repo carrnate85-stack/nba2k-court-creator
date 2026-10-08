@@ -17,6 +17,7 @@ from .court_import import (NBA2K27_BASE_ENTRY, OUTPUT_SIZE, _base_file_lock,
                           open_iff, read_iff_scene)
 from .export_io import ensure_new_export
 from .asset_io import asset_revision, validate_asset_image, verified_asset_stream
+from .hardwood_adjustments import texture_settings, adjust_hardwood, place_hardwood
 from tools.export_2k26_court_texture import oodle_decompress
 
 
@@ -681,11 +682,19 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
                         geometry: dict | None = None, protected_sources=()) -> Path:
     geometry = request_geometry(project_root, request) if geometry is None else geometry
     floor = request.get("floor") or {}
+    main_settings = texture_settings(floor)
     revision = asset_revision(floor)
     path = Path(str(floor.get("path", "")))
     if not path.is_file():
         raise ValueError("Choose a stock hardwood texture.")
-    sources = (path, geometry_path(project_root), *protected_sources,
+    two_point_floor = request.get("twoPointFloor")
+    if two_point_floor is not None and not isinstance(two_point_floor, dict):
+        raise ValueError("Invalid two-point hardwood selection.")
+    secondary_settings = texture_settings(two_point_floor) if two_point_floor is not None else None
+    two_point_path = Path(str(two_point_floor.get("path", ""))) if two_point_floor is not None else None
+    if two_point_path is not None and not two_point_path.is_file():
+        raise ValueError("The selected two-point hardwood is missing.")
+    sources = (path, *((two_point_path,) if two_point_path is not None else ()), geometry_path(project_root), *protected_sources,
                *(Path(item["path"]) for item in request.get("logoImages", []) if item.get("path")))
     ensure_new_export(output_path, *sources)
     scale = 0.25 if preview else 1.0
@@ -705,8 +714,10 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
         pixels = source.convert("RGBA")
         if floor.get("artworkAlphaMode") == "GameData":
             pixels.putalpha(255)
+        pixels = adjust_hardwood(pixels, main_settings)
         hardwood = ImageOps.fit(pixels, (width, height), method=Image.Resampling.LANCZOS)
         pixels.close()
+        hardwood = place_hardwood(hardwood, main_settings)
         if native:
             from PIL import ImageChops
             mask = Image.new("L", (width, height))
@@ -718,13 +729,35 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
     settings = request.get("lineSettings", {})
     paint_settings = request.get("paintSettings", {})
     draw = ImageDraw.Draw(canvas)
-    paint_ids = {layer["id"] for layer in geometry["paints"]}
-    for layer in [*geometry["paints"], *geometry["layers"]]:
-        setting = (paint_settings if layer["id"] in paint_ids else settings).get(layer["id"], {})
+    def draw_layer(layer, settings):
+        setting = settings.get(layer["id"], {})
         if setting.get("visible", layer["visible"]):
             color = setting.get("color", layer["color"])
             for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
                 draw.polygon([(point[0] * scale, point[1] * scale) for point in polygon], fill=color)
+    for layer in geometry["paints"]:
+        draw_layer(layer, paint_settings)
+    if two_point_path is not None:
+        from PIL import ImageChops
+        with verified_asset_stream(two_point_path, asset_revision(two_point_floor)) as stream, Image.open(stream) as source:
+            validate_asset_image(source)
+            pixels = source.convert("RGBA")
+            if two_point_floor.get("artworkAlphaMode") == "GameData": pixels.putalpha(255)
+            pixels = adjust_hardwood(pixels, secondary_settings)
+            secondary = ImageOps.fit(pixels, (width, height), method=Image.Resampling.LANCZOS)
+            pixels.close()
+            secondary = place_hardwood(secondary, secondary_settings)
+        mask = Image.new("L", (width, height))
+        mask_draw = ImageDraw.Draw(mask)
+        for layer in geometry["paints"]:
+            if layer["id"] not in {"two-point-left", "two-point-right"}: continue
+            for polygon in layer["gameUvPolygons"] if native else layer["polygons"]:
+                mask_draw.polygon([(p[0] * scale - left, p[1] * scale - top) for p in polygon], fill=255)
+        secondary.putalpha(ImageChops.multiply(secondary.getchannel("A"), mask))
+        canvas.alpha_composite(secondary, (left, top))
+        secondary.close(); mask.close()
+    for layer in geometry["layers"]:
+        draw_layer(layer, settings)
     from .court_template import _save_png_atomic, _composite_logo
     for logo in request.get("logoImages", []):
         if logo.get("visible", True):

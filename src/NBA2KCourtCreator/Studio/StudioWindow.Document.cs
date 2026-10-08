@@ -7,7 +7,7 @@ namespace NBA2KCourtCreator.Studio;
 
 public partial class StudioWindow
 {
-    private sealed record PreparedFloor(StockFloor Floor, BitmapSource Thumbnail, Drawing Drawing, string SourceRevision);
+    private sealed record PreparedFloor(StockFloor Floor, BitmapSource Thumbnail, Drawing Drawing, string SourceRevision, BitmapSource Image, HardwoodTextureSettings Settings);
     private string? _floorSourceRevision;
     private readonly Func<string, int, BitmapSource> _loadFloorImage;
     private readonly bool _usePairedFloorLoader;
@@ -20,7 +20,7 @@ public partial class StudioWindow
         _floorSelectionCancellation = null;
         return _floorRevision;
     }
-    private async Task<PreparedFloor> PrepareFloorAsync(StockFloor floor, CancellationToken cancellation = default)
+    private async Task<PreparedFloor> PrepareFloorAsync(StockFloor floor, CancellationToken cancellation = default, Geometry? region = null)
     {
         var bounds = _geometry!["gameUv"]!["hardwoodBounds"]!.AsArray();
         var rectangle = new Rect(Number(bounds[0]), Number(bounds[1]), Number(bounds[2]), Number(bounds[3]));
@@ -45,11 +45,9 @@ public partial class StudioWindow
                     { cancellation.ThrowIfCancellationRequested(); thumbnail = _loadFloorImage(floor.Path, 144); }
                 }
                 cancellation.ThrowIfCancellationRequested();
-                var brush = new ImageBrush(image) { Stretch = Stretch.UniformToFill, AlignmentX = AlignmentX.Center, AlignmentY = AlignmentY.Center,
-                    ViewportUnits = BrushMappingMode.Absolute, Viewport = rectangle };
-                brush.Freeze();
-                var drawing = new GeometryDrawing(brush, null, _courtSurface); drawing.Freeze();
-                return new PreparedFloor(floor, thumbnail, drawing, StudioImages.SourceRevision(image)!);
+                var settings = HardwoodTextureSettings.Read(floor.Source);
+                var drawing = HardwoodTextureSettings.CreateDrawing(image, rectangle, region ?? _courtSurface!, settings);
+                return new PreparedFloor(floor, thumbnail, drawing, StudioImages.SourceRevision(image)!, image, settings);
             }, cancellation);
         }
         finally { _floorDecoder.Release(); }
@@ -58,11 +56,13 @@ public partial class StudioWindow
     {
         CancelImportRequest(); _importPreviewRequest = null;
         _floor = prepared.Floor; _hardwoodDrawing = prepared.Drawing;
+        _preparedMainFloor = prepared; _mainHardwoodSettings = prepared.Settings;
         _floorSourceRevision = prepared.SourceRevision;
         FloorThumbnail.Source = prepared.Thumbnail; SelectedCourtText.Text = prepared.Floor.Name;
         _recent.Remove(prepared.Floor.Id); _recent.Insert(0, prepared.Floor.Id); if (_recent.Count > 20) _recent.RemoveAt(20);
         SavePreferences();
         RefreshImportState();
+        RefreshHardwoodValues();
     }
     private void RefreshMutationState()
     {

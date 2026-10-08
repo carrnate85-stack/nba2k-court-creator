@@ -9,6 +9,29 @@
 - `court_creator`: persistent Python engine for stock discovery, geometry, image composition, conversion, and IFF exports.
 - `electron`: retained fallback, not the default launcher target.
 
+## Hardwood Textures
+
+The main hardwood card fills the court surface. The Two-point Hardwood card
+selects a second catalog/custom texture for both left and right two-point areas,
+using the stock NBA three-point enclosure with both outer keys excluded. Use main
+removes the second texture and restores the main hardwood and any two-point colors.
+Paint in the keys, court markings and logos keep their existing drawing order.
+
+The hardwood tool opens the actual `TextureStudio.ContextualToolOptionsBar` from
+the released Canvas toolkit above the preview. The fixed 40-DIP row drops into
+view and sends options that do not fit into the shared overflow menu. Choosing
+another tool hides it. Main/Two-point target selection controls independent
+Brightness, Contrast, Saturation, Grain scale and Rotation sliders, plus Reset.
+Colors use Canvas's adjustment service; scale/rotation repeat the full-court
+texture around its center before clipping, keeping the texture inside its area.
+Original image files and alpha are preserved. Live native previews are debounced
+and rendered off the UI thread; dragging a slider records one undo step.
+
+Both floor references and settings survive recovery, undo/redo and project
+save/reopen; portable project saves bundle both source images. The Python PNG/IFF
+exporter uses matching color math, alignment and clipping at full resolution.
+Older projects keep one hardwood with default settings.
+
 ## Logo Actions
 
 The logo action row has compact Flip and Mirror dropdowns instead of a Center

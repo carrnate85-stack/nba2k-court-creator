@@ -26,6 +26,7 @@ public partial class StudioWindow
     private string _colorLayerId = "paint-left";
     public void SelectCanvasTool(ArtworkTool tool)
     {
+        CommitHardwoodGesture(); _hardwoodToolActive = false;
         CourtCanvas.CancelGesture();
         if (tool is ArtworkTool.Move or ArtworkTool.Transform) SwitchSection("logos");
         if (tool == ArtworkTool.Eyedropper) SwitchSection("paint");
@@ -40,7 +41,7 @@ public partial class StudioWindow
         var usable = _initialized && !_closePending && !_closed;
         SelectedCourtCard.IsEnabled = _ready && !_catalogBusy && !_closePending && !_closed && PendingLogoImports == 0;
         foreach (var button in new[] { MoveToolButton, TransformToolButton, EyedropperToolButton, HandToolButton, ZoomToolButton })
-        { if (Equals(button.Tag, CourtCanvas.Tool.ToString())) button.SetResourceReference(Control.BackgroundProperty, "AccentDarkBrush"); else button.Background = Brushes.Transparent; }
+        { if (!_hardwoodToolActive && Equals(button.Tag, CourtCanvas.Tool.ToString())) button.SetResourceReference(Control.BackgroundProperty, "AccentDarkBrush"); else button.Background = Brushes.Transparent; }
         MoveToolButton.IsEnabled = usable; HandToolButton.IsEnabled = ZoomToolButton.IsEnabled = usable;
         TransformToolButton.IsEnabled = usable && CourtCanvas.SelectedLayer is not null && _section == "logos";
         EyedropperToolButton.IsEnabled = usable && _section != "import";
@@ -56,6 +57,7 @@ public partial class StudioWindow
         PinnedColorButton.IsEnabled = CanChangeDocument && !_colorPickerOpen && SelectedColorLayer?.Visible == true && _section != "import";
         ActiveToolText.Text = CourtCanvas.Tool == ArtworkTool.Move && _section != "logos" ? _section switch { "paint" => "Colors & Lines", "import" => "Convert Court", "export" => "Export Court", _ => "Hardwood" } : CourtCanvas.Tool switch { ArtworkTool.Transform => "Resize / rotate logo", ArtworkTool.Eyedropper => "Eyedropper: " + (SelectedColorLayer?.Name ?? "selected layer"), ArtworkTool.Hand => "Hand", ArtworkTool.Zoom => "Zoom", _ => "Move logo" };
         CanvasHint.Text = CourtCanvas.Tool switch { ArtworkTool.Transform => "Drag corner handles to resize; top handle to rotate. Hold Shift to temporarily invert aspect lock.", ArtworkTool.Eyedropper => "Click court artwork to apply its color to the selected layer.", ArtworkTool.Hand => "Drag to pan. Scroll to zoom.", ArtworkTool.Zoom => "Click to zoom in; Alt-click to zoom out.", _ when _section == "logos" => "Drag a logo to move it. Corner handles resize; top handle rotates.", _ => "Scroll to zoom. Space + drag to pan." };
+        RefreshHardwoodBar();
     }
     private StockLayer? SelectedColorLayer => _paints.Concat(_lines).Append(_outside).FirstOrDefault(layer => layer.Id == _colorLayerId);
     private void RefreshSelectedColor()

@@ -58,6 +58,7 @@ public partial class StudioWindow : Window
         _testing = testing; _recovery = recovery ?? (testing ? null : new StudioSnapshotWriter(StudioProjectStore.WriteRecovery));
         _preferences = preferences ?? (testing ? null : new StudioPreferenceStore(StudioProjectStore.SettingsDirectory));
         InitializeComponent(); Style = (Style)FindResource(typeof(Window));
+        ConfigureHardwoodTools();
         ConfigureArtworkActions();
         if (!testing) { StudioWindowBounds.Attach(this); ContentRendered += async (_, _) => await Guard(InitializePortableAsync); }
         CourtCanvas.ShowGuides=false;CourtCanvas.SnapEnabled=false;
@@ -142,6 +143,9 @@ public partial class StudioWindow : Window
         _floors.Clear(); _floors.AddRange(floors);
         _paints.Clear(); _paints.AddRange(paints);
         _lines.Clear(); _lines.AddRange(lines);
+        var twoPointSurface = new GeometryGroup { FillRule = FillRule.Nonzero };
+        foreach (var layer in paints.Where(layer => layer.Id is "two-point-left" or "two-point-right")) twoPointSurface.Children.Add(layer.Geometry);
+        twoPointSurface.Freeze(); _twoPointSurface = twoPointSurface;
         _defaultFloorId = _floors.FirstOrDefault(f => _loadedVisibility[f.Id]?.GetValue<bool>() == true)?.Id ?? _floors.FirstOrDefault()?.Id;
         CourtCanvas.Anchors = _geometry["guides"]?["game-uv"]?["anchors"]?.AsArray().OfType<JsonObject>()
             .Select(item => new StudioAnchor(String(item, "id"), String(item, "name"), new Point(Number(item["x"]), Number(item["y"])))) .ToArray() ?? [];
@@ -185,6 +189,7 @@ public partial class StudioWindow : Window
     }
     public async Task SelectFloorAsync(StockFloor? floor)
     {
+        CommitHardwoodGesture();
         if (_restoring || _saving || PendingLogoImports > 0 || _closed || _closePending || _artworkEditorOpen) throw new InvalidOperationException("The court is not available for editing right now.");
         if (floor is null) throw new InvalidOperationException("No hardwood textures were found in the local library.");
         var revision = InvalidateFloorRequests();
@@ -192,7 +197,12 @@ public partial class StudioWindow : Window
         _floorSelectionCancellation = cancellation;
         try
         {
-            var prepared = await PrepareFloorAsync(floor, cancellation.Token);
+            var selected = floor;
+            if (_floor is not null && floor.Id == _floor.Id && StringComparer.OrdinalIgnoreCase.Equals(floor.Path, _floor.Path))
+            {
+                var source = (JsonObject)floor.Source.DeepClone(); source["textureSettings"] = _mainHardwoodSettings.ToJson(); selected = floor with { Source = source };
+            }
+            var prepared = await PrepareFloorAsync(selected, cancellation.Token);
             if (revision != _floorRevision || cancellation.IsCancellationRequested || _closed || _closePending) return;
             ApplyFloor(prepared); RebuildBackground();
         }
@@ -214,11 +224,13 @@ public partial class StudioWindow : Window
             foreach (var layer in paintGroup) geometry.Children.Add(layer.Geometry);
             geometry.Freeze(); group.Children.Add(new GeometryDrawing(StudioImages.Brush(paintGroup.Key), null, geometry));
         }
+        if (_twoPointDrawing is not null) group.Children.Add(_twoPointDrawing);
         foreach (var layer in _lines.Where(layer => layer.Visible)) group.Children.Add(new GeometryDrawing(StudioImages.Brush(layer.Color), null, layer.Geometry));
         group.Freeze(); CourtCanvas.BackgroundDrawing = group;
     }
     public void SwitchSection(string section)
     {
+        CommitHardwoodGesture(); _hardwoodToolActive = false;
         if (section == "floors") section = "paint";
         CourtCanvas.CancelGesture(); _section = section;
         Inspector.Visibility = Visibility.Visible;
@@ -258,8 +270,9 @@ public partial class StudioWindow : Window
         var floorData = (JsonObject)(_floor?.Source.DeepClone() ?? new JsonObject());
         if (_floor is not null) { floorData["path"] = _floor.Path; floorData["name"] = _floor.Name; }
         if (_floorSourceRevision is not null) floorData["sourceRevision"] = _floorSourceRevision;
+        floorData["textureSettings"] = _mainHardwoodSettings.ToJson();
         return new JsonObject { ["version"] = 2, ["buildMode"] = "game-uv", ["mappingMode"] = "game-uv",
-            ["floor"] = floorData, ["outsideColor"] = _outside.Color, ["outsideVisible"] = _outside.Visible,
+            ["floor"] = floorData, ["twoPointFloor"] = TwoPointFloorSnapshot(), ["outsideColor"] = _outside.Color, ["outsideVisible"] = _outside.Visible,
             ["visibility"] = visibility, ["colorOverrides"] = colors, ["layerNames"] = names,
             ["paintSettings"] = Settings(_paints), ["lineSettings"] = Settings(_lines),
             ["logoImages"] = new JsonArray(CourtCanvas.Layers.Select(SerializeLogo).Cast<JsonNode?>().ToArray()),
@@ -282,6 +295,7 @@ public partial class StudioWindow : Window
     private async Task RestoreProjectFromAsync(Func<Task<JsonObject>> load, bool opened = false)
     {
         if (_restoring || _saving || _catalogBusy || _closed || _closePending || _artworkEditorOpen) throw new InvalidOperationException("A court operation is already in progress.");
+        CommitHardwoodGesture(); ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop();
         CourtCanvas.CancelGesture(); FinishLogoOpacity();
         using var cancellation = new CancellationTokenSource();
         _projectRestoreCancellation = cancellation;
@@ -356,10 +370,30 @@ public partial class StudioWindow : Window
                     missing.Add((projectRelative ? "bundled" : "saved") + " hardwood (using the local library copy)");
             }
             if (selectedFloor is null && floorId != _defaultFloorId) missing.Add("hardwood (using the default court)");
+            if (selectedFloor is not null && project["floor"]?["textureSettings"] is { } savedTextureSettings)
+            {
+                var source = (JsonObject)selectedFloor.Source.DeepClone(); source["textureSettings"] = savedTextureSettings.DeepClone();
+                selectedFloor = selectedFloor with { Source = source };
+            }
             cancellation.Token.ThrowIfCancellationRequested();
             var preparedFloor = await PrepareFloorAsync(selectedFloor ?? _floors.First(f => f.Id == _defaultFloorId), cancellation.Token);
             if (project["floor"]?["sourceRevision"]?.GetValue<string>() is { } floorRevision && floorRevision != preparedFloor.SourceRevision)
                 updatedAssets.Add("hardwood");
+            PreparedFloor? preparedTwoPoint = null;
+            if (project["twoPointFloor"] is JsonObject savedTwoPoint)
+            {
+                var savedId = String(savedTwoPoint, "id");
+                var path = ResolvePath(String(savedTwoPoint, "path"), projectPath, projectRelative);
+                var secondary = File.Exists(path) ? ReadSavedFloor(savedTwoPoint, path, false)
+                    : customFloors.Concat(_floors).FirstOrDefault(floor => floor.Id == savedId && File.Exists(floor.Path));
+                if (secondary is null) missing.Add("two-point hardwood (using main hardwood)");
+                else
+                {
+                    preparedTwoPoint = await PrepareFloorAsync(secondary, cancellation.Token, _twoPointSurface);
+                    if (savedTwoPoint["sourceRevision"]?.GetValue<string>() is { } secondaryRevision && secondaryRevision != preparedTwoPoint.SourceRevision)
+                        updatedAssets.Add("two-point hardwood");
+                }
+            }
             cancellation.Token.ThrowIfCancellationRequested();
             // Load and validate assets first. A failed read must not replace the open document.
             _syncing = true;
@@ -386,7 +420,7 @@ public partial class StudioWindow : Window
             }
             if (!_floors.Any(f => f.Id == preparedFloor.Floor.Id)) _floors.Add(preparedFloor.Floor);
             _projectPath = projectPath;
-            ApplyFloor(preparedFloor); RebuildBackground();
+            ApplyFloor(preparedFloor); ApplyTwoPointFloor(preparedTwoPoint); RebuildBackground();
             CourtCanvas.SelectedLayer = CourtCanvas.Layers.FirstOrDefault();
             _projectName = project["projectName"]?.GetValue<string>() is { } savedName && !string.IsNullOrWhiteSpace(savedName) ? savedName : _projectPath is null ? "Untitled court" : Path.GetFileNameWithoutExtension(_projectPath); UpdateProjectLabel();
             _dirty = updatedAssets.Count > 0; RebuildLayerRows();
@@ -415,6 +449,7 @@ public partial class StudioWindow : Window
     }
     public async Task NewProjectAsync()
     {
+        CommitHardwoodGesture();
         var before = CreateProject();
         var reset = (JsonObject)before.DeepClone();
         foreach (var layer in _paints.Concat(_lines))
@@ -424,6 +459,7 @@ public partial class StudioWindow : Window
         }
         reset["outsideColor"] = _outside.DefaultColor; reset["outsideVisible"] = _outside.DefaultVisible;
         reset["floor"] = _floors.First(f => f.Id == _defaultFloorId).Source.DeepClone();
+        reset["twoPointFloor"] = null;
         reset["logoImages"] = new JsonArray(); reset["_projectPath"] = null; reset["projectName"] = "Untitled court";
         await RestoreProjectAsync(reset); ResetImportContext(); RecordUndo(before); Changed(); SwitchSection("paint"); CourtCanvas.Fit();
     }
@@ -472,6 +508,7 @@ public partial class StudioWindow : Window
     private bool CanChangeDocument => _initialized && _ready && !_syncing && !_restoring && !_saving && !_catalogBusy && !_closed && !_closePending && !_artworkEditorOpen;
     private bool Change(Action change)
     {
+        CommitHardwoodGesture();
         if(!CanChangeDocument)return false;
         CourtCanvas.CancelGesture();
         if(!CanChangeDocument)return false;
@@ -484,6 +521,7 @@ public partial class StudioWindow : Window
     private void Changed() { _dirty = true; RebuildBackground(); CourtCanvas.InvalidateVisual(); if (_recovery is not null && !_closePending) { _recoveryTimer.Stop(); _recoveryTimer.Start(); } }
     public async Task UndoAsync(bool redo = false)
     {
+        CommitHardwoodGesture();
         if(!CanChangeDocument)throw new InvalidOperationException("A court operation is already in progress.");
         CourtCanvas.CancelGesture();
         if(!CanChangeDocument)throw new InvalidOperationException("A court operation is already in progress.");

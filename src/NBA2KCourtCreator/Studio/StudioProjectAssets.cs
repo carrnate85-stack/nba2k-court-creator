@@ -17,6 +17,7 @@ internal static class StudioProjectAssets
                 if (item[key]?.GetValue<string>() is { Length: > 0 } path) paths.Add(Path.GetFullPath(path, basis));
         }
         if (snapshot["floor"] is JsonObject floor) Add(floor);
+        if (snapshot["twoPointFloor"] is JsonObject twoPointFloor) Add(twoPointFloor);
         foreach (var key in new[] { "logoImages", "customFloorImages" })
             foreach (var item in (snapshot[key] as JsonArray ?? []).OfType<JsonObject>()) Add(item);
         if (snapshot["templatePath"]?.GetValue<string>() is { Length: > 0 } template) paths.Add(Path.GetFullPath(template, applicationRoot));
@@ -81,6 +82,7 @@ internal static class StudioProjectAssets
             if (preview && !string.IsNullOrWhiteSpace(source) && copied.ContainsKey(Path.GetFullPath(source, sourceDirectory))) item["previewPath"] = item["path"]!.DeepClone();
         }
         if (project["floor"] is JsonObject floor) BundlePath(floor, true);
+        if (project["twoPointFloor"] is JsonObject twoPointFloor) BundlePath(twoPointFloor, true);
         foreach (var logo in (project["logoImages"] as JsonArray ?? []).OfType<JsonObject>()) BundlePath(logo, false);
         foreach (var custom in (project["customFloorImages"] as JsonArray ?? []).OfType<JsonObject>()) BundlePath(custom, true);
         project["assetPathMode"] = "project-relative";

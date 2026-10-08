@@ -15,12 +15,14 @@ public static class StudioProjectValidation
         if (Text(project["assetPathMode"], "assetPathMode") is { } pathMode && pathMode != "project-relative")
             throw Invalid("assetPathMode", "is not supported");
         Color(project["outsideColor"], "outsideColor"); Boolean(project["outsideVisible"], "outsideVisible");
-        if (project["floor"] is not null)
+        foreach (var floorKey in new[] { "floor", "twoPointFloor" })
+        if (project[floorKey] is not null)
         {
-            var floor = Object(project["floor"], "floor");
-            foreach (var key in new[] { "id", "name", "path", "previewPath", "category" }) Text(floor[key], "floor." + key);
-            Revision(floor["sourceRevision"], "floor.sourceRevision");
+            var floor = Object(project[floorKey], floorKey);
+            foreach (var key in new[] { "id", "name", "path", "previewPath", "category" }) Text(floor[key], floorKey + "." + key);
+            Revision(floor["sourceRevision"], floorKey + ".sourceRevision");
             Artwork(floor);
+            HardwoodTextureSettings.Read(floor);
         }
         foreach (var key in new[] { "paintSettings", "lineSettings" })
             foreach (var pair in Map(project[key], key))
