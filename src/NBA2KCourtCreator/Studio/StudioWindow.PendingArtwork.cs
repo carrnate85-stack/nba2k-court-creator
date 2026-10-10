@@ -15,6 +15,7 @@ public partial class StudioWindow
     internal int PendingLogoImports => _pendingLogos.Count;
     private void InvalidateDocumentOperations()
     {
+        CancelHardwoodPreview();
         ++_documentVersion; CancelImportRequest(); _importPreviewRequest = null;
         foreach (var pending in _pendingLogos) pending.Cancel();
         _pendingLogos.Clear();

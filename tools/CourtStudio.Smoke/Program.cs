@@ -23,7 +23,8 @@ internal static partial class Program
             try
             {
                 var output = args.FirstOrDefault(arg => !arg.StartsWith("--"));
-                if (args.Contains("--hardwood-tools")) await CheckHardwoodTools(output ?? "outputs/hardwood-tools-check");
+                if (args.Contains("--performance")) await CheckPerformance(output ?? "outputs/performance-check");
+                else if (args.Contains("--hardwood-tools")) await CheckHardwoodTools(output ?? "outputs/hardwood-tools-check");
                 else if (args.Contains("--history-restore")) await CheckHistoryRestore(output ?? "outputs/history-restore-check");
                 else if (args.Contains("--asset-revisions")) { output ??= "outputs/asset-revision-check"; Directory.CreateDirectory(output); await CheckAssetRevisions(output); }
                 else if (args.Contains("--portable-startup")) await CheckPortableStartup(output ?? "outputs/portable-startup-check");

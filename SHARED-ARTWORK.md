@@ -15,11 +15,16 @@ configuration hides file management, document resize and mip controls; it suppli
 court-green, white-marking and black-graphic color adjustment presets. It uses
 the host's light/dark choice without changing application-global resources.
 
-Portable 1.7.9 consumes the freshly packed 0.9.4 Core/WPF pair verified on
-2026-10-08, including the shared preview and painting optimizations. Verification
+Portable 1.7.15 consumes the 0.9.15 Core/WPF package pair, including the shared
+preview and painting optimizations. Verification
 uses the package assemblies rather than the source project's development build;
 the portable manifest records the exact DLL hashes. Court color/region history
-remains host-owned and separately reuses its retained previews and controls.
+remains host-owned. Routine color, hardwood adjustment and logo placement history
+updates retained objects; asset changes keep the validated full restore path.
+Hardwood previews use one worker and retain only the latest pending request.
+A bounded 64 MiB adjusted-image cache lets scale/rotation reuse exact color pixels.
+The shared color call finishes atomically; canceled requests stop before further
+drawings or publication. No approximation changes saved/exported texture quality.
 
 Supported host-driven edits use `CanvasEditor.Commands`: insertion, transforms,
 selection, opacity, adjustments and undo/redo publish atomically with shared

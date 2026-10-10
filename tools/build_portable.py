@@ -107,7 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('--python-base', type=Path, required=True)
     parser.add_argument('--site-packages', type=Path, required=True)
     parser.add_argument('--canvas-feed', type=Path, required=True)
-    parser.add_argument('--canvas-version', default='0.9.4')
+    parser.add_argument('--canvas-version', default='0.9.15')
     parser.add_argument('--dotnet', type=Path, default=Path(shutil.which('dotnet') or 'dotnet'))
     parser.add_argument('--output', type=Path, default=ROOT / 'outputs/NBA 2K Court Creator Portable.exe')
     build(parser.parse_args())

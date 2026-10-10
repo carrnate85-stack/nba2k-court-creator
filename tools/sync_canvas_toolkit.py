@@ -61,6 +61,15 @@ def find_release(root):
     else:
         artifacts = central / "artifacts"
         directories = sorted(path for path in artifacts.glob("published-*-v*") if path.is_dir())
+        # The combined Canvas checkout supplies the exact host-pinned package pair.
+        # Do not sweep development package folders or override an explicit suite root.
+        props = root / "src/Directory.Build.props"
+        if not os.environ.get("CanvasToolkitRoot") and props.is_file():
+            pinned = ET.parse(props).findtext(".//CanvasToolkitVersion")
+            if pinned and re.fullmatch(r"\d+\.\d+\.\d+", pinned):
+                feed = root.parent / "source/artifacts/packages" / pinned
+                if feed.is_dir():
+                    directories.append(feed)
     requested = os.environ.get("CanvasToolkitVersion")
     releases = []
     for directory in directories:

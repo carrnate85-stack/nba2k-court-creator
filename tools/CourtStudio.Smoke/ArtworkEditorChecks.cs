@@ -28,6 +28,9 @@ internal static partial class Program
         var png = Path.Combine(root, "source.png");
         using var source = NewDocumentService.Create(96, 64);
         source.AlphaCompositingMode = AlphaCompositingMode.GameData;
+        // New transparent Canvas documents now start as overlays. This fixture represents
+        // a game's base texture, whose alpha is an independent data channel.
+        source.Layers[0].IsBaseLayer = true;
         source.ChannelLabels = ["Court R", "Court G", "Court B", "Material data"];
         source.Layers[0].Image.ProcessPixelRows(rows => { for (var y = 0; y < rows.Height; y++)
             for (var x = 0; x < rows.Width; x++) rows.GetRowSpan(y)[x] = new(90, 120, 180, (byte)(x % 2 == 0 ? 0 : 73)); });

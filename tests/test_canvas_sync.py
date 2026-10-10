@@ -89,6 +89,17 @@ class CanvasSyncTests(unittest.TestCase):
         self.assertIn("Standalone", sync.sync(self.root, automatic=True, runner=self.runner))
         self.assertFalse(self.calls)
 
+    def test_combined_checkout_uses_only_the_host_pinned_package_pair(self):
+        pinned = "0.9.15"
+        props = self.root / "src/Directory.Build.props"
+        props.write_text(f"<Project><PropertyGroup><CanvasToolkitVersion>{pinned}</CanvasToolkitVersion></PropertyGroup></Project>")
+        feed = self.root.parent / "source/artifacts/packages" / pinned
+        self.release(pinned, folder=feed)
+        self.release("0.9.16", folder=feed.parent / "0.9.16")
+        self.assertEqual(sync.find_release(self.root)[0], pinned)
+        os.environ["CanvasToolkitRoot"] = str(self.central)
+        self.assertIsNone(sync.find_release(self.root))
+
     def test_older_pinned_release_cannot_build_shared_conversions(self):
         feed = self.release("0.5.1"); before = self.snapshot()
         os.environ["CanvasToolkitFeed"] = str(feed)

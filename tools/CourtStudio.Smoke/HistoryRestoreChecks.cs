@@ -44,14 +44,15 @@ internal static partial class Program
             var beforeReads = StudioImages.ReadStatistics; var times = new List<double>();
             for (var index = 0; index < 8; ++index)
             {
-                var timer = Stopwatch.StartNew(); var undo = window.UndoAsync(); Busy(); await undo; times.Add(timer.Elapsed.TotalMilliseconds); Ready();
+                var timer = Stopwatch.StartNew(); var undo = window.UndoAsync(); if (!undo.IsCompleted) Busy(); await undo; times.Add(timer.Elapsed.TotalMilliseconds); Ready();
                 Assert(JsonNode.DeepEquals(window.CreateProject(), baseline), "Fast color undo changed the project or source pins.");
-                var redo = window.UndoAsync(true); Busy(); await redo; Ready();
+                var redo = window.UndoAsync(true); if (!redo.IsCompleted) Busy(); await redo; Ready();
                 Assert(JsonNode.DeepEquals(window.CreateProject(), changed), "Fast color redo changed the project or source pins.");
                 Assert(ReferenceEquals(window.Canvas.SelectedLayer!.Image, originalImage), "Unchanged logo preview was prepared again.");
                 Assert(ReferenceEquals(window.Canvas.SelectedLayer, originalLogo) && ReferenceEquals(System.Windows.Media.VisualTreeHelper.GetChild(originalLayers, 0), firstGroup), "Unchanged layers or color controls were recreated during undo.");
             }
             Assert(reads == 0 && logoReads == 0 && StudioImages.ReadStatistics == beforeReads, "Color history reread unchanged assets.");
+            Assert(window.FastHistoryRestores == 16, "Color history bypassed the targeted restore path.");
             await window.SetHardwoodTextureAsync(new(Brightness: 12)); var textured = window.CreateProject(); reads = 0;
             await window.UndoAsync(); await window.UndoAsync(true);
             Assert(reads == 0 && JsonNode.DeepEquals(window.CreateProject(), textured), "Texture history redecoded hardwood or lost its settings.");

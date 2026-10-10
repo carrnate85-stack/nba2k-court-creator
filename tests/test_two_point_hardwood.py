@@ -29,6 +29,18 @@ class TwoPointHardwoodTests(unittest.TestCase):
         region('paint-left', [[140, 180], [300, 180], [300, 420], [140, 420]], '#008000')
         region('paint-right', [[700, 180], [860, 180], [860, 420], [700, 420]], '#008000')
         region(self.geometry['layers'][0]['id'], [[180, 120], [220, 120], [220, 140], [180, 140]], '#FFFF00')
+        # Hardwood now follows the outermost visible three-point boundary, with
+        # explicit paint above it. Keep this synthetic court consistent with that contract.
+        for layer in self.geometry['paints']:
+            if layer['id'].startswith('two-point-'):
+                layer['visible'] = False
+        outlines = []
+        for left, right in ((100, 300), (700, 900)):
+            for x1, y1, x2, y2 in ((left, 100, right, 102), (left, 498, right, 500),
+                                  (left, 100, left + 2, 500), (right - 2, 100, right, 500)):
+                outlines.append([[x1, y1], [x2, y1], [x2, y2], [x1, y2]])
+        boundary = next(layer for layer in self.geometry['layers'] if layer['id'] == 'NBA_line_three_point_lowShape')
+        boundary.update(polygons=outlines, gameUvPolygons=outlines, visible=True)
         self.request = dict(floor={'path': str(self.main)}, twoPointFloor={'path': str(self.second)}, outsideColor='#000000')
 
     def render(self, request=None, *, preview=True):
@@ -55,7 +67,8 @@ class TwoPointHardwoodTests(unittest.TestCase):
             self.assertEqual(image.size, (8192, 4096))
             self.assertEqual(image.getpixel((120, 300))[:3], (0, 0, 255))
             self.assertEqual(image.getpixel((880, 300))[:3], (0, 0, 255))
-        with self.render(dict(self.request, twoPointFloor=None)) as image:
+        paint = {identity: {'visible': True} for identity in ('two-point-left', 'two-point-right')}
+        with self.render(dict(self.request, twoPointFloor=None, paintSettings=paint)) as image:
             self.assertEqual(image.getpixel((30, 75))[:3], (255, 0, 255))
 
     def test_pattern_keeps_full_court_alignment(self):
@@ -69,8 +82,8 @@ class TwoPointHardwoodTests(unittest.TestCase):
         request = dict(self.request, twoPointHardwoodEnabled=False)
         retained = dict(request['twoPointFloor'])
         with self.render(request, preview=False) as image:
-            self.assertEqual(image.getpixel((120, 300))[:3], (255, 0, 255))
-            self.assertEqual(image.getpixel((880, 300))[:3], (255, 0, 255))
+            self.assertEqual(image.getpixel((120, 300))[:3], (255, 0, 0))
+            self.assertEqual(image.getpixel((880, 300))[:3], (255, 0, 0))
             self.assertEqual(image.getpixel((200, 300))[:3], (0, 128, 0))
         self.assertEqual(request['twoPointFloor'], retained)
         request['twoPointHardwoodEnabled'] = True
@@ -85,6 +98,13 @@ class TwoPointHardwoodTests(unittest.TestCase):
             with self.subTest(enabled=enabled), self.assertRaisesRegex(ValueError, 'enabled state'):
                 renderer.render_experimental(self.root, dict(self.request, twoPointHardwoodEnabled=enabled), output, preview=True, geometry=self.geometry)
             self.assertEqual(output.read_bytes(), b'previous export')
+
+    def test_hidden_three_point_boundary_hides_secondary_wood_and_explicit_paint_wins(self):
+        with self.render(dict(self.request, lineSettings={'NBA_line_three_point_lowShape': {'visible': False}})) as image:
+            self.assertEqual(image.getpixel((30, 75))[:3], (255, 0, 0))
+        with self.render(dict(self.request, paintSettings={'two-point-left': {'visible': True, 'color': '#FF00FF'}})) as image:
+            self.assertEqual(image.getpixel((30, 75))[:3], (255, 0, 255))
+            self.assertEqual(image.getpixel((220, 75))[:3], (0, 0, 255))
 
     def test_missing_stale_or_protected_second_floor_preserves_output(self):
         output = self.root / 'export.png'; output.write_bytes(b'previous export')

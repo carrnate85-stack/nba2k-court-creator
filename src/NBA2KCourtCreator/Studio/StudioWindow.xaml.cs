@@ -559,7 +559,7 @@ public partial class StudioWindow : Window
         if(before.ToJsonString()!=CreateProject().ToJsonString()){RecordUndo(before);Changed();}
         return true;
     }
-    private void Changed() { _dirty = true; RebuildBackground(); CourtCanvas.InvalidateVisual(); if (_recovery is not null && !_closePending) { _recoveryTimer.Stop(); _recoveryTimer.Start(); } }
+    private void Changed(bool rebuildBackground = true) { _dirty = true; if (rebuildBackground) RebuildBackground(); CourtCanvas.InvalidateVisual(); if (_recovery is not null && !_closePending) { _recoveryTimer.Stop(); _recoveryTimer.Start(); } }
     public async Task UndoAsync(bool redo = false)
     {
         CommitHardwoodGesture();
@@ -570,8 +570,12 @@ public partial class StudioWindow : Window
         if(!CanChangeDocument)throw new InvalidOperationException("A court operation is already in progress.");
         var source = redo ? _redo : _undo; var destination = redo ? _undo : _redo;
         if (source.Count == 0) return; var target = source[^1]; var before = CreateProject();
-        var snapshot = (JsonObject)target.DeepClone();
-        await RestoreProjectFromAsync(() => Task.FromResult(snapshot), history: true); source.RemoveAt(source.Count - 1); destination.Add(before); Changed(); RefreshHistoryState(); SetStatus(redo ? "Redo applied." : "Undo applied.");
+        if (!await TryRestoreHistoryEditsAsync(target, before))
+        {
+            var snapshot = (JsonObject)target.DeepClone();
+            await RestoreProjectFromAsync(() => Task.FromResult(snapshot), history: true);
+        }
+        source.RemoveAt(source.Count - 1); destination.Add(before); Changed(rebuildBackground: false); RefreshHistoryState(); SetStatus(redo ? "Redo applied." : "Undo applied.");
     }
     private void SetStatus(string text) => StatusText.Text = text;
     private async Task Guard(Func<Task> work) { try { await work(); } catch (OperationCanceledException error) when (error.CancellationToken.IsCancellationRequested) { } catch (Exception error) { if (_closed) return; SetStatus(error.Message); if (!_testing) MessageBox.Show(this, error.Message, "Court Creator", MessageBoxButton.OK, MessageBoxImage.Warning); } }

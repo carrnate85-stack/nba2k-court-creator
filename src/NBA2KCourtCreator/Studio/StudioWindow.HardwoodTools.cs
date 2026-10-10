@@ -6,6 +6,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Globalization;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace NBA2KCourtCreator.Studio;
@@ -23,6 +24,15 @@ public partial class StudioWindow
     private readonly DispatcherTimer _hardwoodPreviewTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
     private JsonObject? _hardwoodUndoBefore;
     private long _hardwoodPreviewRevision;
+    private Task? _hardwoodPreviewWork;
+    private bool _hardwoodPreviewPending;
+    private CancellationTokenSource? _hardwoodPreviewCancellation;
+    internal Func<BitmapSource, Rect, Geometry, HardwoodTextureSettings, CancellationToken, Drawing> RenderHardwoodPreview { get; set; } = HardwoodTextureSettings.CreateDrawing;
+    private void CancelHardwoodPreview()
+    {
+        _hardwoodPreviewPending = false;
+        _hardwoodPreviewCancellation?.Cancel();
+    }
     private void ConfigureHardwoodTools()
     {
         HardwoodEditTarget.SelectionChanged += HardwoodEditTargetChanged;
@@ -38,7 +48,7 @@ public partial class StudioWindow
             Grid.SetColumn(control, column); HardwoodOptions.Children.Add(control);
         }
         _hardwoodPreviewTimer.Tick += async (_, _) => { _hardwoodPreviewTimer.Stop(); await Guard(RefreshHardwoodPreviewAsync); };
-        Closed += (_, _) => { ++_hardwoodPreviewRevision; _hardwoodPreviewTimer.Stop(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
+        Closed += (_, _) => { ++_hardwoodPreviewRevision; CancelHardwoodPreview(); _hardwoodPreviewTimer.Stop(); _hardwoodPeers.Clear(); _hardwoodNumberCommits.Clear(); _cancelHardwoodNumbers.Clear(); };
     }
 
     private void HardwoodEditTargetChanged(object sender, SelectionChangedEventArgs e)
@@ -135,7 +145,7 @@ public partial class StudioWindow
             var settings = _editingTwoPointHardwood ? _twoPointHardwoodSettings : _mainHardwoodSettings;
             settings = WriteSetting(settings, key, (int)Math.Round(slider.Value));
             if (_editingTwoPointHardwood) _twoPointHardwoodSettings = settings; else _mainHardwoodSettings = settings;
-            ++_hardwoodPreviewRevision; RefreshHardwoodValues();
+            ++_hardwoodPreviewRevision; CancelHardwoodPreview(); RefreshHardwoodValues();
             _dirty = true; _hardwoodPreviewTimer.Stop(); _hardwoodPreviewTimer.Start();
             if (!slider.IsMouseCaptureWithin) CommitHardwoodGesture();
         };
@@ -236,18 +246,46 @@ public partial class StudioWindow
         var bounds = _geometry!["gameUv"]!["hardwoodBounds"]!.AsArray();
         return new Rect(Number(bounds[0]), Number(bounds[1]), Number(bounds[2]), Number(bounds[3]));
     }
-    private async Task RefreshHardwoodPreviewAsync()
+    private Task RefreshHardwoodPreviewAsync()
     {
-        var revision = _hardwoodPreviewRevision;
-        var main = _preparedMainFloor; var secondary = _preparedTwoPointFloor;
-        var mainSettings = _mainHardwoodSettings; var secondarySettings = _twoPointHardwoodSettings;
-        var rectangle = HardwoodRectangle();
-        var drawings = await Task.Run(() => (
-            Main: main is null ? null : HardwoodTextureSettings.CreateDrawing(main.Image, rectangle, _courtSurface!, mainSettings),
-            Second: secondary is null ? null : HardwoodTextureSettings.CreateDrawing(secondary.Image, rectangle, _courtSurface!, secondarySettings)));
-        if (_closed || revision != _hardwoodPreviewRevision || !ReferenceEquals(main, _preparedMainFloor) || !ReferenceEquals(secondary, _preparedTwoPointFloor)) return;
-        _hardwoodDrawing = drawings.Main; _twoPointDrawing = drawings.Second;
-        _mainRenderedSettings = mainSettings; _twoPointRenderedSettings = secondarySettings; RebuildBackground();
+        if (_closed || _restoring || _courtSurface is null) return Task.CompletedTask;
+        _hardwoodPreviewPending = true;
+        return _hardwoodPreviewWork ??= DrainHardwoodPreviewsAsync();
+    }
+
+    private async Task DrainHardwoodPreviewsAsync()
+    {
+        // Ensure the task is assigned even if the first request is already up to date.
+        await Task.Yield();
+        try
+        {
+            while (_hardwoodPreviewPending && !_closed && !_restoring)
+            {
+                _hardwoodPreviewPending = false;
+                var revision = _hardwoodPreviewRevision;
+                var main = _preparedMainFloor; var secondary = _preparedTwoPointFloor;
+                var mainSettings = _mainHardwoodSettings; var secondarySettings = _twoPointHardwoodSettings;
+                var changeMain = main is not null && (_hardwoodDrawing is null || mainSettings != _mainRenderedSettings);
+                var changeSecond = secondary is not null && (_twoPointDrawing is null || secondarySettings != _twoPointRenderedSettings);
+                if (!changeMain && !changeSecond) continue;
+                var rectangle = HardwoodRectangle(); var region = _courtSurface!;
+                using var cancellation = new CancellationTokenSource();
+                _hardwoodPreviewCancellation = cancellation;
+                try
+                {
+                    var drawings = await Task.Run(() => (
+                        Main: changeMain ? RenderHardwoodPreview(main!.Image, rectangle, region, mainSettings, cancellation.Token) : null,
+                        Second: changeSecond ? RenderHardwoodPreview(secondary!.Image, rectangle, region, secondarySettings, cancellation.Token) : null), cancellation.Token);
+                    if (_closed || cancellation.IsCancellationRequested || revision != _hardwoodPreviewRevision || !ReferenceEquals(main, _preparedMainFloor) || !ReferenceEquals(secondary, _preparedTwoPointFloor)) continue;
+                    if (changeMain) { _hardwoodDrawing = drawings.Main; _mainRenderedSettings = mainSettings; }
+                    if (changeSecond) { _twoPointDrawing = drawings.Second; _twoPointRenderedSettings = secondarySettings; }
+                    RebuildBackground();
+                }
+                catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+                finally { _hardwoodPreviewCancellation = null; }
+            }
+        }
+        finally { _hardwoodPreviewWork = null; }
     }
 
     public async Task SetHardwoodTextureAsync(HardwoodTextureSettings settings, bool twoPoint = false)
