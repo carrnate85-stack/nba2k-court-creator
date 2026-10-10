@@ -199,11 +199,11 @@ class IffExportBaseTests(unittest.TestCase):
     def test_generated_compressed_budget_is_checked_before_crc_inflation(self):
         before = self.snapshot(self.png, self.base, self.tool, self.output)
         actual_copy = court_import._copy_iff_entry
-        def copy_entry(original, converted, item, replacement=None):
+        def copy_entry(original, converted, item, replacement=None, **kwargs):
             copied = copy.copy(item)
             if item.filename == "floor.dds":
                 copied.extra = struct.pack("<HH", 0xCAFE, 4000) + b"X" * 4000
-            return actual_copy(original, converted, copied, replacement)
+            return actual_copy(original, converted, copied, replacement, **kwargs)
         with self.converter(), patch.object(court_import, "MAX_BASE_ARCHIVE_BYTES", 4096), patch.object(
                 court_import, "_copy_iff_entry", side_effect=copy_entry), patch.object(
                 ZipFile, "testzip", side_effect=AssertionError("Oversized archive reached CRC inflation")):

@@ -679,7 +679,7 @@ def _build_geometry() -> dict:
 
 
 def render_experimental(project_root: Path, request: dict, output_path: Path, *, preview: bool = False,
-                        geometry: dict | None = None, protected_sources=()) -> Path:
+                        geometry: dict | None = None, protected_sources=(), fast_png: bool = False) -> Path:
     geometry = request_geometry(project_root, request) if geometry is None else geometry
     floor = request.get("floor") or {}
     main_settings = texture_settings(floor)
@@ -808,5 +808,5 @@ def render_experimental(project_root: Path, request: dict, output_path: Path, *,
     for logo in request.get("logoImages", []):
         if logo.get("visible", True):
             _composite_logo(canvas, logo, scale)
-    _save_png_atomic(canvas, output_path, fast=preview, sources=sources)
+    _save_png_atomic(canvas, output_path, fast=preview or fast_png, sources=sources)
     return output_path

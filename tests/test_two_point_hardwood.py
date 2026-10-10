@@ -62,6 +62,15 @@ class TwoPointHardwoodTests(unittest.TestCase):
                 self.assertEqual(pixel(200, 128), (255, 255, 0))
                 self.assertEqual(pixel(40, 300), (0, 0, 0))
 
+    def test_fast_internal_png_preserves_full_resolution_and_every_pixel(self):
+        normal, fast = self.root / 'normal.png', self.root / 'fast.png'
+        for output, fast_png in ((normal, False), (fast, True)):
+            renderer.render_experimental(self.root, self.request, output, geometry=self.geometry, fast_png=fast_png)
+        with Image.open(normal) as expected, Image.open(fast) as actual:
+            self.assertEqual(actual.size, (8192, 4096))
+            self.assertEqual(actual.mode, expected.mode)
+            self.assertEqual(actual.tobytes(), expected.tobytes())
+
     def test_full_resolution_and_disabled_second_floor_restore_two_point_color(self):
         with self.render(preview=False) as image:
             self.assertEqual(image.size, (8192, 4096))

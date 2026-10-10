@@ -366,7 +366,7 @@ def _export_sources(request: dict) -> tuple[Path, ...]:
             *(resolve_asset_path(str(value)) for value in values if value))
 
 
-def render_preview(request_path: Path, *, geometry: dict | None = None) -> dict:
+def render_preview(request_path: Path, *, geometry: dict | None = None, fast_png: bool = False) -> dict:
     request = request_path if isinstance(request_path, dict) else read_request(request_path)
     if request.get("experimental") or request.get("buildMode") == "game-uv":
         from .experimental_lines import render_experimental, request_geometry
@@ -388,7 +388,8 @@ def render_preview(request_path: Path, *, geometry: dict | None = None) -> dict:
         logos = [dict(item, path=str(resolve_asset_path(str(item.get("path", "")))))
                  for item in request.get("logoImages", [])]
         render_experimental(PROJECT_ROOT, {**request, "floor": floor, "twoPointFloor": two_point_floor, "logoImages": logos}, output_path,
-                            preview=not request.get("exportFullResolution"), geometry=geometry, protected_sources=protected_sources)
+                            preview=not request.get("exportFullResolution"), geometry=geometry, protected_sources=protected_sources,
+                            fast_png=fast_png)
         return {"ok": True, "previewPath": str(output_path)}
     template_path = resolve_asset_path(str(request.get("templatePath") or default_template_path()))
     document = parse_court_psd_layers(template_path)
@@ -423,6 +424,7 @@ def render_preview(request_path: Path, *, geometry: dict | None = None) -> dict:
         logo_images=logo_images,
         max_size=None if request.get("exportFullResolution") else (2048, 1024),
         protected_sources=protected_sources,
+        fast_png=fast_png,
     )
     return {"ok": True, "previewPath": str(output_path)}
 
@@ -644,7 +646,9 @@ def export_current_iff(request_path: Path) -> dict:
     with tempfile.TemporaryDirectory(prefix="court-export-") as folder:
         png_path = Path(folder) / "court.png"
         render_request = {**request, "outputPath": str(png_path), "exportFullResolution": True}
-        render_preview(render_request, geometry=geometry)
+        # The full-resolution PNG is consumed immediately by texconv. Compress
+        # it quickly without changing its pixels or normal PNG export settings.
+        render_preview(render_request, geometry=geometry, fast_png=True)
         output = package_png_into_iff(
             png_path,
             NBA2K27_EXPORT_BASE,

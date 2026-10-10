@@ -116,8 +116,13 @@ def read_iff_scene(archive: ZipFile) -> bytes:
     return data
 
 
-def _copy_iff_entry(original: ZipFile, destination: ZipFile, item, replacement: bytes | None = None) -> None:
+def _copy_iff_entry(original: ZipFile, destination: ZipFile, item, replacement: bytes | None = None,
+                    *, compression_level: int | None = None) -> None:
     copied = copy.copy(item)
+    if compression_level is not None and copied.compress_type == zipfile.ZIP_DEFLATED:
+        # Python 3.12's streaming ZipInfo writer exposes this setting only here.
+        # Keep the source entry, compression method and other metadata intact.
+        copied._compresslevel = compression_level
     if replacement is not None:
         destination.writestr(copied, replacement)
     else:
@@ -1266,7 +1271,7 @@ def _aligned_image(source: Image.Image, bounds: list[int], background: Path,
 def render_texture(source_path: Path, texture_name: str, bounds: list[int],
                    background: Path, output_path: Path, *, preview: bool = False, geometry: dict | None = None,
                    protected_sources=(), source_revision: str | None = None, background_revision: str | None = None,
-                   publication_receipt: dict | None = None) -> Path:
+                   publication_receipt: dict | None = None, fast_png: bool = False) -> Path:
     sources = (Path(source_path), Path(background), *protected_sources)
     ensure_new_export(output_path, *sources)
     output_size = (1200, 600) if preview else OUTPUT_SIZE
@@ -1282,7 +1287,7 @@ def render_texture(source_path: Path, texture_name: str, bounds: list[int],
             writable_stream=publication_receipt is not None,
             validate=validate_preview, validate_cleanup=validate_preview) as staged:
         staged_path = Path(staged.name) if publication_receipt is not None else staged
-        result.save(staged, format="PNG", compress_level=3)
+        result.save(staged, format="PNG", compress_level=1 if fast_png else 3)
         if publication_receipt is not None:
             pending_receipt = stream_receipt(staged)
     if publication_receipt is not None:
@@ -1448,7 +1453,7 @@ def package_png_into_iff(
                         owned_staging(staged, identity)
                         replacement = (data if item.filename == target_texture else
                                        scene_override if item.filename == "level_floor.SCNE" and scene_override is not None else None)
-                        _copy_iff_entry(original, converted, item, replacement)
+                        _copy_iff_entry(original, converted, item, replacement, compression_level=1)
                     converted.comment = (LAYOUT_PREFIX + json.dumps({
                         "mapping": "game-uv", "texture": target_texture,
                         "size": list(OUTPUT_SIZE), "courtBounds": target_court_bounds(geometry=geometry),
@@ -1476,7 +1481,7 @@ def build_iff(source_path: Path, texture_name: str, bounds: list[int], backgroun
     with tempfile.TemporaryDirectory(prefix="court-iff-") as folder:
         temporary = Path(folder)
         png = render_texture(source_path, texture_name, bounds, background, temporary / "court.png", geometry=geometry,
-                             source_revision=source_revision, background_revision=background_revision)
+                             source_revision=source_revision, background_revision=background_revision, fast_png=True)
         return package_png_into_iff(
             png, target_iff, target_texture, output_path, texconv,
             scene_override=scene_override, native_layout=native_layout, geometry=geometry, protected_sources=sources,

@@ -161,6 +161,7 @@ def create_visible_court_preview_png(
     logo_images: list[dict] | None = None,
     max_size: tuple[int, int] | None = (2048, 1024),
     protected_sources=(),
+    fast_png: bool = False,
 ) -> None:
     try:
         from PIL import Image
@@ -227,7 +228,7 @@ def create_visible_court_preview_png(
 
     background = Image.new("RGBA", canvas.size, (32, 36, 43, 255))
     image = Image.alpha_composite(background, canvas)
-    _save_png_atomic(image, output_path, fast=max_size is not None, sources=sources)
+    _save_png_atomic(image, output_path, fast=fast_png or max_size is not None, sources=sources)
 
 
 def warm_visible_preview_layers(

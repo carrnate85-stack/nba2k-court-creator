@@ -123,9 +123,9 @@ class IffArchiveTests(unittest.TestCase):
                 metadata = {field: getattr(info, field) for field in fields}
                 with patch.object(zipfile.ZipFile, "read", side_effect=AssertionError("Whole member read")), patch.object(
                         court_import.shutil, "copyfileobj", wraps=court_import.shutil.copyfileobj) as copy_member:
-                    court_import._copy_iff_entry(original, destination, info)
+                    court_import._copy_iff_entry(original, destination, info, compression_level=1)
                     self.assertEqual(copy_member.call_args.kwargs["length"], 1024 * 1024)
-                    court_import._copy_iff_entry(original, destination, original.getinfo("padding"), b"replacement")
+                    court_import._copy_iff_entry(original, destination, original.getinfo("padding"), b"replacement", compression_level=1)
                 self.assertEqual({field: getattr(info, field) for field in fields}, metadata)
             with court_import.open_iff(target) as archive:
                 self.assertEqual(archive.read("mesh.bin"), payload)
