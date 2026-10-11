@@ -27,6 +27,15 @@ not load and decompress the entire payload as an embedded managed assembly.
 The installed game archives and loose mods
 are not replaced. Game-specific import/export still needs the game installation.
 
+Version 1.7.17 repairs older export caches by decoding the extracted vertex
+buffers and updating their scene references. This happens once; subsequent
+exports reuse the repaired base and retain the fast PNG/ZIP packaging path.
+Every IFF export uses the regular template's original court positions and roughly
+64 by 124-foot surrounding floor, matching the stock arena 000 footprint. Its
+lightmap coordinates are prepared from stock arena 000 once and reused for every
+export, regardless of filename. This mapping uses the game's arena lighting; the
+larger practice-arena footprint and its UV mapping are not substituted.
+
 The launcher verifies its appended payload SHA-256 before extraction, validates
 entry paths and sizes, and installs through a private candidate directory. Its
 normal user-facing launch opens the app, which provisions floors as needed. It does

@@ -34,7 +34,7 @@ OUTPUT_SIZE = (8192, 4096)
 # Court boundary measured on a modern full-court texture, in normalized coordinates.
 COURT_EDGES = (0.1317, 0.1094, 0.8683, 0.8906)
 NBA2K27_BASE_ENTRY = "levels/floor_myteam2k26_int_floor.iff"
-BASE_VERSION = b"CourtCreator-FullCourt-v2"
+BASE_VERSION = b"CourtCreator-FullCourt-v3"
 LAYOUT_PREFIX = b"CourtCreator-Layout-v1\n"
 GAME_SETTINGS_PATH = Path(__file__).resolve().parent.parent / "data" / "game_installation.json"
 MAX_GAME_SETTINGS_BYTES = 1024 * 1024
@@ -612,7 +612,7 @@ def _base_cache_snapshot(destination):
     return _file_snapshot(destination, max_bytes=MAX_BASE_ARCHIVE_BYTES, label="Stock export base cache", limit_label="archive size limit")
 
 
-def _clean_base_archive(destination: Path, *, sources=(), validate_lock=None) -> dict:
+def _clean_base_archive(destination: Path, *, sources=(), validate_lock=None, game_root=None) -> dict:
     destination = Path(destination).absolute()
     sources = tuple(Path(path) for path in sources)
     _check_base_storage(destination, sources=sources)
@@ -633,17 +633,20 @@ def _clean_base_archive(destination: Path, *, sources=(), validate_lock=None) ->
             if sum(item.file_size for item in original.infolist()) > MAX_BASE_ARCHIVE_BYTES:
                 raise ValueError("The stock export base exceeds its inflated archive size limit.")
             scene = clean_floor_scene(read_iff_scene(original))
+            from .floor_geometry import normalized_scene, regular_lightmap
+            replacements = regular_lightmap(normalized_scene(original, scene, game_root), game_root)
+            scene = replacements["level_floor.SCNE"]
             with staged.open("r+b") as stream:
                 owned_staging(staged, identity, info=os.fstat(stream.fileno()))
                 stream.truncate(0)
                 with ZipFile(stream, "w") as cleaned:
                     for item in original.infolist():
-                        _copy_iff_entry(original, cleaned, item, scene if item.filename == "level_floor.SCNE" else None)
+                        _copy_iff_entry(original, cleaned, item, replacements.get(item.filename), compression_level=1)
                     cleaned.comment = BASE_VERSION
         with open_iff(staged) as checked:
             if staged.stat().st_size > MAX_BASE_ARCHIVE_BYTES or sum(item.file_size for item in checked.infolist()) > MAX_BASE_ARCHIVE_BYTES:
                 raise ValueError("The prepared export base exceeds its archive size limit.")
-            if checked.testzip() is not None or not _entry_matches(checked, "level_floor.SCNE", scene):
+            if checked.testzip() is not None or any(not _entry_matches(checked, name, data) for name, data in replacements.items()):
                 raise ValueError("The prepared export base failed validation.")
         result = inspect_iff(staged, target=True)
     result["path"] = str(destination)
@@ -942,9 +945,12 @@ def _recover_base_extraction(destination: Path, game_root: Path | None = None) -
 
 
 @contextmanager
-def extracted_stock_floor(game_root: Path):
+def extracted_stock_floor(game_root: Path, entry: str | None = None):
     """Expand the stock floor in scratch space, leaving installed mods untouched."""
     root = Path(game_root).resolve()
+    entry = NBA2K27_BASE_ENTRY if entry is None else entry
+    if not re.fullmatch(r"levels/[a-zA-Z0-9_]+_floor\.iff", entry):
+        raise ValueError("Invalid stock floor entry.")
     with tempfile.TemporaryDirectory(prefix="court-stock-floor-") as folder:
         temporary = Path(folder)
         found = False
@@ -954,7 +960,7 @@ def extracted_stock_floor(game_root: Path):
             writer = csv.writer(target, lineterminator="\n")
             for row in csv.reader(source):
                 if len(row) == 4:
-                    if row[0].replace("\\", "/").casefold() == NBA2K27_BASE_ENTRY.casefold():
+                    if row[0].replace("\\", "/").casefold() == entry.casefold():
                         if found:
                             raise ValueError("The stock floor has duplicate manifest entries.")
                         if int(row[2]) < 0 or int(row[3]) <= 0:
@@ -967,13 +973,13 @@ def extracted_stock_floor(game_root: Path):
                 writer.writerow(row)
         if not found:
             raise ValueError("The NBA 2K27 manifest does not contain the stock export floor.")
-        archive_path = temporary / "mods" / NBA2K27_BASE_ENTRY
+        archive_path = temporary / "mods" / entry
         for _attempt in range(2):
             if not archive_path.resolve().is_relative_to(temporary.resolve()):
                 raise ValueError("Stock extraction returned a path outside its scratch folder.")
             archive_path.unlink(missing_ok=True)
             result = run_tool(
-                [str(root / "mod.exe"), NBA2K27_BASE_ENTRY], cwd=str(temporary),
+                [str(root / "mod.exe"), entry], cwd=str(temporary),
                 timeout=180, label="NBA 2K27 extractor",
             )
             if not archive_path.resolve().is_relative_to(temporary.resolve()):
@@ -1083,7 +1089,7 @@ def prepare_2k27_base(destination: Path, game_root: Path | None = None) -> dict:
             return cached
         if destination.is_file() and is_zipfile(destination):
             inspect_iff(destination, target=True)
-            result = _clean_base_archive(destination, sources=sources, validate_lock=validate_lock)
+            result = _clean_base_archive(destination, sources=sources, validate_lock=validate_lock, game_root=available_root)
             if selected_root is not None:
                 _remember_game_root(selected_root, required=True)
             return result
@@ -1101,7 +1107,7 @@ def prepare_2k27_base(destination: Path, game_root: Path | None = None) -> dict:
                 raise ValueError("The stock export base cache changed while preparing. Retry to use the current cache.")
 
         with extracted_stock_floor(root) as archive_path:
-            result = _clean_base_archive(archive_path, sources=sources)
+            result = _clean_base_archive(archive_path, sources=sources, game_root=root)
             prepared = _base_cache_snapshot(archive_path)
             with staged_export(destination, sources=(*sources, archive_path), validate=validate) as staged:
                 identity = staging_identity(staged)
