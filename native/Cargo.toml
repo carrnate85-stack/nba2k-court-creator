@@ -1,0 +1,17 @@
+[workspace]
+members = ["crates/court-core", "src-tauri"]
+resolver = "2"
+
+[profile.release]
+lto = false
+codegen-units = 16
+strip = true
+
+# Matches the shared Canvas desktop settings (local compiler stability on asset-heavy entry points).
+[profile.release.package.court-creator-desktop]
+opt-level = 2
+codegen-units = 1
+
+# Pixel and archive work stays fast in development builds.
+[profile.dev.package."*"]
+opt-level = 2

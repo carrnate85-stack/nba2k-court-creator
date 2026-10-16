@@ -1,0 +1,28 @@
+[package]
+name = "court-creator-desktop"
+version = "2.0.0-preview.1"
+edition = "2024"
+build = "build.rs"
+description = "NBA 2K Court Creator (Rust/Tauri preview)."
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+court-core = { path = "../crates/court-core" }
+canvas-engine = { path = "../../../source/native/crates/canvas-engine" }
+canvas-text = { path = "../../../source/native/crates/canvas-text" }
+tauri = { version = "2", features = ["protocol-asset"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+rfd = { version = "0.15", features = ["common-controls-v6"] }
+uuid = { version = "1", features = ["v4"] }
+rayon = "1"
+
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.39.1"
+windows = { version = "0.62", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_Com", "Win32_UI_Shell"] }
