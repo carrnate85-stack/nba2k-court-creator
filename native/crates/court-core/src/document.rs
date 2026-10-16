@@ -88,6 +88,17 @@ pub struct Document {
     pub logos: Vec<Logo>,
 }
 
+/// An editable `.2kstudio` source must match its recorded revision. A missing or changed archive
+/// fails explicitly instead of silently flattening the artwork (`RestoreArtworkReference`).
+pub fn check_editable_artwork(item: &Map<String, Value>) -> Result<()> {
+    let Some(path) = item.get("artworkProjectPath").and_then(Value::as_str).filter(|p| !p.is_empty()) else { return Ok(()) };
+    let expected = item.get("artworkProjectRevision").and_then(Value::as_str);
+    if expected.is_none() || crate::files::file_revision(Path::new(path)).ok().as_deref() != expected {
+        return Err(Error::msg("The editable artwork project is missing or changed; its layers were not discarded."));
+    }
+    Ok(())
+}
+
 /// Artwork the document references; the host decodes, owns and caches the pixels.
 pub trait Assets {
     /// Content revision (SHA-256) of a hardwood image after decoding it.
@@ -631,6 +642,48 @@ impl Studio {
         })
     }
 
+    /// Applies edited logo artwork (`EditArtworkAsync`): new owned pixels and editable-source
+    /// metadata replace the old ones; placement, name and slot are unchanged. One undo step.
+    pub fn apply_logo_artwork(&mut self, id: &str, path: PathBuf, revision: String, size: (u32, u32), artwork: Map<String, Value>) -> Result<()> {
+        let index = self.logo_index(id)?;
+        self.change(|studio| {
+            let logo = &mut studio.doc.logos[index];
+            logo.path = path;
+            logo.revision = Some(revision);
+            logo.pixel_width = size.0;
+            logo.pixel_height = size.1;
+            logo.artwork = artwork;
+            Ok(())
+        })
+    }
+
+    /// Applies edited hardwood artwork to the main court texture. The floor keeps its id, name
+    /// and texture settings, so its placement on the court is unchanged. One undo step.
+    pub fn apply_floor_artwork(&mut self, path: PathBuf, revision: String, artwork: Map<String, Value>) -> Result<()> {
+        if self.doc.floor.is_none() {
+            return Err(Error::msg("Select a court texture first."));
+        }
+        self.change(|studio| {
+            let hardwood = studio.doc.floor.as_mut().unwrap();
+            let text = Value::String(path.to_string_lossy().into_owned());
+            if !hardwood.floor.source.is_object() {
+                hardwood.floor.source = json!({});
+            }
+            for key in ["artworkProjectPath", "artworkProjectRevision", "artworkDdsPath", "artworkDdsRevision", "artworkAlphaMode"] {
+                hardwood.floor.source.as_object_mut().unwrap().remove(key);
+            }
+            for (key, value) in artwork {
+                hardwood.floor.source[key] = value;
+            }
+            hardwood.floor.source["path"] = text.clone();
+            hardwood.floor.source["previewPath"] = text;
+            hardwood.floor.path = path.clone();
+            hardwood.floor.preview_path = path;
+            hardwood.revision = Some(revision);
+            Ok(())
+        })
+    }
+
     pub fn rename_project(&mut self, name: &str) -> Result<()> {
         let name = name.trim();
         if name.is_empty() || name.chars().count() > 120 || name.chars().any(char::is_control) {
@@ -697,6 +750,7 @@ impl Studio {
         for item in project.get("logoImages").and_then(Value::as_array).into_iter().flatten() {
             let path = resolve(self, item.get("path").and_then(Value::as_str).unwrap_or(""));
             let artwork = self.artwork_reference(item, project_path.as_deref(), relative);
+            check_editable_artwork(&artwork)?;
             let mut logo = Logo {
                 id: item.get("id").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| uuid::Uuid::new_v4().simple().to_string()),
                 name: item.get("name").and_then(Value::as_str).unwrap_or("Logo").to_string(),
@@ -772,6 +826,7 @@ impl Studio {
         let main = selected
             .or_else(|| self.library.default_floor.as_ref().and_then(|id| self.library.floor(id)).cloned())
             .ok_or_else(|| Error::msg("No hardwood textures were found in the local library."))?;
+        check_editable_artwork(main.source.as_object().unwrap_or(&Map::new()))?;
         let main_settings = Settings::read(&main.source)?;
         let main_revision = assets.floor(&main.path, main.source.get("artworkAlphaMode").and_then(Value::as_str) == Some("GameData"))?;
         if project.get("floor").and_then(|f| f.get("sourceRevision")).and_then(Value::as_str).is_some_and(|r| r != main_revision) {
@@ -792,6 +847,7 @@ impl Studio {
                     if let Some(settings) = saved.get("textureSettings") {
                         floor.source["textureSettings"] = settings.clone();
                     }
+                    check_editable_artwork(floor.source.as_object().unwrap_or(&Map::new()))?;
                     let settings = Settings::read(&floor.source)?;
                     let revision = assets.floor(&floor.path, floor.source.get("artworkAlphaMode").and_then(Value::as_str) == Some("GameData"))?;
                     if saved.get("sourceRevision").and_then(Value::as_str).is_some_and(|r| r != revision) {
@@ -942,5 +998,27 @@ fn restore_legacy_colors(doc: &mut Document, project: &Value) {
                 layer.color = format!("#{:02X}{:02X}{:02X}", rgb[0].as_f64().unwrap_or(0.0) as u8, rgb[1].as_f64().unwrap_or(0.0) as u8, rgb[2].as_f64().unwrap_or(0.0) as u8);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn editable_artwork_requires_its_recorded_revision() {
+        let folder = std::env::temp_dir().join(format!("court-artwork-{}", uuid::Uuid::new_v4().simple()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let archive = folder.join("artwork.2kstudio");
+        std::fs::write(&archive, b"layers").unwrap();
+        let mut item = Map::new();
+        assert!(check_editable_artwork(&item).is_ok(), "plain artwork needs no archive");
+        item.insert("artworkProjectPath".into(), json!(archive.to_string_lossy()));
+        assert!(check_editable_artwork(&item).is_err(), "a missing revision is refused");
+        item.insert("artworkProjectRevision".into(), json!(crate::files::sha256_hex(b"layers")));
+        assert!(check_editable_artwork(&item).is_ok());
+        std::fs::write(&archive, b"changed").unwrap();
+        assert!(check_editable_artwork(&item).is_err(), "a changed archive is refused, not flattened");
+        std::fs::remove_dir_all(&folder).unwrap();
     }
 }

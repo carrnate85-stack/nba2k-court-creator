@@ -83,7 +83,9 @@ pub fn logos_directory() -> PathBuf {
 /// Copies artwork into `logos/<sha256><ext>` unless it already lives there.
 pub fn own_logo(path: &Path, bytes: &[u8], revision: &str) -> Result<PathBuf> {
     let directory = logos_directory();
-    if files::normalized(path).starts_with(files::normalized(&directory)) {
+    let normalized = files::normalized(path);
+    // Applied Edit Artwork results already live in app-owned storage.
+    if normalized.starts_with(files::normalized(&directory)) || normalized.starts_with(files::normalized(&files::data_root().join("artwork"))) {
         return Ok(path.to_path_buf());
     }
     let mut extension = path.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_else(|| "png".into());
@@ -133,11 +135,13 @@ pub struct Preferences {
     pub recent: Vec<String>,
     pub dark: bool,
     pub primary_color: String,
+    /// Saved color-picker presets (`PaintColorPalette.Presets`, at most 128), newest last.
+    pub color_presets: Vec<String>,
 }
 
 impl Default for Preferences {
     fn default() -> Self {
-        Self { favorites: Vec::new(), recent: Vec::new(), dark: false, primary_color: "#19583F".into() }
+        Self { favorites: Vec::new(), recent: Vec::new(), dark: false, primary_color: "#19583F".into(), color_presets: Vec::new() }
     }
 }
 
@@ -148,7 +152,7 @@ impl Preferences {
     /// Port of `StudioPreferences.FromDocument` (strict keys, bounded lists, valid color).
     pub fn from_document(value: &Value) -> Result<Self> {
         let map = value.as_object().ok_or_else(|| Error::msg("Preferences must be an object."))?;
-        if map.keys().any(|k| !matches!(k.as_str(), "favorites" | "recent" | "dark" | "primaryColor")) {
+        if map.keys().any(|k| !matches!(k.as_str(), "favorites" | "recent" | "dark" | "primaryColor" | "colorPresets")) {
             return Err(Error::msg("Preferences contain unrecognized settings."));
         }
         let ids = |key: &str, limit: usize| -> Result<Vec<String>> {
@@ -173,10 +177,26 @@ impl Preferences {
             None => "#19583F".into(),
             Some(value) => value.as_str().and_then(court_core::render::normalize_hex).ok_or_else(|| Error::msg("Invalid primary color preference."))?,
         };
-        Ok(Self { favorites: ids("favorites", 10000)?, recent: ids("recent", 20)?, dark, primary_color: primary })
+        let color_presets = match map.get("colorPresets") {
+            None => Vec::new(),
+            Some(value) => Self::presets(value).ok_or_else(|| Error::msg("Invalid color presets."))?,
+        };
+        Ok(Self { favorites: ids("favorites", 10000)?, recent: ids("recent", 20)?, dark, primary_color: primary, color_presets })
+    }
+    /// Validated, normalized and de-duplicated preset colors (128 at most).
+    pub fn presets(value: &Value) -> Option<Vec<String>> {
+        let items = value.as_array().filter(|a| a.len() <= 128)?;
+        let mut out: Vec<String> = Vec::new();
+        for item in items {
+            let hex = item.as_str().and_then(court_core::render::normalize_hex)?;
+            if !out.contains(&hex) {
+                out.push(hex);
+            }
+        }
+        Some(out)
     }
     pub fn to_document(&self) -> Value {
-        json!({"favorites": self.favorites, "recent": self.recent, "dark": self.dark, "primaryColor": self.primary_color})
+        json!({"favorites": self.favorites, "recent": self.recent, "dark": self.dark, "primaryColor": self.primary_color, "colorPresets": self.color_presets})
     }
     /// Loads the preview's own preferences, seeding once (read-only) from the existing app's file.
     pub fn load() -> (Self, Option<String>) {

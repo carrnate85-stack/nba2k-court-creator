@@ -49,14 +49,11 @@ function hsvToRgb(h: number, s: number, v: number) {
   return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
 }
 
-const readPresets = (): string[] => { try { return JSON.parse(localStorage.getItem('court-presets') ?? '[]'); } catch { return []; } };
-const writePresets = (list: string[]) => { try { localStorage.setItem('court-presets', JSON.stringify(list)); } catch { /* per-viewer convenience only */ } };
 
 /** Shared picker: spectrum/hue, RGB/HSB, hex (selected first), Primary then Presets, one Team Colors action. */
-export function ColorPicker({ title, color, primary, palettes, onApply, onClose }: { title: string; color: string; primary: string; palettes: Palette[]; onApply(hex: string): void; onClose(): void }) {
+export function ColorPicker({ title, color, primary, palettes, presets, onPresets, onApply, onClose }: { title: string; color: string; primary: string; palettes: Palette[]; presets: string[]; onPresets(list: string[]): void; onApply(hex: string): void; onClose(): void }) {
   const [hsv, setHsv] = useState(() => { const [r, g, b] = toRgb(color); return rgbToHsv(r, g, b); });
   const [hexText, setHexText] = useState(color);
-  const [presets, setPresets] = useState(readPresets);
   const [teams, setTeams] = useState(false);
   const hexInput = useRef<HTMLInputElement>(null);
   const current = toHex(...(hsvToRgb(hsv.h, hsv.s, hsv.v) as [number, number, number]));
@@ -102,8 +99,8 @@ export function ColorPicker({ title, color, primary, palettes, onApply, onClose 
       <div className="swatch-section">
         <div className="row"><span className="label">Primary</span><button className="chip" style={{ background: primary }} title={`Primary ${primary}`} onClick={() => set(primary)} /></div>
         <div className="row"><span className="label">Preset Colors</span>
-          {presets.map(p => <button key={p} className="chip" style={{ background: p }} title={`${p} — right-click to remove preset`} onClick={() => set(p)} onContextMenu={e => { e.preventDefault(); const next = presets.filter(x => x !== p); setPresets(next); writePresets(next); }} />)}
-          <button className="chip" title="Save the current color as a preset" disabled={presets.length >= 32} onClick={() => { const next = [...presets.filter(x => x !== current), current]; setPresets(next); writePresets(next); }}>+</button>
+          {presets.map(p => <button key={p} className="chip" style={{ background: p }} title={`${p} — right-click to remove preset`} onClick={() => set(p)} onContextMenu={e => { e.preventDefault(); onPresets(presets.filter(x => x !== p)); }} />)}
+          <button className="chip" title="Save the current color as a preset" disabled={presets.length >= 128} onClick={() => onPresets([...presets.filter(x => x !== current), current])}>+</button>
         </div>
       </div>
     </Dialog>
@@ -269,7 +266,7 @@ export function LogoImporter({ onPlaced, onClose, setStatus }: { onPlaced(reply:
 type TextValues = { Text: string; FontFamily: string; FontSize: number; FillColor: string; OutlineColor: string; OutlineWidth: number; Bold: boolean; Italic: boolean; Alignment: number; LineHeight: number; LetterSpacing: number };
 
 /** Text settings (font, size, fill, outline, bold/italic, alignment, line height, letter spacing). */
-export function TextDialog({ initial, primary, palettes, onApply, onClose }: { initial: Record<string, unknown>; primary: string; palettes: Palette[]; onApply(settings: TextValues): void; onClose(): void }) {
+export function TextDialog({ initial, primary, palettes, presets, onPresets, onApply, onClose }: { initial: Record<string, unknown>; primary: string; palettes: Palette[]; presets: string[]; onPresets(list: string[]): void; onApply(settings: TextValues): void; onClose(): void }) {
   const pick = <T,>(pascal: string, fallback: T): T => (initial[pascal] ?? initial[pascal[0].toLowerCase() + pascal.slice(1)] ?? fallback) as T;
   const [values, setValues] = useState<TextValues>({
     Text: pick('Text', 'TEXT'), FontFamily: pick('FontFamily', 'Arial'), FontSize: pick('FontSize', 180), FillColor: pick('FillColor', primary), OutlineColor: pick('OutlineColor', '#000000'),
@@ -281,7 +278,7 @@ export function TextDialog({ initial, primary, palettes, onApply, onClose }: { i
   useEffect(() => {
     const timer = setTimeout(async () => {
       try {
-        const { data } = await bitmap('text_preview', { settings: values });
+        const { data } = await bitmap('court_text_preview', { settings: values });
         const c = preview.current!; c.width = data.width; c.height = data.height; c.getContext('2d')!.putImageData(data, 0, 0); setError('');
       } catch (e) { setError(errorText(e)); }
     }, 120);
@@ -290,7 +287,7 @@ export function TextDialog({ initial, primary, palettes, onApply, onClose }: { i
   const set = <K extends keyof TextValues>(key: K, value: TextValues[K]) => setValues(v => ({ ...v, [key]: value }));
   const number = (key: keyof TextValues, min: number, max: number, step = 1) => <input type="number" min={min} max={max} step={step} value={values[key] as number} onChange={e => set(key, Number(e.target.value) as never)} />;
   const valid = values.Text.trim().length > 0 && values.FontSize >= 6 && values.FontSize <= 600 && values.OutlineWidth >= 0 && values.OutlineWidth <= 40 && values.LineHeight >= 0 && values.LineHeight <= 3000 && values.LetterSpacing >= 0 && values.LetterSpacing <= 200;
-  if (picker) return <ColorPicker title={picker === 'FillColor' ? 'Text fill' : 'Text outline'} color={normalizeHex(values[picker]) ?? '#FFFFFF'} primary={primary} palettes={palettes} onClose={() => setPicker(null)} onApply={hex => { set(picker, hex); setPicker(null); }} />;
+  if (picker) return <ColorPicker title={picker === 'FillColor' ? 'Text fill' : 'Text outline'} color={normalizeHex(values[picker]) ?? '#FFFFFF'} primary={primary} palettes={palettes} presets={presets} onPresets={onPresets} onClose={() => setPicker(null)} onApply={hex => { set(picker, hex); setPicker(null); }} />;
   return (
     <Dialog title="Text" className="text-dialog" onClose={onClose} footer={<><small className="grow" style={{ color: 'var(--warning-text)' }}>{error}</small><button onClick={onClose}>Cancel</button><button className="action" disabled={!valid} onClick={() => onApply(values)}>Apply</button></>}>
       <div className="text-grid">

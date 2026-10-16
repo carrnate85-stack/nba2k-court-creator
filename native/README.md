@@ -32,11 +32,11 @@ Explicit local path dependencies on the sibling checkout `../../source/native`:
 (DirectWrite/Direct2D text). The UI bundles `ui/theme.generated.css` and `ui/icons.generated.json` at
 build time through the `@canvas` Vite alias. Nothing from the Canvas checkout is needed at runtime.
 
-Built and verified against Canvas `6acf4d25a1d82d3d87e7e399219aae7f1244d8e9` (0.42.0) **with that
-checkout's uncommitted changes present** (crate versions bumped to 0.43.0; modified `lib.rs`,
-`project.rs`; untracked `brush_dynamics.rs`, `layer_comps.rs`, `linked.rs`). SHA-256 of the sorted
-per-file hashes of both crates' `src` + `Cargo.toml`: `97843573…8d7ad5efb`; `theme.generated.css` `440b89f0…0ae3542`;
-`icons.generated.json` `96f9795b…cd6c152`. No Canvas file was modified for this port. Court-specific
+Built and verified against Canvas `0755659259f84fc0e768f575dd048e288ba325af` (0.44.0, clean checkout). Besides the two
+crates, the build bundles Canvas UI sources through the `@canvas` alias: theme tokens, icons,
+`CanvasViewport`, `CompositeSurface`, `TextEditor`, `LayerThumbnail`, `HexColorInput`, their workers
+and `editor.css` (scoped to the Edit Artwork window at build time). SHA-256 of the sorted per-file
+hashes of both crates' `src` + `Cargo.toml`: `c193a62e…fecca1e1`. No Canvas file was modified for this port. Court-specific
 geometry, colors, hardwood settings and IFF rules stay in `court-core`.
 
 ## Build, check and install
@@ -96,8 +96,17 @@ All on this PC with NBA 2K27 installed (updated 2026-10-16). Off-screen only; no
   relative assets, text placement, PNG/IFF export; in-app PNG export of the editable-text fixture is
   byte-identical to Python. True first run (no existing caches): usable after the first floor,
   preparation resumed after exit and completed (266 floors) with the catalog refreshed in place.
-- **Official run** (`tools/Build.ps1`): 26 core tests, type-check, release EXE
-  (SHA-256 `95740E50…E80116AD`, 17.97 MB) and the hidden light, dark and compact suites (11 checks
+- **Edit Artwork** (hidden checks, light/dark/compact): logo Apply writes `artwork.png` +
+  `artwork.2kstudio` under `artwork/<id>`, keeps placement, is one court undo/redo step and reopens
+  with its layers; court edits are blocked while the editor is open; Cancel leaves the court
+  unchanged; hardwood Apply keeps the floor id and texture settings; portable Save/Open bundles the
+  editable archives with relative paths and validates their revisions. A missing or changed archive
+  fails the open instead of flattening the artwork (unit test).
+- **Color presets** are stored in `preferences.json` (`colorPresets`, normalized, at most 128, like
+  `PaintColorPalette`; the WPF app kept them only for the session). Presets saved by the first
+  preview build in WebView storage are moved there once.
+- **Official run** (`tools/Build.ps1`): 27 core tests, type-check, release EXE
+  (SHA-256 `7B0FDCCF…DBE6DE40`, 22.35 MB) and the hidden light, dark and compact suites (16 checks
   each) passed; `Install-Preview.ps1` re-ran the hidden suite on the installed copy from `%TEMP%`.
 - **Dependencies:** EXE imports only Windows system DLLs (UCRT, DirectWrite/Direct2D, COM, user32 …).
 
@@ -106,15 +115,19 @@ captures to `target/verification`.
 
 ## Known gaps
 
-- **Edit Artwork** (the embedded shared Canvas pixel editor with Apply/Cancel) is not ported. Existing
-  editable-artwork metadata (`artworkProject*`, `artworkDds*`, `artworkAlphaMode`) is preserved and
-  round-trips; *Send Texture to 2K Canvas* (one-way handoff) is available.
-- The color picker, team colors, catalog, importer and text dialogs are React rebuilds of the WPF
-  dialogs; physical mouse/keyboard/DPI behavior has not been manually tested.
+- **Edit Artwork** reuses the Canvas Rust editor's own React components (viewport, compositor,
+  selection, layer thumbnails, inline text) and engine; the compact tool set, layer panel and court
+  presets are a Court Creator shell rather than the full Canvas window. Canvas-only panels (masks
+  UI, adjustments dialog, filters, channels, mips) are not exposed. `artwork.rs` keeps a subset copy
+  of Canvas's `Edit` command enum and `artwork_text.rs` adapts Canvas's `text_edit.rs`; both must be
+  re-synced if those Canvas commands change.
+- The color picker, team colors, catalog, importer, text and artwork dialogs have not been tested by
+  hand with a real mouse, keyboard or display scaling (hidden checks only).
 - Text renders through `canvas-text` (DirectWrite), validated by Canvas against the released WPF
   renderer; a new text layer is not guaranteed byte-identical to a WPF-rendered PNG (saved text PNGs
   are reused as-is).
 - DDS codec: `canvas-engine` BC7 instead of `texconv` (comparable error; not byte-identical).
-- Saved color presets are per-viewer WebView storage (not the WPF preset store).
+- Hardwood Edit Artwork keeps the current texture settings; the WPF app re-read them from the floor's
+  source object, which could reset them.
 - **In-game acceptance of an exported IFF has not been performed** (the 1.7.17 regular export passed
   file checks but its in-game test is likewise pending).

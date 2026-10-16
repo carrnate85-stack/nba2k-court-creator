@@ -455,7 +455,7 @@ dependencies = [
 
 [[package]]
 name = "canvas-engine"
-version = "0.43.0"
+version = "0.44.0"
 dependencies = [
  "base64 0.22.1",
  "image",
@@ -471,7 +471,7 @@ dependencies = [
 
 [[package]]
 name = "canvas-text"
-version = "0.43.0"
+version = "0.44.0"
 dependencies = [
  "canvas-engine",
  "serde",

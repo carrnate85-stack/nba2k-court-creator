@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 //! NBA 2K Court Creator (Rust/Tauri preview). Uses the installed WebView2 runtime; no .NET,
 //! Python, Node or browser runtime is bundled or started.
+mod artwork;
+mod artwork_text;
 mod commands;
 mod smoke;
 mod startup;
@@ -21,6 +23,7 @@ pub struct App {
     pub preparing: AtomicBool,
     pub startup: Arc<Mutex<startup::StartupState>>,
     pub smoke: Option<PathBuf>,
+    pub artwork: Arc<artwork::Host>,
 }
 
 impl App {
@@ -162,6 +165,7 @@ fn main() {
         preparing: AtomicBool::new(false),
         startup: Arc::new(Mutex::new(startup::StartupState { phase: "loading".into(), message: prefs_warning.unwrap_or_else(|| "Starting studio...".into()), ..Default::default() })),
         smoke: smoke.clone(),
+        artwork: Arc::default(),
     };
     tauri::Builder::default()
         .manage(app)
@@ -172,11 +176,18 @@ fn main() {
             commands::logo_transform, commands::logo_update, commands::logo_opacity, commands::logo_delete, commands::logo_duplicate, commands::logo_reorder,
             commands::rename_project, commands::undo, commands::document,
             commands::importer_open, commands::importer_pixels, commands::importer_action, commands::importer_place, commands::importer_close,
-            commands::text_fonts, commands::text_preview, commands::text_defaults, commands::text_apply,
+            commands::court_text_preview, commands::text_defaults, commands::text_apply,
             commands::set_preferences, commands::add_custom_floor,
             commands::new_project, commands::open_project, commands::save_project,
             commands::export_court, commands::prepare_export_base, commands::send_to_canvas, commands::cancel_operation, commands::import_open, commands::import_preview, commands::import_export,
-            smoke::smoke_report, smoke::smoke_capture, smoke::smoke_open_fixture, smoke::smoke_export,
+            artwork::artwork_open, artwork::artwork_apply, artwork::artwork_close,
+            artwork::edit, artwork::document_info, artwork::history, artwork::cancel_selection, artwork::render, artwork::render_view,
+            artwork::render_preview, artwork::render_operation_preview, artwork::selection_pixels, artwork::sample_pixel,
+            artwork::layer_pixels, artwork::mask_pixels, artwork::snap_to_edges,
+            artwork_text::text_fonts, artwork_text::text_begin, artwork_text::text_preview, artwork_text::text_draft_pixels,
+            artwork_text::text_finish, artwork_text::text_cancel, artwork_text::text_add_layer, artwork_text::text_update_layer,
+            artwork_text::text_settings, artwork_text::text_render,
+            smoke::smoke_report, smoke::smoke_capture, smoke::smoke_open_fixture, smoke::smoke_export, smoke::smoke_save_reopen,
         ])
         .setup(move |app| {
             let mut url = String::from("index.html");

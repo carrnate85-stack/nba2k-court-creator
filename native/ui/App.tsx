@@ -3,6 +3,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { bitmap, call, errorText, type Doc, type Floor, type Inspection, type Layer, type Logo, type Prefs, type Regions, type Reply, type Settings, type StartupState, type StudioData } from './api';
 import { CourtCanvas, type CanvasHandle, type LogoBitmap, type Pose, type Tool } from './CourtCanvas';
+import { ArtworkEditor, type ArtworkSession } from './ArtworkEditor';
 import { ColorPicker, FloorCatalog, LogoImporter, MessageDialog, TeamColors, TextDialog, normalizeHex } from './dialogs';
 import { Icon, type IconName } from './icons';
 import { runSmoke } from './smoke';
@@ -13,6 +14,7 @@ type Modal =
   | { kind: 'picker'; title: string; color: string; apply(hex: string): void }
   | { kind: 'teams'; apply(hex: string): void }
   | { kind: 'importer' }
+  | { kind: 'artwork'; session: ArtworkSession }
   | { kind: 'text'; initial: Record<string, unknown>; x: number; y: number; target: string | null }
   | { kind: 'message'; title: string; text: string; actions: { label: string; primary?: boolean; run(): void }[] };
 
@@ -111,7 +113,7 @@ export function App() {
   const [data, setData] = useState<StudioData | null>(null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [floors, setFloors] = useState<Floor[]>([]);
-  const [prefs, setPrefs] = useState<Prefs>({ favorites: [], recent: [], dark: false, primaryColor: '#19583F' });
+  const [prefs, setPrefs] = useState<Prefs>({ favorites: [], recent: [], dark: false, primaryColor: '#19583F', colorPresets: [] });
   const [status, setStatusText] = useState('Starting studio...');
   const [section, setSection] = useState<Section>('paint');
   const [tool, setTool] = useState<Tool>('Move');
@@ -158,6 +160,8 @@ export function App() {
     setStartup(result.state);
     if (result.data) {
       setData(result.data); setDoc(result.data.doc); setFloors(result.data.floors); setPrefs(result.data.prefs);
+      // Presets saved by the first preview build lived in WebView storage; move them to preferences once.
+      try { const old: unknown = JSON.parse(localStorage.getItem('court-presets') ?? '[]'); if (Array.isArray(old) && old.length && !smokeMode) { void call<Prefs>('set_preferences', { colorPresets: [...new Set([...result.data.prefs.colorPresets, ...old])].slice(0, 128) }).then(p => { setPrefs(p); localStorage.removeItem('court-presets'); }).catch(() => {}); } } catch { /* nothing to migrate */ }
       setStatusText(result.state.message);
     } else setStatusText(result.state.message);
   }, []);
@@ -286,6 +290,16 @@ export function App() {
     const result = await call<string | null>('export_court', { iff });
     if (result) setStatusText(result);
   });
+  /** Edit > Edit Artwork: the selected logo on the Logos tab, otherwise the main hardwood. */
+  const [cardMenu, setCardMenu] = useState<{ x: number; y: number } | null>(null);
+  const editArtwork = (logo: boolean) => run(async () => {
+    await commitHardwood(); canvas.current?.cancel();
+    const target = logo && section === 'logos' ? selectedLogo : null;
+    if (logo && section === 'logos' && !target) { setStatusText('Select a logo or graphic first.'); return; }
+    setStatusText(`Opening ${target ? target.name : 'the court texture'} for editing...`);
+    const session = await call<ArtworkSession>('artwork_open', { logo: target?.id ?? null });
+    setModal({ kind: 'artwork', session }); setStatusText('Edit Artwork is open. Apply or Cancel to return to the court.');
+  });
   const sendToCanvas = () => run(async () => { await commitHardwood(); const result = await call<string | null>('send_to_canvas'); if (result) setStatusText(result); });
   const prepareBase = () => run(async () => { setStatusText('Preparing the game export base...'); setStatusText(await call<string>('prepare_export_base')); });
   const toggleTheme = () => void savePrefs({ dark: !prefs.dark });
@@ -364,7 +378,7 @@ export function App() {
     return () => window.removeEventListener('keydown', key);
   });
 
-  useEffect(() => { if (smokeMode && ready) void runSmoke({ canvas, setSection, setTool: selectTool, showHardwood, apply: r => { apply(r); setSelected(r.doc.logos[0]?.id ?? null); } }); }, [ready]); // eslint-disable-line
+  useEffect(() => { if (smokeMode && ready) void runSmoke({ canvas, setSection, setTool: selectTool, showHardwood, apply: r => { apply(r); setSelected(r.doc.logos[0]?.id ?? null); }, artwork: session => setModal(session ? { kind: 'artwork', session } : null) }); }, [ready]); // eslint-disable-line
 
   // --- Rendering helpers ---
   const editingEnabled = section !== 'import' && ((!hardwoodTool && (tool === 'Move' || tool === 'Transform')) || section === 'logos');
@@ -438,6 +452,7 @@ export function App() {
         <Menu label="Edit">{close => <>
           <Item label="Undo" shortcut="Ctrl+Z" disabled={!d.canUndo} onClick={() => { close(); void undo(false); }} />
           <Item label="Redo" shortcut="Ctrl+Y" disabled={!d.canRedo} title="Redo (Ctrl+Y or Ctrl+Shift+Z)" onClick={() => { close(); void undo(true); }} />
+          <Item label="Edit Artwork..." title="Edit the selected court texture, logo or graphic" disabled={!canEdit} onClick={() => { close(); void editArtwork(true); }} />
         </>}</Menu>
         <Menu label="View">{close => <>
           <Item label="Fit court" shortcut="Ctrl+0" onClick={() => { close(); canvas.current?.fit(); }} />
@@ -608,7 +623,8 @@ export function App() {
         </div>
         <div className="hardwood-strip">
           <button className={`court-card ${hardwoodTool && !editingTwoPoint ? 'active' : ''}`} title={`Main hardwood: ${d.floor?.name ?? 'Loading court library...'}\nBrowse and adjust this texture.`} aria-label="Main hardwood: open catalog" disabled={!canEdit}
-            onClick={() => { showHardwood(false); setModal({ kind: 'catalog', twoPoint: false }); }}>
+            onClick={() => { showHardwood(false); setModal({ kind: 'catalog', twoPoint: false }); }}
+            onContextMenu={e => { e.preventDefault(); if (canEdit) setCardMenu({ x: e.clientX, y: e.clientY }); }}>
             <Thumb path={d.floor?.previewPath} />
             <span className="text"><div className="label">MAIN HARDWOOD</div><div className="title">{d.floor?.name ?? 'Loading court library...'}</div></span>
             <Icon name="chevronRight" size={14} />
@@ -639,10 +655,17 @@ export function App() {
       {modal?.kind === 'catalog' && <FloorCatalog title={modal.twoPoint ? 'Choose two-point hardwood' : 'Hardwood Catalog'} floors={floors} selected={(modal.twoPoint ? d.twoPoint : d.floor)?.id ?? null} favorites={prefs.favorites} recent={d.recent}
         onFavorite={(id, on) => void savePrefs({ favorite: [id, on] })} onUse={floor => void chooseFloor(floor, modal.twoPoint)} onClose={() => setModal(null)}
         onAdd={() => run(async () => { const result = await call<{ id: string; floors: Floor[] } | null>('add_custom_floor'); if (!result) return; setFloors(result.floors); const floor = result.floors.find(f => f.id === result.id); if (floor) return chooseFloor(floor, modal.twoPoint); })} />}
-      {modal?.kind === 'picker' && <ColorPicker title={modal.title} color={modal.color} primary={prefs.primaryColor} palettes={data!.palettes} onApply={modal.apply} onClose={() => setModal(null)} />}
+      {modal?.kind === 'picker' && <ColorPicker title={modal.title} color={modal.color} primary={prefs.primaryColor} palettes={data!.palettes} presets={prefs.colorPresets} onPresets={colorPresets => void savePrefs({ colorPresets })} onApply={modal.apply} onClose={() => setModal(null)} />}
       {modal?.kind === 'teams' && <TeamColors palettes={data!.palettes} onPick={modal.apply} onClose={() => setModal(null)} />}
+      {cardMenu && <div className="backdrop transparent" onMouseDown={() => setCardMenu(null)} onContextMenu={e => { e.preventDefault(); setCardMenu(null); }}>
+        <div className="popup context-menu" style={{ left: cardMenu.x, top: cardMenu.y }} onMouseDown={e => e.stopPropagation()}>
+          <button onClick={() => { setCardMenu(null); void editArtwork(false); }}><span>Edit Artwork...</span></button>
+        </div>
+      </div>}
+      {modal?.kind === 'artwork' && <ArtworkEditor session={modal.session} primary={prefs.primaryColor} onClose={() => { setModal(null); setStatusText('Artwork editing cancelled; the court is unchanged.'); }}
+        onApplied={reply => { setModal(null); apply(reply); }} />}
       {modal?.kind === 'importer' && <LogoImporter setStatus={setStatus} onClose={() => setModal(null)} onPlaced={reply => { setModal(null); apply(reply); setSection('logos'); setHardwoodTool(false); setTool('Move'); }} />}
-      {modal?.kind === 'text' && <TextDialog initial={modal.initial} primary={prefs.primaryColor} palettes={data!.palettes} onClose={() => setModal(null)}
+      {modal?.kind === 'text' && <TextDialog initial={modal.initial} primary={prefs.primaryColor} palettes={data!.palettes} presets={prefs.colorPresets} onPresets={colorPresets => void savePrefs({ colorPresets })} onClose={() => setModal(null)}
         onApply={settings => { const m = modal; setModal(null); void run(() => call<Reply>('text_apply', { settings, x: m.x, y: m.y, target: m.target })); }} />}
       {modal?.kind === 'message' && <MessageDialog title={modal.title} text={modal.text} actions={modal.actions} onClose={() => setModal(null)} />}
     </div>

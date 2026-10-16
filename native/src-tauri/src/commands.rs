@@ -162,7 +162,7 @@ pub struct Reply {
     selected: Option<String>,
 }
 
-fn reply(studio: &Studio, status: Option<String>, selected: Option<String>) -> Reply {
+pub fn reply(studio: &Studio, status: Option<String>, selected: Option<String>) -> Reply {
     Reply { doc: doc_view(studio), status, selected }
 }
 
@@ -609,18 +609,10 @@ pub async fn importer_close(app: tauri::State<'_, App>, session: u64) -> Command
 
 // --- Text ---
 
-#[tauri::command]
-pub async fn text_fonts() -> CommandResult<Vec<String>> {
-    static FONTS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
-    if let Some(fonts) = FONTS.get() {
-        return Ok(fonts.clone());
-    }
-    let fonts = worker(|| court_core::text::fonts().map_err(err)).await?;
-    Ok(FONTS.get_or_init(|| fonts).clone())
-}
+// `text_fonts` is served by the shared Canvas text module (same DirectWrite family list).
 
 #[tauri::command]
-pub async fn text_preview(settings: Value) -> CommandResult<tauri::ipc::Response> {
+pub async fn court_text_preview(settings: Value) -> CommandResult<tauri::ipc::Response> {
     worker(move || {
         let settings = court_core::text::from_json(&settings).map_err(err)?;
         let image = court_core::text::render(&settings).map_err(err)?;
@@ -704,7 +696,7 @@ pub async fn text_apply(app: tauri::State<'_, App>, settings: Value, x: f64, y: 
 // --- Preferences and catalog ---
 
 #[tauri::command]
-pub async fn set_preferences(app: tauri::State<'_, App>, dark: Option<bool>, primary_color: Option<String>, favorite: Option<(String, bool)>) -> CommandResult<Preferences> {
+pub async fn set_preferences(app: tauri::State<'_, App>, dark: Option<bool>, primary_color: Option<String>, favorite: Option<(String, bool)>, color_presets: Option<Value>) -> CommandResult<Preferences> {
     let prefs = {
         let mut session = app.session.lock().map_err(err)?;
         if let Some(dark) = dark {
@@ -712,6 +704,9 @@ pub async fn set_preferences(app: tauri::State<'_, App>, dark: Option<bool>, pri
         }
         if let Some(color) = primary_color {
             session.prefs.primary_color = render::normalize_hex(&color).ok_or("Enter a valid primary color.")?;
+        }
+        if let Some(presets) = color_presets {
+            session.prefs.color_presets = Preferences::presets(&presets).ok_or("Color presets must be up to 128 valid hex colors.")?;
         }
         if let Some((id, add)) = favorite {
             session.prefs.favorites.retain(|f| *f != id);

@@ -102,6 +102,29 @@ pub async fn smoke_export(app: tauri::State<'_, App>, iff: bool) -> Result<Strin
     .await
 }
 
+/// Portable Save then Open of the current court in a folder next to the report (no dialogs).
+#[tauri::command]
+pub async fn smoke_save_reopen(app: tauri::State<'_, App>) -> Result<serde_json::Value, String> {
+    let folder = output(&app)?.with_extension("portable");
+    let session = app.session.clone();
+    worker(move || {
+        let _ = std::fs::remove_dir_all(&folder);
+        std::fs::create_dir_all(&folder).map_err(error)?;
+        let path = folder.join("Smoke Court.court.json");
+        let snapshot = session.lock().map_err(error)?.studio().map_err(error)?.create_project();
+        court_core::project::save_portable(&path, &snapshot, &court_core::files::data_root()).map_err(error)?;
+        let mut value = court_core::project::read(&path).map_err(error)?;
+        let saved = value.clone();
+        value["_projectPath"] = serde_json::Value::String(path.to_string_lossy().into_owned());
+        let mut session = session.lock().map_err(error)?;
+        let crate::state::Session { studio, cache, .. } = &mut *session;
+        let studio = studio.as_mut().ok_or("Studio not ready")?;
+        let report = studio.restore(&value, true, &mut AssetLoader { cache }).map_err(error)?;
+        Ok(serde_json::json!({"status": report.status(), "saved": saved, "doc": crate::commands::doc_view(studio)}))
+    })
+    .await
+}
+
 /// Exits nonzero with a report if the hidden suite stalls.
 pub fn watchdog(handle: tauri::AppHandle, path: PathBuf) {
     std::thread::spawn(move || {
