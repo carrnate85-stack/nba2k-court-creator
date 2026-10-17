@@ -6,8 +6,8 @@ description = "NBA 2K Court Creator court geometry, rendering, project and IFF e
 
 [dependencies]
 # Shared 2K Canvas engine (DDS codecs, raster loading) and DirectWrite text, as explicit local dependencies.
-canvas-engine = { path = "../../../../source/native/crates/canvas-engine" }
-canvas-text = { path = "../../../../source/native/crates/canvas-text" }
+canvas-engine = { path = "../../../../2k Canvas/source/native/crates/canvas-engine" }
+canvas-text = { path = "../../../../2k Canvas/source/native/crates/canvas-text" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 sha2 = "0.10"

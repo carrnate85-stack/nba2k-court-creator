@@ -2,8 +2,8 @@ import { defineConfig, type Plugin } from 'vite';
 import { fileURLToPath } from 'node:url';
 
 // Shared 2K Canvas UI files (theme tokens, icons, editor components and styles) are imported from
-// the sibling Canvas checkout at build time and bundled; nothing from that checkout is needed at runtime.
-const canvasUi = fileURLToPath(new URL('../../source/native/ui', import.meta.url));
+// the sibling Canvas checkout (`../2k Canvas/source`) at build time and bundled; nothing from that checkout is needed at runtime.
+const canvasUi = fileURLToPath(new URL('../../2k Canvas/source/native/ui', import.meta.url));
 
 /** Scopes Canvas's editor stylesheet (`editor.css?scoped`) to the Edit Artwork window so its
  * page-level rules never restyle the court studio. Keyframes stay global. */

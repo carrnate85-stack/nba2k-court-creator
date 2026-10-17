@@ -5,7 +5,7 @@ param([switch]$SkipSmoke)
 $ErrorActionPreference = 'Continue'
 $native = Split-Path $PSScriptRoot -Parent
 $workspace = Split-Path (Split-Path $native -Parent) -Parent
-$rust = Join-Path $workspace 'source/artifacts/toolchains/rust'
+$rust = Join-Path $workspace '2k Canvas/source/artifacts/toolchains/rust'
 $evidence = Join-Path $native 'target/verification'
 $originalPath = $env:PATH
 try {
@@ -17,6 +17,11 @@ try {
     $pnpm = (Get-Command pnpm -ErrorAction SilentlyContinue).Source
     if (!$pnpm) { $pnpm = Join-Path $env:USERPROFILE '.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback/pnpm.cmd' }
     if (!(Test-Path -LiteralPath $pnpm)) { throw 'Install Node and pnpm for development. They are not packaged with the application.' }
+    $node = (Get-Command node -ErrorAction SilentlyContinue).Source
+    if (!$node) { throw 'Install Node for development. It is not packaged with the application.' }
+    # cmd.exe cannot search a very long PATH (pnpm scripts would not find tsc/vite), so the
+    # frontend steps also start from a minimal one.
+    $env:PATH = "$(Split-Path $node);$(Split-Path $pnpm);$env:SystemRoot\system32;$env:SystemRoot"
     & $pnpm --dir $native install --frozen-lockfile --ignore-scripts
     if ($LASTEXITCODE) { throw 'Frontend dependency installation failed.' }
     & $pnpm --dir $native run build

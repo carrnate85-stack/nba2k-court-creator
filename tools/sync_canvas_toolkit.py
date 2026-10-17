@@ -67,9 +67,12 @@ def find_release(root):
         if not os.environ.get("CanvasToolkitRoot") and props.is_file():
             pinned = ET.parse(props).findtext(".//CanvasToolkitVersion")
             if pinned and re.fullmatch(r"\d+\.\d+\.\d+", pinned):
-                feed = root.parent / "source/artifacts/packages" / pinned
-                if feed.is_dir():
-                    directories.append(feed)
+                # Sibling Canvas checkout: `../source` (old layout) or `../2k Canvas/source`.
+                for checkout in (root.parent / "source", root.parent / "2k Canvas" / "source"):
+                    feed = checkout / "artifacts/packages" / pinned
+                    if feed.is_dir():
+                        directories.append(feed)
+                        break
     requested = os.environ.get("CanvasToolkitVersion")
     releases = []
     for directory in directories:

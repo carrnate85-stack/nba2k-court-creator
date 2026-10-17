@@ -14,8 +14,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 court-core = { path = "../crates/court-core" }
-canvas-engine = { path = "../../../source/native/crates/canvas-engine" }
-canvas-text = { path = "../../../source/native/crates/canvas-text" }
+canvas-engine = { path = "../../../2k Canvas/source/native/crates/canvas-engine" }
+canvas-text = { path = "../../../2k Canvas/source/native/crates/canvas-text" }
 tauri = { version = "2", features = ["protocol-asset"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

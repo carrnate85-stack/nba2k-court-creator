@@ -27,22 +27,24 @@ exporter relies on (integer polygon fill, Lanczos/bicubic resampling, bicubic af
 
 ## Shared 2K Canvas code
 
-Explicit local path dependencies on the sibling checkout `../../source/native`:
+Explicit local path dependencies on the sibling Canvas checkout `../../2k Canvas/source/native`
+(the project lives at `D:\Projects\2k Canvas\2k Court Creator`, Canvas at `D:\Projects\2k Canvas\2k Canvas`):
 `crates/canvas-engine` (DDS BC1/BC3/BC7 encode/decode with mips) and `crates/canvas-text`
 (DirectWrite/Direct2D text). The UI bundles `ui/theme.generated.css` and `ui/icons.generated.json` at
 build time through the `@canvas` Vite alias. Nothing from the Canvas checkout is needed at runtime.
 
-Built and verified against Canvas `0755659259f84fc0e768f575dd048e288ba325af` (0.44.0, clean checkout). Besides the two
+Built and verified against Canvas `5e42c0703c9676c29b0adabb9743254a411c05bb` (0.46.0) **with that
+checkout's uncommitted changes present** (crate versions 0.47.0; modified `editor.css`, `App.tsx`). Besides the two
 crates, the build bundles Canvas UI sources through the `@canvas` alias: theme tokens, icons,
 `CanvasViewport`, `CompositeSurface`, `TextEditor`, `LayerThumbnail`, `HexColorInput`, their workers
 and `editor.css` (scoped to the Edit Artwork window at build time). SHA-256 of the sorted per-file
-hashes of both crates' `src` + `Cargo.toml`: `c193a62e…fecca1e1`. No Canvas file was modified for this port. Court-specific
+hashes of both crates' `src` + `Cargo.toml`: `0af23140…e310ba`. No Canvas file was modified for this port. Court-specific
 geometry, colors, hardwood settings and IFF rules stay in `court-core`.
 
 ## Build, check and install
 
 ```powershell
-./native/tools/Build.ps1            # from court-portable-source
+./native/tools/Build.ps1            # from the project root
 ./native/tools/Install-Preview.ps1  # optional: installs the verified EXE + separate shortcut
 ```
 
@@ -106,7 +108,7 @@ All on this PC with NBA 2K27 installed (updated 2026-10-16). Off-screen only; no
   `PaintColorPalette`; the WPF app kept them only for the session). Presets saved by the first
   preview build in WebView storage are moved there once.
 - **Official run** (`tools/Build.ps1`): 27 core tests, type-check, release EXE
-  (SHA-256 `7B0FDCCF…DBE6DE40`, 22.35 MB) and the hidden light, dark and compact suites (16 checks
+  (SHA-256 `0336ADFC…`, built at `D:\Projects\2k Canvas\2k Court Creator`) and the hidden light, dark and compact suites (16 checks
   each) passed; `Install-Preview.ps1` re-ran the hidden suite on the installed copy from `%TEMP%`.
 - **Dependencies:** EXE imports only Windows system DLLs (UCRT, DirectWrite/Direct2D, COM, user32 …).
 
